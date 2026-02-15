@@ -2,7 +2,6 @@
 
 import { useState, useRef } from "react";
 import { QuestionPosition } from "@/Entities/QuestionPosition";
-import { RoomTemplate } from "@/Entities/RoomTemplate";
 
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);

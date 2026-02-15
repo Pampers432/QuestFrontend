@@ -4,5 +4,5 @@ export interface CreateRoomTemplate{
     id?: string | null;
     name: string;
     sceneData: QuestionPosition[];
-    previewImageUrl: string;
+    previewImage: File | null;
 }
