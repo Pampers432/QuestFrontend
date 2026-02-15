@@ -1,0 +1,34 @@
+.nav {
+  height: 70px;
+  background: linear-gradient(90deg, #1e1e1e, #333);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 25px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  position: sticky;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.links {
+  display: flex;
+  gap: 20px;
+}
+
+.link {
+  color: #ddd;
+  text-decoration: none;
+  font-size: 18px;
+  transition: 0.2s ease;
+}
+
+.link:hover {
+  color: white;
+  text-shadow: 0 0 5px rgba(255,255,255,0.6);
+}

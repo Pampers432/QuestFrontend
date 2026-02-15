@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { QuestionPosition } from "@/Entities/QuestionPosition";
+import { RoomTemplate } from "@/Entities/RoomTemplate";
 
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [zones, setZones] = useState([
+  const [zones, setZones] = useState<QuestionPosition[]>([
     { name: "obj1", x: 100, y: 150, w: 200, h: 350 },
     { name: "obj2", x: 350, y: 140, w: 120, h: 380 },
     { name: "obj3", x: 420, y: 350, w: 350, h: 250 },
@@ -13,34 +15,28 @@ export default function Home() {
     { name: "door", x: 1050, y: 150, w: 250, h: 400 }
   ]);
 
+  const [templateName, setTemplateName] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>("/room.png");
-  const [templateName, setTemplateName] = useState<string>("");
+  const [previewUrl, setPreviewUrl] = useState("/room.png");
 
-  // =========================
-  // Загрузка файла
-  // =========================
+  const [dragging, setDragging] = useState<number | null>(null);
+  const [resizing, setResizing] = useState<number | null>(null);
+
+  const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const [startSize, setStartSize] = useState({ w: 0, h: 0 });
+  const [startMouse, setStartMouse] = useState({ x: 0, y: 0 });
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
+    if (e.target.files?.[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
       setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
-  // =========================
-  // Сохранение шаблона
-  // =========================
   const saveTemplate = async () => {
-    if (!selectedFile) {
-      alert("Выберите изображение");
-      return;
-    }
-
-    if (!templateName.trim()) {
-      alert("Введите название шаблона");
-      return;
-    }
+    if (!selectedFile) return alert("Выберите изображение");
+    if (!templateName.trim()) return alert("Введите название шаблона");
 
     const formData = new FormData();
     formData.append("Name", templateName);
@@ -53,29 +49,20 @@ export default function Home() {
         body: formData
       });
 
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(errorText);
-      }
+      if (!res.ok) throw new Error(await res.text());
 
-      const data = await res.json();
-      console.log("Успешно:", data);
       alert("Шаблон успешно сохранён!");
     } catch (err) {
-      console.error("Ошибка:", err);
+      console.error(err);
       alert("Ошибка при сохранении шаблона");
     }
   };
 
-  // =========================
-  // Drag & Resize
-  // =========================
-  const [dragging, setDragging] = useState<number | null>(null);
-  const [resizing, setResizing] = useState<number | null>(null);
-
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [startSize, setStartSize] = useState({ w: 0, h: 0 });
-  const [startMouse, setStartMouse] = useState({ x: 0, y: 0 });
+  const printZones = () => {
+    console.clear();
+    console.log("=== Текущие зоны ===");
+    console.log(JSON.stringify(zones, null, 2));
+  };
 
   const handleMouseDown = (index: number, e: React.MouseEvent) => {
     setDragging(index);
@@ -86,6 +73,7 @@ export default function Home() {
   const handleResizeMouseDown = (index: number, e: React.MouseEvent) => {
     e.stopPropagation();
     setResizing(index);
+
     const zone = zones[index];
     setStartSize({ w: zone.w, h: zone.h });
     setStartMouse({ x: e.clientX, y: e.clientY });
@@ -102,10 +90,13 @@ export default function Home() {
     if (resizing !== null) {
       const newZones = [...zones];
       const zone = newZones[resizing];
+
       const dx = e.clientX - startMouse.x;
       const dy = e.clientY - startMouse.y;
+
       zone.w = Math.max(20, startSize.w + dx);
       zone.h = Math.max(20, startSize.h + dy);
+
       setZones(newZones);
     }
   };
@@ -117,97 +108,63 @@ export default function Home() {
 
   const addNewZone = () => {
     const newIndex = zones.length + 1;
-    const newZone = {
-      name: `obj${newIndex}`,
-      x: 100,
-      y: 100,
-      w: 150,
-      h: 150
-    };
-    setZones([...zones, newZone]);
+    setZones([
+      ...zones,
+      { name: `obj${newIndex}`, x: 100, y: 100, w: 150, h: 150 }
+    ]);
   };
 
   return (
-    <div style={{ padding: "20px" }}>
-      <div style={{ marginBottom: "20px" }}>
-        
+    <div>
+      <div className="editor-panel">
         <input
           type="text"
           placeholder="Название шаблона"
           value={templateName}
           onChange={(e) => setTemplateName(e.target.value)}
-          style={{ marginRight: "10px", padding: "5px" }}
+          className="editor-input"
         />
 
-        <button className="b1" onClick={addNewZone}>
+        <button className="editor-btn" onClick={addNewZone}>
           Добавить объект
         </button>
 
-        <button
-          className="b1"
-          onClick={saveTemplate}
-          style={{ marginLeft: 10 }}
-        >
+        <button className="editor-btn" onClick={saveTemplate}>
           Сохранить шаблон
         </button>
 
-        <div
-          style={{
-            marginTop: "15px",
-            border: "1px solid #ddd",
-            padding: "10px",
-            display: "inline-block"
-          }}
-        >
-          <input type="file" onChange={handleFileChange} accept="image/*" />
-        </div>
+        <button className="editor-btn" onClick={printZones}>
+          Показать зоны
+        </button>
+
+        <input type="file" accept="image/*" onChange={handleFileChange} />
       </div>
 
       <div
         ref={containerRef}
-        style={{
-          position: "relative",
-          display: "inline-block",
-          border: "1px solid #000"
-        }}
+        className="editor-canvas"
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
       >
-        <img
-          src={previewUrl}
-          alt=""
-          draggable={false}
-          style={{ display: "block" }}
-        />
+        <img src={previewUrl} draggable={false} style={{ width: "100%" }} />
 
         {zones.map((zone, index) => (
           <div
             key={index}
+            className="editor-zone"
             onMouseDown={(e) => handleMouseDown(index, e)}
             style={{
-              position: "absolute",
               left: zone.x,
               top: zone.y,
               width: zone.w,
-              height: zone.h,
-              border: "2px solid red",
-              backgroundColor: "rgba(255,0,0,0.15)",
-              cursor: dragging === index ? "grabbing" : "grab",
-              boxSizing: "border-box",
-              userSelect: "none"
+              height: zone.h
             }}
           >
+            {zone.name}
+
             <div
+              className="editor-resize"
               onMouseDown={(e) => handleResizeMouseDown(index, e)}
-              style={{
-                position: "absolute",
-                right: 0,
-                bottom: 0,
-                width: 15,
-                height: 15,
-                background: "red",
-                cursor: "nwse-resize"
-              }}
             />
           </div>
         ))}
