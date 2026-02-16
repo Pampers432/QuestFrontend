@@ -95,3 +95,124 @@ body {
   cursor: nwse-resize;
   border-radius: 3px;
 }
+
+/* Контейнер страницы */
+.page-container {
+  padding: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: sans-serif;
+}
+
+/* Заголовки */
+.page-title {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.page-subtitle {
+  font-size: 22px;
+  margin-bottom: 20px;
+}
+
+/* Блок с изображением */
+.room-preview-wrapper {
+  position: relative;
+  display: inline-block;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #ccc;
+}
+
+.room-preview {
+  width: 600px;
+  display: block;
+  border-radius: 10px;
+}
+
+/* Зоны */
+.zone-box {
+  position: absolute;
+  border: 2px solid #00a000;
+  background-color: rgba(0, 255, 0, 0.15);
+  border-radius: 6px;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #004d00;
+}
+
+/* Форма квеста */
+.quest-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 350px;
+}
+
+.quest-input,
+.quest-textarea,
+.quest-select {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 15px;
+  width: 100%;
+}
+
+.quest-textarea {
+  height: 80px;
+  resize: none;
+}
+
+/* Карточка вопроса */
+.question-card {
+  margin-top: 25px;
+  padding: 20px;
+  border-radius: 10px;
+  background: #fafafa;
+  border: 1px solid #ddd;
+}
+
+.question-card-title {
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+/* Варианты ответа */
+.answer-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.answer-input {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+/* Кнопки */
+.btn {
+  padding: 10px 14px;
+  background: #1e1e1e;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+  transition: 0.2s;
+}
+
+.btn:hover {
+  background: #333;
+}
+
+.btn-small {
+  padding: 6px 10px;
+  font-size: 13px;
+}
