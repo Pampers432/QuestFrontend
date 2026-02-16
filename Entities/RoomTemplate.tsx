@@ -1,6 +1,6 @@
 import { QuestionPosition } from "./QuestionPosition";
 
-export interface CreateRoomTemplate{
+export interface RoomTemplate{
     id?: string | null;
     name: string;
     sceneData: QuestionPosition[];

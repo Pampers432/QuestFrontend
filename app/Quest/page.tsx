@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { RoomTemplate } from "@/types/RoomTemplate";
-import { QuestionPosition } from "@/types/QuestionPosition";
+import { RoomTemplate } from "@/Entities/RoomTemplate";
+import { QuestionPosition } from "@/Entities/QuestionPosition";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
+
   const [templates, setTemplates] = useState<RoomTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,8 +46,6 @@ export default function Home() {
   return (
     <div style={{ padding: 30 }}>
       <h1>Шаблоны комнат</h1>
-
-      {templates.length === 0 && <p>Шаблонов пока нет</p>}
 
       <div
         style={{
@@ -88,6 +89,26 @@ export default function Home() {
               <p>
                 Вопросов: <b>{zonesCount}</b>
               </p>
+
+              <button
+                onClick={() => {
+                  localStorage.setItem("selectedTemplate", JSON.stringify(template));
+                  router.push("/Quest/CreateQuest");
+                }}
+                style={{
+                  marginTop: 10,
+                  padding: "8px 12px",
+                  background: "#1e1e1e",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 6,
+                  cursor: "pointer",
+                  width: "100%",
+                  fontSize: 15
+                }}
+              >
+                Использовать
+              </button>
             </div>
           );
         })}
