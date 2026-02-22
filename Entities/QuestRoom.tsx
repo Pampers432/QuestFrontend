@@ -1,4 +1,5 @@
 import { Question } from "./Question";
+import { RoomTemplate } from "./RoomTemplate";
 
 export interface QuestRoom {
   id?: string | null;
@@ -8,5 +9,6 @@ export interface QuestRoom {
   title?: string | null;
   orderIndex: number;
 
+  roomTemplate: RoomTemplate;
   questions: Question[];
 }

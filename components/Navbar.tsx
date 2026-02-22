@@ -9,12 +9,16 @@ export default function Navbar() {
       <div className={styles.logo}>Quest Builder</div>
 
       <div className={styles.links}>
-        <Link href="/Quest" className={styles.link}>
-          Quest
+        <Link href="/" className={styles.link}>
+          Главная
         </Link>
 
-        <Link href="/" className={styles.link}>
-          Home
+        <Link href="/Templates" className={styles.link}>
+          Шаблоны
+        </Link>       
+
+        <Link href="/Quests" className={styles.link}>
+          Квесты
         </Link>
       </div>
     </nav>
