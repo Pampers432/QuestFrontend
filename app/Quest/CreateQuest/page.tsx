@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { RoomTemplate } from "@/Entities/RoomTemplate";
 
 type AnswerOptionType = {
@@ -17,6 +17,9 @@ type QuestionState = {
 
 export default function CreateQuest() {
   const [template, setTemplate] = useState<RoomTemplate | null>(null);
+  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
+  const [imageNaturalSize, setImageNaturalSize] = useState({ width: 0, height: 0 });
+  const imageRef = useRef<HTMLImageElement>(null);
 
   const [questions, setQuestions] = useState<{
     [key: string]: QuestionState;
@@ -29,6 +32,7 @@ export default function CreateQuest() {
     difficulty: "Easy",
     status: "Draft"
   });
+
   const addOption = (zoneName: string) => {
     setQuestions(prev => ({
       ...prev,
@@ -110,30 +114,40 @@ export default function CreateQuest() {
       const initial: any = {};
 
       parsed.sceneData.forEach((z) => {
-        if (z.name.toLowerCase() !== "door") {
-          initial[z.name] = {
-            text: "",
-            type: "single_choice",
-            answerOptions: [
-              { id: crypto.randomUUID(), text: "", isCorrect: false },
-              { id: crypto.randomUUID(), text: "", isCorrect: false }
-            ]
-          };
-        }
+        // Показываем все зоны, включая door
+        initial[z.name] = {
+          text: "",
+          type: "single_choice",
+          answerOptions: [
+            { id: crypto.randomUUID(), text: "", isCorrect: false },
+            { id: crypto.randomUUID(), text: "", isCorrect: false }
+          ]
+        };
       });
 
       setQuestions(initial);
     }
   }, []);
 
+  const handleImageLoad = () => {
+    if (imageRef.current) {
+      setImageSize({
+        width: imageRef.current.clientWidth,
+        height: imageRef.current.clientHeight
+      });
+      setImageNaturalSize({
+        width: imageRef.current.naturalWidth,
+        height: imageRef.current.naturalHeight
+      });
+    }
+  };
+
   if (!template) {
     return <div className="page-container">Шаблон не найден</div>;
   }
 
   // Масштабирование зон
-  const originalWidth = 1920;
   const displayWidth = 600;
-  const scale = displayWidth / originalWidth;
 
   return (
     <div className="page-container">
@@ -142,19 +156,26 @@ export default function CreateQuest() {
 
       <div style={{ display: "flex", gap: 40 }}>
         {/* Превью комнаты */}
-        <div className="room-preview-wrapper">
+        <div className="room-preview-wrapper" style={{ position: "relative", width: displayWidth }}>
           <img
+            ref={imageRef}
             src={`https://localhost:7240${template.previewImageUrl}`}
             alt="preview"
             className="room-preview"
+            onLoad={handleImageLoad}
+            style={{ width: "100%", height: "auto" }}
           />
 
           {/* Зоны */}
-          {template.sceneData.map((zone) => {
-            const x = zone.x * scale;
-            const y = zone.y * scale;
-            const w = zone.w * scale;
-            const h = zone.h * scale;
+          {imageSize.width > 0 && template.sceneData.map((zone) => {
+            // Вычисляем масштаб от натурального размера к отображаемому
+            const scaleX = imageSize.width / imageNaturalSize.width;
+            const scaleY = imageSize.height / imageNaturalSize.height;
+            
+            const x = zone.x * scaleX;
+            const y = zone.y * scaleY;
+            const w = zone.w * scaleX;
+            const h = zone.h * scaleY;
 
             return (
               <div
@@ -228,7 +249,6 @@ export default function CreateQuest() {
       <h3 style={{ marginTop: 40 }}>Вопросы по зонам</h3>
 
       {template.sceneData
-        .filter(z => z.name.toLowerCase() !== "door")
         .map(zone => (
           <div key={zone.name} className="question-card">
             <div className="question-card-title">Зона: {zone.name}</div>
@@ -241,10 +261,12 @@ export default function CreateQuest() {
                   [zone.name]: {
                     ...prev[zone.name],
                     type: e.target.value,
-                    answerOptions: [
-                      { id: crypto.randomUUID(), text: "", isCorrect: false },
-                      { id: crypto.randomUUID(), text: "", isCorrect: false }
-                    ]
+                    answerOptions: e.target.value === "single_choice" || e.target.value === "multiple_choice"
+                      ? [
+                          { id: crypto.randomUUID(), text: "", isCorrect: false },
+                          { id: crypto.randomUUID(), text: "", isCorrect: false }
+                        ]
+                      : []
                   }
                 }))
               }
@@ -259,7 +281,7 @@ export default function CreateQuest() {
 
             <textarea
               placeholder="Введите текст вопроса"
-              value={questions[zone.name]?.text}
+              value={questions[zone.name]?.text || ""}
               onChange={(e) =>
                 setQuestions(prev => ({
                   ...prev,
@@ -273,7 +295,7 @@ export default function CreateQuest() {
             />
 
             {/* Варианты ответа */}
-            {["single_choice", "multiple_choice"].includes(
+            {questions[zone.name] && ["single_choice", "multiple_choice"].includes(
               questions[zone.name]?.type
             ) && (
               <div style={{ marginTop: 15 }}>
@@ -307,7 +329,6 @@ export default function CreateQuest() {
                       }
                       className="answer-input"
                     />
-
 
                     <button
                       onClick={() => removeOption(zone.name, option.id)}
