@@ -14,6 +14,42 @@ export default function QuestPage({ params }: { params: { id: string } }) {
   const [endsAt, setEndsAt] = useState("");
   const [accessCode, setAccessCode] = useState("");
 
+  const startSession = async () => {
+  if (!quest) return;
+
+  const body = {
+    questId: quest.id,
+    startedBy: "0EF0EA1A-7E15-402B-894F-5D7224607447", // временно
+    timeLimit: timeLimit,
+    allowPartialCompletion: allowPartial,
+    allowToSkip: allowSkip,
+    accessCode: accessCode,
+    startsAt: startsAt,
+    endsAt: endsAt || null,
+    isActive: false
+  };
+
+  const res = await fetch("https://localhost:7240/api/QuestSessions/CreateSession", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+
+  if (!res.ok) {
+    alert("Ошибка создания сессии");
+    return;
+  }
+
+  const session = await res.json();
+
+  // сохраняем сессию
+  localStorage.setItem("activeSession", JSON.stringify(session));
+
+  // переход на форму прохождения
+  router.push(`/Session/${session.id}`);
+};
+
+
   const router = useRouter();
 
   useEffect(() => {
@@ -38,9 +74,7 @@ export default function QuestPage({ params }: { params: { id: string } }) {
         <h2 style={{ margin: 0 }}>Настройки теста</h2>
       </div>
 
-      {/* ОСНОВНОЙ КОНТЕЙНЕР */}
       <div style={{ display: "flex", gap: 40 }}>
-        {/* ЛЕВАЯ ЧАСТЬ — комнаты */}
         <div style={{ flex: 2 }}>
           {quest.questRooms.map((room) => (
             <div
@@ -62,7 +96,6 @@ export default function QuestPage({ params }: { params: { id: string } }) {
           ))}
         </div>
 
-        {/* ПРАВАЯ ЧАСТЬ — форма */}
         <div
           style={{
             flex: 1,
@@ -72,7 +105,6 @@ export default function QuestPage({ params }: { params: { id: string } }) {
             height: "fit-content"
           }}
         >
-          {/* Заголовок убрали — он теперь сверху */}
           <label>Лимит времени (минуты)</label>
           <input
             type="number"
@@ -136,9 +168,10 @@ export default function QuestPage({ params }: { params: { id: string } }) {
               borderRadius: 8,
               border: "none",
               marginTop: 20
-            }}
+            }}            
+            onClick={startSession}
           >
-            Начать тест
+            Запустить тест
           </button>
         </div>
       </div>
