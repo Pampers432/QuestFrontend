@@ -3,8 +3,13 @@
 import { use, useEffect, useState } from "react";
 import { QuestionPosition } from "@/Entities/QuestionPosition";
 
+const API = "https://localhost:7240/api/QuestSessions";
+
 export default function SessionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+
+  const [quest, setQuest] = useState<any>(null);
+  const [roomIndex, setRoomIndex] = useState(0);
 
   const [room, setRoom] = useState<any>(null);
   const [zones, setZones] = useState<QuestionPosition[]>([]);
@@ -12,7 +17,15 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
 
   const [activeQuestion, setActiveQuestion] = useState<any>(null);
   const [activeSession, setActiveSession] = useState<any>(null);
+
   const [doorMessage, setDoorMessage] = useState<string | null>(null);
+  const [finishMessage, setFinishMessage] = useState<string | null>(null);
+  
+  const goToResults = () => {
+    setFinishMessage(null);
+    window.location.href = `/Session/${activeSession.id}/Results`;
+  };
+
 
   useEffect(() => {
     const savedQuest = localStorage.getItem("selectedQuest");
@@ -20,70 +33,149 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
 
     if (!savedQuest || !savedSession) return;
 
-    const quest = JSON.parse(savedQuest);
+    const q = JSON.parse(savedQuest);
     const session = JSON.parse(savedSession);
 
+    if (!session.attemptId) {
+      startAttempt(session);
+    }
+
+    if (!session.attempts) session.attempts = [];
+    if (session.score === undefined) session.score = 0;
+
+    setQuest(q);
     setActiveSession(session);
 
-    const firstRoom = quest.questRooms[0];
-    setRoom(firstRoom);
-
-    setPreviewUrl(`https://localhost:7240${firstRoom.roomTemplate.previewImageUrl}`);
-
-    const parsedZones: QuestionPosition[] = JSON.parse(firstRoom.roomTemplate.sceneData);
-    setZones(parsedZones);
+    loadRoom(q, 0);
   }, [id]);
 
-  if (!room || !activeSession) return <div>Загрузка...</div>;
+  const startAttempt = async (session: any) => {
+    const res = await fetch(`${API}/StartAttempt`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: session.startedBy,
+        questSessionId: session.id
+      })
+    });
 
-  // ============================
-  // 🔥 ЛОГИКА ДВЕРИ
-  // ============================
-  const handleDoorClick = () => {
+    const data = await res.json();
+    session.attemptId = data.id;
+
+    localStorage.setItem("activeSession", JSON.stringify(session));
+    setActiveSession({ ...session });
+  };
+
+  const loadRoom = (questData: any, index: number) => {
+    const r = questData.questRooms[index];
+
+    setRoom(r);
+    setRoomIndex(index);
+
+    setPreviewUrl(`https://localhost:7240${r.roomTemplate.previewImageUrl}`);
+
+    const parsedZones: QuestionPosition[] = JSON.parse(
+      r.roomTemplate.sceneData
+    );
+
+    setZones(parsedZones);
+  };
+
+  if (!room || !activeSession || !quest)
+    return <div>Загрузка...</div>;
+
+  const handleAnswer = async (option: any, question: any) => {
+    const isCorrect = option.isCorrect;
+    const points = isCorrect ? question.points ?? 1 : 0;
+
+    const updatedSession = { ...activeSession };
+
+    updatedSession.attempts.push({
+      questionId: question.id,
+      isCorrect,
+      pointsAwarded: points,
+      answeredAt: new Date().toISOString()
+    });
+
+    updatedSession.score += points;
+
+    localStorage.setItem("activeSession", JSON.stringify(updatedSession));
+    setActiveSession(updatedSession);
+
+    await fetch(`${API}/SaveAnswer`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        attemptId: updatedSession.attemptId,
+        questionId: question.id,
+        answerData: JSON.stringify({
+          selected_options: [option.id]
+        }),
+        isCorrect,
+        pointsAwarded: points
+      })
+    });
+
+    setActiveQuestion(null);
+  };
+
+  const handleDoorClick = async () => {
     const now = new Date();
     const startsAt = new Date(activeSession.startsAt);
     const endsAt = new Date(activeSession.endsAt);
 
-    // 1. Проверка активности
     if (!activeSession.isActive) {
       setDoorMessage("Сессия не активна");
       return;
     }
 
-    // 2. Проверка времени начала
     if (now < startsAt) {
       setDoorMessage("Сессия ещё не началась");
       return;
     }
 
-    // 3. Проверка времени окончания
     if (now > endsAt) {
       setDoorMessage("Время сессии истекло");
       return;
     }
 
-    // 4. Проверка лимита времени
     if (activeSession.timeLimit && activeSession.timeLimit > 0) {
-      const minutesPassed = Math.floor((now.getTime() - startsAt.getTime()) / 60000);
+      const minutesPassed = Math.floor(
+        (now.getTime() - startsAt.getTime()) / 60000
+      );
+
       if (minutesPassed > activeSession.timeLimit) {
         setDoorMessage("Вы превысили лимит времени");
         return;
       }
     }
 
-    // 5. Проверка попыток (если нужно)
-    if (activeSession.attempts && activeSession.attempts.length > 0) {
-      // Здесь можно добавить логику, если нужно
+    const answeredIds = activeSession.attempts.map((a: any) => a.questionId);
+    const unanswered = room.questions.filter(
+      (q: any) => !answeredIds.includes(q.id)
+    );
+
+    if (!activeSession.allowPartialCompletion && unanswered.length > 0) {
+      setDoorMessage("Вы должны ответить на все вопросы");
+      return;
     }
 
-    // 6. Если всё ок — переход
-    setDoorMessage("Переход в следующую комнату...");
-    // Здесь позже добавим реальный переход
+    // Переход в следующую комнату
+    if (roomIndex + 1 < quest.questRooms.length) {
+      loadRoom(quest, roomIndex + 1);
+      setDoorMessage("Переход в следующую комнату...");
+      return;
+    }
+
+    // Завершение
+    await fetch(
+      `${API}/FinishAttempt/${activeSession.attemptId}`,
+      { method: "POST" }
+    );
+
+    goToResults();
   };
 
-  // ============================
-  // 🔥 КЛИК ПО ЗОНЕ (по индексу)
-  // ============================
   const handleZoneClick = (zoneIndex: number) => {
     const zone = zones[zoneIndex];
 
@@ -106,32 +198,37 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
 
   return (
     <div style={{ width: "100%", height: "100vh", overflow: "hidden" }}>
-      <div className="room-preview-wrapper" style={{ width: "100%", height: "100%" }}>
-        
+      <div style={{ width: "100%", height: "100%" }}>
         <img
           src={previewUrl}
-          className="room-preview"
-          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover"
+          }}
           draggable={false}
         />
 
         {zones.map((z, i) => (
           <div
             key={i}
-            className="zone-box"
             onClick={() => handleZoneClick(i)}
             style={{
+              position: "absolute",
               left: z.x,
               top: z.y,
               width: z.w,
               height: z.h,
-              cursor: z.name.toLowerCase() === "door" ? "pointer" : "pointer",
-              borderColor: z.name.toLowerCase() === "door" ? "red" : "#00a000",
+              cursor: "pointer",
+              border: "2px solid",
+              borderColor:
+                z.name.toLowerCase() === "door"
+                  ? "red"
+                  : "#00a000",
               backgroundColor:
                 z.name.toLowerCase() === "door"
                   ? "rgba(255,0,0,0.15)"
-                  : "rgba(0,255,0,0.15)",
-              pointerEvents: "auto"
+                  : "rgba(0,255,0,0.15)"
             }}
           >
             {z.name}
@@ -141,91 +238,73 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
 
       {/* Модалка вопроса */}
       {activeQuestion && (
-        <div
-          style={{
-            position: "fixed",
-            left: 0,
-            top: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000
-          }}
-          onClick={() => setActiveQuestion(null)}
-        >
-          <div
-            style={{
-              background: "white",
-              padding: 20,
-              borderRadius: 10,
-              minWidth: 350
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 style={{ marginBottom: 10 }}>{activeQuestion.text}</h2>
+        <Modal onClose={() => setActiveQuestion(null)}>
+          <h2>{activeQuestion.text}</h2>
 
-            {activeQuestion.answerOptions?.map((a: any, idx: number) => (
-              <button
-                key={idx}
-                className="btn"
-                style={{ width: "100%", marginBottom: 10 }}
-              >
-                {a.text}
-              </button>
-            ))}
-
+          {activeQuestion.answerOptions?.map((a: any, idx: number) => (
             <button
-              className="btn"
-              style={{ background: "#777", width: "100%" }}
-              onClick={() => setActiveQuestion(null)}
+              key={idx}
+              style={{ width: "100%", marginBottom: 10 }}
+              onClick={() => handleAnswer(a, activeQuestion)}
             >
-              Закрыть
+              {a.text}
             </button>
-          </div>
-        </div>
+          ))}
+
+          <button onClick={() => setActiveQuestion(null)}>
+            Закрыть
+          </button>
+        </Modal>
       )}
 
       {/* Модалка двери */}
       {doorMessage && (
-        <div
-          style={{
-            position: "fixed",
-            left: 0,
-            top: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000
-          }}
-          onClick={() => setDoorMessage(null)}
-        >
-          <div
-            style={{
-              background: "white",
-              padding: 20,
-              borderRadius: 10,
-              minWidth: 350
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2>{doorMessage}</h2>
-
-            <button
-              className="btn"
-              style={{ width: "100%", marginTop: 15 }}
-              onClick={() => setDoorMessage(null)}
-            >
-              Закрыть
-            </button>
-          </div>
-        </div>
+        <Modal onClose={() => setDoorMessage(null)}>
+          <h2>{doorMessage}</h2>
+          <button onClick={() => setDoorMessage(null)}>
+            Закрыть
+          </button>
+        </Modal>
       )}
+
+      {/* Модалка завершения */}
+      {finishMessage && (
+        <Modal>
+          <h2>{finishMessage}</h2>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+function Modal({ children, onClose }: any) {
+  return (
+    <div
+      style={{
+        position: "fixed",
+        left: 0,
+        top: 0,
+        width: "100vw",
+        height: "100vh",
+        background: "rgba(0,0,0,0.5)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 1000
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          background: "white",
+          padding: 20,
+          borderRadius: 10,
+          minWidth: 350
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {children}
+      </div>
     </div>
   );
 }
