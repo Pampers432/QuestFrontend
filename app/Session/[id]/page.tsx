@@ -1,12 +1,14 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useState, useRef } from "react";
 import { QuestionPosition } from "@/Entities/QuestionPosition";
 
 const API = "https://localhost:7240/api/QuestSessions";
 
 export default function SessionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
 
   const [quest, setQuest] = useState<any>(null);
   const [roomIndex, setRoomIndex] = useState(0);
@@ -14,6 +16,8 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
   const [room, setRoom] = useState<any>(null);
   const [zones, setZones] = useState<QuestionPosition[]>([]);
   const [previewUrl, setPreviewUrl] = useState("");
+  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
+  const [imageNaturalSize, setImageNaturalSize] = useState({ width: 0, height: 0 });
 
   const [activeQuestion, setActiveQuestion] = useState<any>(null);
   const [activeSession, setActiveSession] = useState<any>(null);
@@ -25,7 +29,6 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
     setFinishMessage(null);
     window.location.href = `/Session/${activeSession.id}/Results`;
   };
-
 
   useEffect(() => {
     const savedQuest = localStorage.getItem("selectedQuest");
@@ -81,6 +84,43 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
     setZones(parsedZones);
   };
 
+  const handleImageLoad = () => {
+    if (imageRef.current && containerRef.current) {
+      const container = containerRef.current;
+      const img = imageRef.current;
+      
+      // Получаем натуральные размеры изображения
+      setImageNaturalSize({
+        width: img.naturalWidth,
+        height: img.naturalHeight
+      });
+      
+      // Получаем фактические размеры после загрузки
+      setImageSize({
+        width: img.clientWidth,
+        height: img.clientHeight
+      });
+    }
+  };
+
+  // Отслеживаем изменение размеров контейнера
+  useEffect(() => {
+    if (!imageRef.current || !containerRef.current) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (imageRef.current) {
+        setImageSize({
+          width: imageRef.current.clientWidth,
+          height: imageRef.current.clientHeight
+        });
+      }
+    });
+
+    resizeObserver.observe(containerRef.current);
+
+    return () => resizeObserver.disconnect();
+  }, [previewUrl]);
+
   if (!room || !activeSession || !quest)
     return <div>Загрузка...</div>;
 
@@ -94,7 +134,10 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
       questionId: question.id,
       isCorrect,
       pointsAwarded: points,
-      answeredAt: new Date().toISOString()
+      answeredAt: new Date().toISOString(),
+      answerData: JSON.stringify({
+        selected_options: [option.id]
+      })
     });
 
     updatedSession.score += points;
@@ -196,44 +239,97 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
     }
   };
 
+  // Вычисляем масштаб для зон
+  const getZoneStyle = (zone: QuestionPosition) => {
+    if (imageSize.width === 0 || imageNaturalSize.width === 0) {
+      return {
+        left: zone.x,
+        top: zone.y,
+        width: zone.w,
+        height: zone.h
+      };
+    }
+
+    const scaleX = imageSize.width / imageNaturalSize.width;
+    const scaleY = imageSize.height / imageNaturalSize.height;
+
+    return {
+      left: zone.x * scaleX,
+      top: zone.y * scaleY,
+      width: zone.w * scaleX,
+      height: zone.h * scaleY
+    };
+  };
+
   return (
-    <div style={{ width: "100%", height: "100vh", overflow: "hidden" }}>
-      <div style={{ width: "100%", height: "100%" }}>
+    <div 
+      ref={containerRef}
+      style={{ 
+        width: "100vw", 
+        height: "auto", 
+        overflow: "hidden",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#000"
+      }}
+    >
+      <div style={{ 
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+      }}>
         <img
+          ref={imageRef}
           src={previewUrl}
+          onLoad={handleImageLoad}
           style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover"
+            maxWidth: "100%",
+            maxHeight: "100%",
+            width: "auto",
+            height: "auto",
+            objectFit: "contain"
           }}
           draggable={false}
         />
 
-        {zones.map((z, i) => (
-          <div
-            key={i}
-            onClick={() => handleZoneClick(i)}
-            style={{
-              position: "absolute",
-              left: z.x,
-              top: z.y,
-              width: z.w,
-              height: z.h,
-              cursor: "pointer",
-              border: "2px solid",
-              borderColor:
-                z.name.toLowerCase() === "door"
-                  ? "red"
-                  : "#00a000",
-              backgroundColor:
-                z.name.toLowerCase() === "door"
-                  ? "rgba(255,0,0,0.15)"
-                  : "rgba(0,255,0,0.15)"
-            }}
-          >
-            {z.name}
-          </div>
-        ))}
+        {/* Зоны */}
+        {zones.map((z, i) => {
+          const zoneStyle = getZoneStyle(z);
+          
+          return (
+            <div
+              key={i}
+              onClick={() => handleZoneClick(i)}
+              style={{
+                position: "absolute",
+                cursor: "pointer",
+                border: "2px solid",
+                borderColor: z.name.toLowerCase() === "door" ? "red" : "#00a000",
+                backgroundColor: z.name.toLowerCase() === "door" 
+                  ? "rgba(255,0,0,0.15)" 
+                  : "rgba(0,255,0,0.15)",
+                ...zoneStyle
+              }}
+            >
+              <span style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                color: "white",
+                fontWeight: "bold",
+                textShadow: "1px 1px 2px black",
+                fontSize: "14px"
+              }}>
+                {z.name}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
       {/* Модалка вопроса */}

@@ -29,8 +29,17 @@ export const TemplateCard = ({ template }: { template: RoomTemplate }) => {
       <button
         className={styles.button}
         onClick={() => {
-          localStorage.setItem("selectedTemplate", JSON.stringify(template));
-          router.push("/Quest/CreateQuest");
+          const saved = localStorage.getItem("selectedTemplates");
+          const templates = saved ? JSON.parse(saved) : [];
+
+          const exists = templates.some((t: RoomTemplate) => t.id === template.id);
+          if (!exists) {
+            templates.push(template);
+          }
+
+          localStorage.setItem("selectedTemplates", JSON.stringify(templates));
+
+          router.push("/Templates/CreateQuest");
         }}
       >
         Использовать

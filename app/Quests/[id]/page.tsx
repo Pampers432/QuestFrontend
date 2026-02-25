@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 export default function QuestPage({ params }: { params: { id: string } }) {
   const [quest, setQuest] = useState<Quest | null>(null);
+  const [currentRoomIndex, setCurrentRoomIndex] = useState(0);
 
   const [timeLimit, setTimeLimit] = useState<number | null>(null);
   const [allowPartial, setAllowPartial] = useState(false);
@@ -15,40 +16,39 @@ export default function QuestPage({ params }: { params: { id: string } }) {
   const [accessCode, setAccessCode] = useState("");
 
   const startSession = async () => {
-  if (!quest) return;
+    if (!quest) return;
 
-  const body = {
-    questId: quest.id,
-    startedBy: "0EF0EA1A-7E15-402B-894F-5D7224607447", // временно
-    timeLimit: timeLimit,
-    allowPartialCompletion: allowPartial,
-    allowToSkip: allowSkip,
-    accessCode: accessCode,
-    startsAt: startsAt,
-    endsAt: endsAt || null,
-    isActive: false
+    const body = {
+      questId: quest.id,
+      startedBy: "0EF0EA1A-7E15-402B-894F-5D7224607447", // временно
+      timeLimit: timeLimit,
+      allowPartialCompletion: allowPartial,
+      allowToSkip: allowSkip,
+      accessCode: accessCode,
+      startsAt: startsAt,
+      endsAt: endsAt || null,
+      isActive: false
+    };
+
+    const res = await fetch("https://localhost:7240/api/QuestSessions/CreateSession", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      alert("Ошибка создания сессии");
+      return;
+    }
+
+    const session = await res.json();
+
+    // сохраняем сессию
+    localStorage.setItem("activeSession", JSON.stringify(session));
+
+    // переход на форму прохождения
+    router.push(`/Session/${session.id}`);
   };
-
-  const res = await fetch("https://localhost:7240/api/QuestSessions/CreateSession", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body)
-  });
-
-  if (!res.ok) {
-    alert("Ошибка создания сессии");
-    return;
-  }
-
-  const session = await res.json();
-
-  // сохраняем сессию
-  localStorage.setItem("activeSession", JSON.stringify(session));
-
-  // переход на форму прохождения
-  router.push(`/Session/${session.id}`);
-};
-
 
   const router = useRouter();
 
@@ -58,6 +58,13 @@ export default function QuestPage({ params }: { params: { id: string } }) {
   }, []);
 
   if (!quest) return <div>Загрузка...</div>;
+
+  // Сортируем комнаты по orderIndex
+  const sortedRooms = [...quest.questRooms].sort(
+    (a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)
+  );
+
+  const currentRoom = sortedRooms[currentRoomIndex];
 
   return (
     <div style={{ padding: 30 }}>
@@ -75,8 +82,47 @@ export default function QuestPage({ params }: { params: { id: string } }) {
       </div>
 
       <div style={{ display: "flex", gap: 40 }}>
+        {/* СЛАЙДЕР КОМНАТ - только то, что нужно */}
+        <div style={{
+          width: "150px",
+          height: "600px",
+          overflowY: "auto",
+          border: "1px solid #ddd",
+          borderRadius: 10,
+          padding: 10
+        }}>
+          <h3 style={{ marginBottom: 15, textAlign: "center", fontSize: 14 }}>Комнаты</h3>
+          
+          {sortedRooms.map((room, index) => (
+            <div
+              key={room.id}
+              onClick={() => setCurrentRoomIndex(index)}
+              style={{
+                marginBottom: 10,
+                cursor: "pointer",
+                border: index === currentRoomIndex ? "3px solid #1e1e1e" : "1px solid #ddd",
+                borderRadius: 8,
+                padding: 5,
+                background: index === currentRoomIndex ? "#f0f0f0" : "white"
+              }}
+            >
+              <img
+                src={`https://localhost:7240${room.roomTemplate.previewImageUrl}`}
+                alt={room.title || room.roomTemplate.name}
+                style={{
+                  width: "100%",
+                  height: "80px",
+                  objectFit: "cover",
+                  borderRadius: 4
+                }}
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Центральная часть с комнатами (без изменений) */}
         <div style={{ flex: 2 }}>
-          {quest.questRooms.map((room) => (
+          {sortedRooms.map((room) => (
             <div
               key={room.id}
               style={{
@@ -96,6 +142,7 @@ export default function QuestPage({ params }: { params: { id: string } }) {
           ))}
         </div>
 
+        {/* Правая панель с настройками (без изменений) */}
         <div
           style={{
             flex: 1,
