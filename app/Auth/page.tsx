@@ -2,6 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import { loginUser, registerUser } from "@/services/authService";
+import { readRoleFromToken, setStoredRole } from "@/utils/auth";
 import styles from "./AuthPage.module.css";
 
 type Mode = "login" | "register";
@@ -10,7 +11,7 @@ export default function AuthPage() {
   const [mode, setMode] = useState<Mode>("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("User");
+  const [role, setRole] = useState("Student");
   const [isBlocked, setIsBlocked] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -43,6 +44,8 @@ export default function AuthPage() {
         if (response.token) {
           localStorage.setItem("auth_token", response.token);
         }
+
+        setStoredRole(response.role || readRoleFromToken(response.token));
 
         setSuccess(response.message || "Вход выполнен успешно");
       } else {
@@ -111,7 +114,8 @@ export default function AuthPage() {
               <label className={styles.label}>
                 Role
                 <select className={styles.input} value={role} onChange={(e) => setRole(e.target.value)}>
-                  <option value="User">User</option>
+                  <option value="Student">Student</option>
+                  <option value="Teacher">Teacher</option>
                   <option value="Admin">Admin</option>
                 </select>
               </label>
