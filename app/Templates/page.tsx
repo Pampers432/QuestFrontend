@@ -1,5 +1,6 @@
 "use client";
 
+import RoleGuard from "@/components/RoleGuard";
 import { useEffect, useState } from "react";
 import { RoomTemplate } from "@/Entities/RoomTemplate";
 import { fetchTemplates } from "@/services/templatesService";
@@ -22,14 +23,19 @@ export default function Home() {
   if (error) return <div>{error}</div>;
 
   return (
-    <div className={styles.container}>
-      <h1>Шаблоны комнат</h1>
+    <RoleGuard
+      allowedRoles={["Teacher", "Admin"]}
+      fallbackMessage="Доступ к шаблонам открыт только для преподавателя и администратора."
+    >
+      <div className={styles.container}>
+        <h1>Шаблоны комнат</h1>
 
-      <div className={styles.grid}>
-        {templates.map((template) => (
-          <TemplateCard key={template.id} template={template} />
-        ))}
+        <div className={styles.grid}>
+          {templates.map((template) => (
+            <TemplateCard key={template.id} template={template} />
+          ))}
+        </div>
       </div>
-    </div>
+    </RoleGuard>
   );
 }

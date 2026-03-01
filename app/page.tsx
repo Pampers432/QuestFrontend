@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import RoleGuard from "@/components/RoleGuard";
 import { useZones } from "@/hooks/useZones";
 import { useDragResize } from "@/hooks/useDragResize";
 import { EditorPanel } from "@/components/EditorPanel";
@@ -28,7 +29,11 @@ export default function Home() {
   };
 
   return (
-    <div>
+    <RoleGuard
+      allowedRoles={["Admin"]}
+      fallbackMessage="Только администратор может добавлять шаблоны."
+    >
+      <div>
       <EditorPanel
         templateName={templateName}
         setTemplateName={setTemplateName}
@@ -39,6 +44,7 @@ export default function Home() {
       />
 
       <EditorCanvas previewUrl={previewUrl} zones={zones} drag={drag} />
-    </div>
+      </div>
+    </RoleGuard>
   );
 }
