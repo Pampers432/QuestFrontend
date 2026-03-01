@@ -6,6 +6,7 @@ import { RoomTemplate } from "@/Entities/RoomTemplate";
 import { CreateQuestRequest, CreateQuestRoomRequest, CreateQuestionRequest, CreateAnswerOptionRequest } from "@/Entities/Dto";
 import { Question } from "@/Entities/Question";
 import { AnswerOption } from "@/Entities/AnswerOption";
+import RoleGuard from "@/components/RoleGuard";
 
 type LocalQuestionState = {
   text: string;
@@ -343,6 +344,10 @@ export default function CreateQuest() {
   const displayWidth = 600;
 
   return (
+    <RoleGuard
+      allowedRoles={["Teacher", "Admin"]}
+      fallbackMessage="Создание квестов доступно только преподавателю и администратору."
+    >
     <div className="page-container">
       <h1 className="page-title">Создание квеста</h1>
 
@@ -775,5 +780,6 @@ export default function CreateQuest() {
         </div>
       ))}
     </div>
+    </RoleGuard>
   );
 }
