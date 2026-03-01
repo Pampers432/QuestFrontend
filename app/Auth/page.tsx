@@ -11,7 +11,7 @@ export default function AuthPage() {
   const [mode, setMode] = useState<Mode>("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("Student");
+  const [role, setRole] = useState("student");
   const [isBlocked, setIsBlocked] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -114,9 +114,9 @@ export default function AuthPage() {
               <label className={styles.label}>
                 Role
                 <select className={styles.input} value={role} onChange={(e) => setRole(e.target.value)}>
-                  <option value="Student">Student</option>
-                  <option value="Teacher">Teacher</option>
-                  <option value="Admin">Admin</option>
+                  <option value="student">Student</option>
+                  <option value="teacher">Teacher</option>
+                  <option value="admin">Admin</option>
                 </select>
               </label>
 
