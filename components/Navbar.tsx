@@ -20,6 +20,10 @@ export default function Navbar() {
         <Link href="/Quests" className={styles.link}>
           Квесты
         </Link>
+
+        <Link href="/Auth" className={styles.link}>
+          Вход / Регистрация
+        </Link>
       </div>
     </nav>
   );
