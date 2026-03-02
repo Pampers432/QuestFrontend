@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { loginUser, registerUser } from "@/services/authService";
 import { readRoleFromToken, setStoredRole } from "@/utils/auth";
 import styles from "./AuthPage.module.css";
@@ -8,6 +9,7 @@ import styles from "./AuthPage.module.css";
 type Mode = "login" | "register";
 
 export default function AuthPage() {
+  const router = useRouter();
   const [mode, setMode] = useState<Mode>("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -45,9 +47,11 @@ export default function AuthPage() {
           localStorage.setItem("auth_token", response.token);
         }
 
-        setStoredRole(response.role || readRoleFromToken(response.token));
+        const resolvedRole = response.role || readRoleFromToken(response.token);
+        setStoredRole(resolvedRole);
 
         setSuccess(response.message || "Вход выполнен успешно");
+        router.push(resolvedRole === "Student" ? "/Session" : "/Quests");
       } else {
         const response = await registerUser({
           username: username.trim(),
@@ -56,6 +60,7 @@ export default function AuthPage() {
         });
 
         setSuccess(response.message || "Пользователь зарегистрирован");
+        router.push(role.toLowerCase() === "student" ? "/Session" : "/Quests");
       }
     } catch (submitError) {
       const message = submitError instanceof Error ? submitError.message : "Неизвестная ошибка";
