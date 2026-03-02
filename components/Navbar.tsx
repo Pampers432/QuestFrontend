@@ -1,12 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getStoredRole, canUseTemplates, canManageTemplates, clearAuthStorage, UserRole } from "@/utils/auth";
 import styles from "./Navbar.module.css";
 
+const getHomeHrefByRole = (role: UserRole | null) => (role === "Student" ? "/Session" : "/Quests");
+
 export default function Navbar() {
   const [role, setRole] = useState<UserRole | null>(() => getStoredRole());
+
+  useEffect(() => {
+    const syncRole = () => setRole(getStoredRole());
+
+    syncRole();
+    window.addEventListener("storage", syncRole);
+
+    return () => window.removeEventListener("storage", syncRole);
+  }, []);
 
   const logout = () => {
     clearAuthStorage();
@@ -18,8 +29,12 @@ export default function Navbar() {
       <div className={styles.logo}>Quest Builder</div>
 
       <div className={styles.links}>
-        <Link href="/" className={styles.link}>
+        <Link href={getHomeHrefByRole(role)} className={styles.link}>
           Главная
+        </Link>
+
+        <Link href="/Session" className={styles.link}>
+          Прохождение теста
         </Link>
 
         {canUseTemplates(role) && (
