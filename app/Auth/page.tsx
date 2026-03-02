@@ -47,9 +47,11 @@ export default function AuthPage() {
           localStorage.setItem("auth_token", response.token);
         }
 
-        setStoredRole(response.role || readRoleFromToken(response.token));
+        const resolvedRole = response.role || readRoleFromToken(response.token);
+        setStoredRole(resolvedRole);
 
         setSuccess(response.message || "Вход выполнен успешно");
+        router.push(resolvedRole === "Student" ? "/Session" : "/Quests");
       } else {
         const response = await registerUser({
           username: username.trim(),
@@ -58,6 +60,7 @@ export default function AuthPage() {
         });
 
         setSuccess(response.message || "Пользователь зарегистрирован");
+        router.push(role.toLowerCase() === "student" ? "/Session" : "/Quests");
 
         if (role.toLowerCase() === "student") {
           router.push("/Session");
