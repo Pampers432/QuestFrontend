@@ -61,6 +61,7 @@ export const setStoredRole = (role: string | null | undefined) => {
   }
 
   localStorage.setItem(ROLE_STORAGE_KEY, normalized);
+  notifyRoleChanged();
 };
 
 export const getStoredRole = (): UserRole | null => {
@@ -88,3 +89,8 @@ export const clearAuthStorage = () => {
 export const canUseTemplates = (role: UserRole | null) => role === "Teacher" || role === "Admin";
 
 export const canManageTemplates = (role: UserRole | null) => role === "Admin";
+
+export const notifyRoleChanged = () => {
+  window.dispatchEvent(new Event("roleChanged"));
+};
+

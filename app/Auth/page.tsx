@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { loginUser, registerUser } from "@/services/authService";
 import { readRoleFromToken, setStoredRole } from "@/utils/auth";
@@ -19,60 +19,78 @@ export default function AuthPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  useEffect(() => {
+    const token = localStorage.getItem("auth_token");
+
+    if (!token) {
+      alert("Вы не вошли в аккаунт");
+      router.push("/Auth");
+    }
+  }, []);
+
+
   const title = useMemo(
     () => (mode === "login" ? "Авторизация" : "Регистрация"),
     [mode]
   );
 
   const onSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
+  e.preventDefault();
+  setError("");
+  setSuccess("");
 
-    if (!username.trim() || !password.trim()) {
-      setError("Введите username и password");
-      return;
-    }
+  if (!username.trim() || !password.trim()) {
+    setError("Введите username и password");
+    return;
+  }
 
-    setIsSubmitting(true);
+  setIsSubmitting(true);
 
-    try {
-      if (mode === "login") {
-        const response = await loginUser({
-          username: username.trim(),
-          password
-        });
+  try {
+    if (mode === "login") {
+      const response = await loginUser({
+        username: username.trim(),
+        password
+      });
 
-        if (response.token) {
-          localStorage.setItem("auth_token", response.token);
-        }
-
-        const resolvedRole = response.role || readRoleFromToken(response.token);
-        setStoredRole(resolvedRole);
-
-        setSuccess(response.message || "Вход выполнен успешно");
-        router.push(resolvedRole === "Student" ? "/Session" : "/Quests");
-      } else {
-        const response = await registerUser({
-          username: username.trim(),
-          password,
-          role
-        });
-
-        setSuccess(response.message || "Пользователь зарегистрирован");
-        router.push(role.toLowerCase() === "student" ? "/Session" : "/Quests");
-
-        if (role.toLowerCase() === "student") {
-          router.push("/Session");
-        }
+      if (response.token) {
+        localStorage.setItem("auth_token", response.token);
       }
-    } catch (submitError) {
-      const message = submitError instanceof Error ? submitError.message : "Неизвестная ошибка";
-      setError(message);
-    } finally {
-      setIsSubmitting(false);
+
+      const resolvedRole = response.role || readRoleFromToken(response.token);
+      if (resolvedRole) {
+        setStoredRole(resolvedRole);
+      }
+
+      setSuccess(response.message || "Вход выполнен успешно");
+
+      const isStudent =
+        resolvedRole === "Student" || resolvedRole?.toLowerCase() === "student";
+
+      router.push(isStudent ? "/Session" : "/Quests");
+    } else {
+      const response = await registerUser({
+        username: username.trim(),
+        password,
+        role
+      });
+
+      setSuccess(response.message || "Пользователь зарегистрирован");
+
+      const isStudent = role === "student" || role === "Student";
+
+      setStoredRole(role);
+      router.push(isStudent ? "/Session" : "/Quests");
     }
-  };
+  } catch (submitError) {
+    const message =
+      submitError instanceof Error ? submitError.message : "Неизвестная ошибка";
+    setError(message);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   return (
     <main className={styles.page}>

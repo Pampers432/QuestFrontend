@@ -9,6 +9,12 @@ export default function Home() {
 
   useEffect(() => {
     const role = getStoredRole();
+
+    if (!role) {
+      router.replace("/Auth");
+      return;
+    }
+
     const target = role === "Student" ? "/Session" : "/Quests";
     router.replace(target);
   }, [router]);

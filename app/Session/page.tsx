@@ -7,10 +7,12 @@ const API = "https://localhost:7240/api/QuestSessions";
 
 type SessionPayload = {
   id?: string;
+  isActive?: boolean;
   quest?: unknown;
   questSnapshot?: unknown;
   questSession?: { quest?: unknown } | null;
 };
+
 
 const resolveQuest = (session: SessionPayload) => {
   if (session.quest) return session.quest;
@@ -60,6 +62,11 @@ export default function SessionAccessPage() {
 
       if (!session) {
         setError("Сессия с таким AccessCode не найдена");
+        return;
+      }
+
+      if (session.isActive === false) {
+        setError("Эта сессия сейчас неактивна");
         return;
       }
 

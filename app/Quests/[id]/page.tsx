@@ -15,40 +15,70 @@ export default function QuestPage({ params }: { params: { id: string } }) {
   const [endsAt, setEndsAt] = useState("");
   const [accessCode, setAccessCode] = useState("");
 
+  const generateAccessCode = () => {
+    const part = () => Math.random().toString(36).substring(2, 6).toUpperCase();
+    return `${part()}-${part()}`;
+  };
+
+
   const startSession = async () => {
-    if (!quest) return;
+  if (!quest) return;
 
-    const body = {
-      questId: quest.id,
-      startedBy: "0EF0EA1A-7E15-402B-894F-5D7224607447", // временно
-      timeLimit: timeLimit,
-      allowPartialCompletion: allowPartial,
-      allowToSkip: allowSkip,
-      accessCode: accessCode,
-      startsAt: startsAt,
-      endsAt: endsAt || null,
-      isActive: false
-    };
+  const token = localStorage.getItem("auth_token");
+  if (!token) {
+    alert("Не найден токен авторизации");
+    return;
+  }
 
-    const res = await fetch("https://localhost:7240/api/QuestSessions/CreateSession", {
+  // получаем текущего пользователя
+  const meRes = await fetch("https://localhost:7240/api/Auth/me", {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (!meRes.ok) {
+    alert("Не удалось получить данные пользователя");
+    return;
+  }
+
+  const me = await meRes.json() as { userId: string };
+
+  const finalAccessCode =
+    accessCode.trim() === "" ? generateAccessCode() : accessCode.trim();
+
+  const body = {
+    questId: quest.id,
+    startedBy: me.userId,
+    timeLimit: timeLimit,
+    allowPartialCompletion: allowPartial,
+    allowToSkip: allowSkip,
+    accessCode: finalAccessCode,
+    startsAt: startsAt,
+    endsAt: endsAt || null,
+    isActive: false
+  };
+
+  const res = await fetch(
+    "https://localhost:7240/api/QuestSessions/CreateSession",
+    {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
-    });
-
-    if (!res.ok) {
-      alert("Ошибка создания сессии");
-      return;
     }
+  );
 
-    const session = await res.json();
+  if (!res.ok) {
+    alert("Ошибка создания сессии");
+    return;
+  }
 
-    // сохраняем сессию
-    localStorage.setItem("activeSession", JSON.stringify(session));
+  const session = await res.json();
 
-    // переход на форму прохождения
-    router.push(`/Session/${session.id}`);
-  };
+  localStorage.setItem("activeSession", JSON.stringify(session));
+  router.push(`/Session/${session.id}`);
+};
+
 
   const router = useRouter();
 
@@ -187,8 +217,10 @@ export default function QuestPage({ params }: { params: { id: string } }) {
             type="text"
             value={accessCode}
             onChange={(e) => setAccessCode(e.target.value)}
+            placeholder="Оставьте пустым для случайной генерации"
             style={{ width: "100%", marginBottom: 15 }}
           />
+
 
           <label>Начало</label>
           <input
