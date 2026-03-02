@@ -61,6 +61,10 @@ export default function AuthPage() {
 
         setSuccess(response.message || "Пользователь зарегистрирован");
         router.push(role.toLowerCase() === "student" ? "/Session" : "/Quests");
+
+        if (role.toLowerCase() === "student") {
+          router.push("/Session");
+        }
       }
     } catch (submitError) {
       const message = submitError instanceof Error ? submitError.message : "Неизвестная ошибка";
