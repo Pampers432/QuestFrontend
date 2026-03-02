@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { loginUser, registerUser } from "@/services/authService";
 import { readRoleFromToken, setStoredRole } from "@/utils/auth";
 import styles from "./AuthPage.module.css";
@@ -8,6 +9,7 @@ import styles from "./AuthPage.module.css";
 type Mode = "login" | "register";
 
 export default function AuthPage() {
+  const router = useRouter();
   const [mode, setMode] = useState<Mode>("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -56,6 +58,10 @@ export default function AuthPage() {
         });
 
         setSuccess(response.message || "Пользователь зарегистрирован");
+
+        if (role.toLowerCase() === "student") {
+          router.push("/Session");
+        }
       }
     } catch (submitError) {
       const message = submitError instanceof Error ? submitError.message : "Неизвестная ошибка";
