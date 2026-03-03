@@ -8,9 +8,9 @@ import { EditorPanel } from "@/components/EditorPanel";
 import { EditorCanvas } from "@/components/EditorCanvas";
 
 export default function Home() {
-  const { zones, addZone, updateZone, printZones } = useZones([
-      { name: "Door", x: 100, y: 150, w: 200, h: 350 },
-      { name: "obj1", x: 350, y: 140, w: 120, h: 380 }
+  const { zones, addZone, updateZone, removeZone, printZones } = useZones([
+    { name: "Door", x: 100, y: 150, w: 200, h: 350 },
+    { name: "obj1", x: 350, y: 140, w: 120, h: 380 }
   ]);
 
   const drag = useDragResize(zones, updateZone);
@@ -28,22 +28,30 @@ export default function Home() {
     console.log("Saving...");
   };
 
+  const canRemoveZone = (zoneName: string) => zoneName.trim().toLowerCase() !== "door";
+
   return (
     <RoleGuard
       allowedRoles={["Admin"]}
       fallbackMessage="Только администратор может добавлять шаблоны."
     >
       <div>
-      <EditorPanel
-        templateName={templateName}
-        setTemplateName={setTemplateName}
-        addZone={addZone}
-        saveTemplate={saveTemplate}
-        printZones={printZones}
-        handleFileChange={handleFileChange}
-      />
+        <EditorPanel
+          templateName={templateName}
+          setTemplateName={setTemplateName}
+          addZone={addZone}
+          saveTemplate={saveTemplate}
+          printZones={printZones}
+          handleFileChange={handleFileChange}
+        />
 
-      <EditorCanvas previewUrl={previewUrl} zones={zones} drag={drag} />
+        <EditorCanvas
+          previewUrl={previewUrl}
+          zones={zones}
+          drag={drag}
+          onRemoveZone={removeZone}
+          canRemoveZone={(zone) => canRemoveZone(zone.name)}
+        />
       </div>
     </RoleGuard>
   );

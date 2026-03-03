@@ -11,16 +11,24 @@ interface EditorCanvasProps {
     onMove: (e: React.MouseEvent) => void;
     stop: () => void;
   };
+  onRemoveZone?: (index: number) => void;
+  canRemoveZone?: (zone: QuestionPosition, index: number) => boolean;
 }
 
-export function EditorCanvas({ previewUrl, zones, drag }: EditorCanvasProps) {
+export function EditorCanvas({
+  previewUrl,
+  zones,
+  drag,
+  onRemoveZone,
+  canRemoveZone
+}: EditorCanvasProps) {
   return (
     <div
       className="editor-canvas"
       onMouseMove={drag.onMove}
       onMouseUp={drag.stop}
     >
-      <img src={previewUrl} draggable={false} style={{ width: "100%" }} />
+      <img src={previewUrl} alt="Предпросмотр шаблона" draggable={false} style={{ width: "100%" }} />
 
       {zones.map((zone, index) => (
         <Zone
@@ -29,6 +37,8 @@ export function EditorCanvas({ previewUrl, zones, drag }: EditorCanvasProps) {
           index={index}
           startDrag={drag.startDrag}
           startResize={drag.startResize}
+          onRemove={onRemoveZone}
+          canRemove={canRemoveZone ? canRemoveZone(zone, index) : false}
         />
       ))}
     </div>
