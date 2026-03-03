@@ -20,6 +20,7 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
   const [saving, setSaving] = useState(false);
   const [templateName, setTemplateName] = useState("");
   const [previewUrl, setPreviewUrl] = useState("/room.png");
+  const [previewFile, setPreviewFile] = useState<File | null>(null);
 
   const {
     zones,
@@ -57,10 +58,12 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
 
         setTemplate(normalized);
         setTemplateName(normalized.name ?? "");
+        
+        const imageUrl = normalized.previewImage || normalized.previewImageUrl;
         setPreviewUrl(
-          normalized.previewImageUrl?.startsWith("http")
-            ? normalized.previewImageUrl
-            : `https://localhost:7240${normalized.previewImage}`
+          imageUrl?.startsWith("http")
+            ? imageUrl
+            : `https://localhost:7240${imageUrl}`
         );
       })
       .catch((error) => {
@@ -76,7 +79,9 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
-      setPreviewUrl(URL.createObjectURL(e.target.files[0]));
+      const file = e.target.files[0];
+      setPreviewFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
@@ -85,34 +90,85 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
 
     setSaving(true);
     try {
-        const res = await fetch(`https://localhost:7240/api/Quests/${template.id}`, {
+      const formData = new FormData();
+      
+      formData.append("Id", template.id || "");
+      formData.append("Name", templateName);
+      formData.append("SceneData", JSON.stringify(zones));
+      
+      if (previewFile) {
+        formData.append("PreviewImage", previewFile);
+      }
+
+      const response = await fetch(`https://localhost:7240/api/Quests/${template.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: formData,
+      });
+
+      const responseText = await response.text();
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${responseText}`);
+      }
+
+      // Пробуем распарсить ответ
+      let responseData;
+      try {
+        responseData = JSON.parse(responseText);
+      } catch (e) {
+        console.error("Failed to parse response as JSON:", responseText);
+        throw new Error("Сервер вернул некорректный формат данных");
+      }
+
+      // Обновляем шаблон в зависимости от типа ответа
+      if (responseData.path) {
+        // Это ответ от PostTemplate - обновляем только изображение
+        setTemplate(prev => {
+          if (!prev) return null;
+          return {
+            ...prev,
             name: templateName,
-            description: null,
-            previewImageUrl: template.previewImage, 
-            sceneData: JSON.stringify(zones)
-        })
+            previewImage: responseData.path,
+            sceneData: zones
+          };
         });
-
-        if (!res.ok) {
-        const errorData = await res.text();
-        throw new Error(errorData || "Ошибка при сохранении");
-        }
-
-        alert("Сохранено!");
-        router.push("/Templates");
-    } catch (error) {
-        console.error("Ошибка сохранения:", error);
-        alert(
-        `Ошибка при сохранении: ${error instanceof Error ? error.message : "Неизвестная ошибка"}`
+        
+        // Обновляем URL превью
+        setPreviewUrl(
+          responseData.path.startsWith("http")
+            ? responseData.path
+            : `https://localhost:7240${responseData.path}`
         );
+      } else {
+        // Это ответ от UpdateTemplate - используем полученные данные
+        const updatedTemplate: RoomTemplate = {
+          ...responseData,
+          sceneData:
+            typeof responseData.sceneData === "string"
+              ? JSON.parse(responseData.sceneData)
+              : responseData.sceneData || zones
+        };
+        setTemplate(updatedTemplate);
+        
+        if (updatedTemplate.previewImage) {
+          setPreviewUrl(
+            updatedTemplate.previewImage.startsWith("http")
+              ? updatedTemplate.previewImage
+              : `https://localhost:7240${updatedTemplate.previewImage}`
+          );
+        }
+      }
+      
+      setPreviewFile(null);
+      alert("Сохранено!");
+      router.push("/Templates");
+    } catch (error) {
+      console.error("Ошибка сохранения:", error);
+      alert(`Ошибка при сохранении: ${error instanceof Error ? error.message : "Неизвестная ошибка"}`);
     } finally {
-        setSaving(false);
+      setSaving(false);
     }
-    };
-
+  };
 
   if (loading) return <div style={{ padding: 24 }}>Загрузка...</div>;
   if (!template) return <div style={{ padding: 24 }}>Шаблон не найден</div>;
@@ -130,6 +186,7 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
           saveTemplate={handleSave}
           printZones={printZones}
           handleFileChange={handleFileChange}
+          saving={saving}
         />
 
         <EditorCanvas
