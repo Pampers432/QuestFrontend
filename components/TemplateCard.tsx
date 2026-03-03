@@ -46,7 +46,7 @@ export const TemplateCard = ({
 
     localStorage.setItem("selectedTemplates", JSON.stringify(existing));
 
-    router.push("/Templates/CreateQuest");
+    router.push("/Quests/CreateQuest");
   };
 
   return (
