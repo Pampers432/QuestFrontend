@@ -70,12 +70,6 @@ export default function Navbar() {
           </Link>
         )}
 
-        {canManageTemplates(role) && (
-          <Link href="/" className={styles.link}>
-            Редактор шаблонов
-          </Link>
-        )}
-
         <Link href="/Quests" className={styles.link}>
           Квесты
         </Link>
