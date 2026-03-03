@@ -5,10 +5,18 @@ interface ZoneProps {
   index: number;
   startDrag: (index: number, e: React.MouseEvent) => void;
   startResize: (index: number, e: React.MouseEvent) => void;
+  onRemove?: (index: number) => void;
+  canRemove?: boolean;
 }
 
-
-export function Zone({ zone, index, startDrag, startResize }: ZoneProps) {
+export function Zone({
+  zone,
+  index,
+  startDrag,
+  startResize,
+  onRemove,
+  canRemove = false
+}: ZoneProps) {
   return (
     <div
       className="editor-zone"
@@ -20,7 +28,25 @@ export function Zone({ zone, index, startDrag, startResize }: ZoneProps) {
         height: zone.h
       }}
     >
-      {zone.name}
+      <span>{zone.name}</span>
+
+      {canRemove && onRemove && (
+        <button
+          type="button"
+          className="editor-zone-remove"
+          onMouseDown={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove(index);
+          }}
+          aria-label={`Удалить зону ${zone.name}`}
+        >
+          ×
+        </button>
+      )}
 
       <div
         className="editor-resize"

@@ -84,6 +84,29 @@ body {
   border-radius: 4px;
 }
 
+
+.editor-zone-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 50%;
+  background: #d32f2f;
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editor-zone-remove:hover {
+  background: #b71c1c;
+}
+
 /* Угол для изменения размера */
 .editor-resize {
   position: absolute;
