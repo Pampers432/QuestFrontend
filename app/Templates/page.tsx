@@ -7,9 +7,11 @@ import { fetchTemplates } from "@/services/templatesService";
 import { TemplateCard } from "@/components/TemplateCard";
 import styles from "./Home.module.css";
 import { useRouter } from "next/navigation";
+import { getStoredRole } from "@/utils/auth";
 
 export default function Home() {
   const router = useRouter();
+  const role = getStoredRole();
 
   const [templates, setTemplates] = useState<RoomTemplate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,6 +23,10 @@ export default function Home() {
       .catch(() => setError("Не удалось загрузить шаблоны"))
       .finally(() => setLoading(false));
   }, []);
+
+  const handleDelete = (id: string) => {
+    setTemplates(prev => prev.filter(t => t.id !== id));
+  };
 
   if (loading) return <div>Загрузка...</div>;
   if (error) return <div>{error}</div>;
@@ -36,14 +42,22 @@ export default function Home() {
 
           <div className={styles.grid}>
             {templates.map((template) => (
-              <TemplateCard key={template.id} template={template} />
+              <TemplateCard
+                key={template.id}
+                template={template}
+                onDelete={handleDelete}
+              />
             ))}
-            
-            <div className={styles.addCard} onClick={() => router.push("/Templates/CreateTemplate")}
-            >
-              <div className={styles.plus}>+</div>
-              <div className={styles.addText}>Добавить шаблон</div>
-            </div>
+
+            {role === "Admin" && (
+              <div
+                className={styles.addCard}
+                onClick={() => router.push("/Templates/CreateTemplate")}
+              >
+                <div className={styles.plus}>+</div>
+                <div className={styles.addText}>Добавить шаблон</div>
+              </div>
+            )}
           </div>
         </div>
       </div>

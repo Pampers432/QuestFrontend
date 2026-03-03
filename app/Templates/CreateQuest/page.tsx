@@ -31,6 +31,7 @@ export default function CreateQuest() {
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [imageNaturalSize, setImageNaturalSize] = useState({ width: 0, height: 0 });
   const imageRef = useRef<HTMLImageElement>(null);
+  const [draggedRoomIndex, setDraggedRoomIndex] = useState<number | null>(null);
 
   const [questData, setQuestData] = useState({
     title: "",
@@ -48,7 +49,7 @@ export default function CreateQuest() {
       
       const newOption: AnswerOption & { id: string } = {
         id: crypto.randomUUID(),
-        questionId: "", // будет заполнено при создании
+        questionId: "",
         text: "",
         isCorrect: false,
         matchPair: null,
@@ -130,6 +131,104 @@ export default function CreateQuest() {
       
       return newRooms;
     });
+  };
+
+  // Функция удаления комнаты
+  const removeRoom = (indexToRemove: number, e: React.MouseEvent) => {
+    e.stopPropagation(); // Предотвращаем всплытие события, чтобы не сработал переход на комнату
+    
+    if (rooms.length <= 1) {
+      alert("Нельзя удалить последнюю комнату. Добавьте новую комнату или очистите квест полностью.");
+      return;
+    }
+
+    setRooms(prev => {
+      const newRooms = prev.filter((_, index) => index !== indexToRemove);
+      
+      // Если удаляем текущую комнату, переключаемся на первую
+      if (indexToRemove === currentRoomIndex) {
+        setCurrentRoomIndex(0);
+      } else if (indexToRemove < currentRoomIndex) {
+        // Если удаляем комнату до текущей, индекс текущей уменьшается
+        setCurrentRoomIndex(prev => prev - 1);
+      }
+      
+      return newRooms;
+    });
+  };
+
+  // Функции для drag and drop
+  const handleDragStart = (index: number, e: React.DragEvent) => {
+    e.stopPropagation();
+    setDraggedRoomIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (draggedRoomIndex === null || draggedRoomIndex === targetIndex) {
+      return;
+    }
+
+    setRooms(prev => {
+      const newRooms = [...prev];
+      const draggedRoom = newRooms[draggedRoomIndex];
+      
+      // Удаляем перетаскиваемый элемент
+      newRooms.splice(draggedRoomIndex, 1);
+      // Вставляем его на новую позицию
+      newRooms.splice(targetIndex, 0, draggedRoom);
+      
+      return newRooms;
+    });
+
+    // Обновляем текущий индекс если нужно
+    if (draggedRoomIndex === currentRoomIndex) {
+      setCurrentRoomIndex(targetIndex);
+    } else if (draggedRoomIndex < currentRoomIndex && targetIndex >= currentRoomIndex) {
+      setCurrentRoomIndex(prev => prev - 1);
+    } else if (draggedRoomIndex > currentRoomIndex && targetIndex <= currentRoomIndex) {
+      setCurrentRoomIndex(prev => prev + 1);
+    }
+
+    setDraggedRoomIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedRoomIndex(null);
+  };
+
+  // Функция для выбора комнаты (клик)
+  const selectRoom = (index: number) => {
+    setCurrentRoomIndex(index);
+  };
+
+  // Функция полной очистки квеста
+  const clearQuest = () => {
+    if (confirm("Вы уверены, что хотите очистить весь квест? Все введенные данные будут потеряны.")) {
+      // Очищаем все состояния
+      setRooms([]);
+      setQuestData({
+        title: "",
+        description: "",
+        subject: "",
+        difficulty: "Easy",
+        status: "Draft"
+      });
+      setCurrentRoomIndex(0);
+      
+      // Удаляем из localStorage
+      localStorage.removeItem("selectedTemplates");
+      
+      // Перенаправляем на страницу выбора шаблонов
+      router.push('/Templates');
+    }
   };
 
   const questionTypes = [
@@ -337,7 +436,33 @@ export default function CreateQuest() {
   };
 
   if (rooms.length === 0) {
-    return <div className="page-container">Шаблоны не найдены</div>;
+    return (
+      <RoleGuard
+        allowedRoles={["Teacher", "Admin"]}
+        fallbackMessage="Создание квестов доступно только преподавателю и администратору."
+      >
+        <div className="page-container">
+          <h1 className="page-title">Создание квеста</h1>
+          <div style={{ textAlign: "center", padding: 40 }}>
+            <p>Шаблоны не найдены</p>
+            <button 
+              onClick={() => router.push('/Templates')}
+              className="btn"
+              style={{ 
+                padding: "10px 20px", 
+                background: "#007bff", 
+                color: "white", 
+                border: "none", 
+                borderRadius: 4, 
+                cursor: "pointer" 
+              }}
+            >
+              Выбрать шаблоны
+            </button>
+          </div>
+        </div>
+      </RoleGuard>
+    );
   }
 
   const currentRoom = rooms[currentRoomIndex];
@@ -349,12 +474,32 @@ export default function CreateQuest() {
       fallbackMessage="Создание квестов доступно только преподавателю и администратору."
     >
     <div className="page-container">
-      <h1 className="page-title">Создание квеста</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+        <h1 className="page-title">Создание квеста</h1>
+        
+        {/* Кнопка очистки */}
+        <button
+          onClick={clearQuest}
+          className="btn-clear"
+          style={{
+            padding: "10px 20px",
+            background: "#dc3545",
+            color: "white",
+            border: "none",
+            borderRadius: 4,
+            cursor: "pointer",
+            fontSize: 14,
+            fontWeight: "bold"
+          }}
+        >
+          Очистить квест
+        </button>
+      </div>
 
       <div style={{ display: "flex", gap: 20 }}>
         {/* Вертикальная панель с комнатами */}
         <div className="rooms-sidebar" style={{
-          width: 120,
+          width: 140,
           height: 500,
           overflowY: "auto",
           border: "1px solid #ddd",
@@ -364,15 +509,23 @@ export default function CreateQuest() {
           {rooms.map((room, index) => (
             <div
               key={room.template.id}
-              onClick={() => setCurrentRoomIndex(index)}
+              draggable
+              onDragStart={(e) => handleDragStart(index, e)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDrop={(e) => handleDrop(e, index)}
+              onDragEnd={handleDragEnd}
+              onClick={() => selectRoom(index)} // Восстанавливаем функционал выбора комнаты
               className="room-thumbnail"
               style={{
                 marginBottom: 10,
-                cursor: "pointer",
+                cursor: "grab",
                 border: index === currentRoomIndex ? "2px solid #007bff" : "1px solid #ddd",
                 borderRadius: 4,
                 padding: 5,
-                background: index === currentRoomIndex ? "#f0f7ff" : "white"
+                background: index === currentRoomIndex ? "#f0f7ff" : "white",
+                opacity: draggedRoomIndex === index ? 0.5 : 1,
+                position: "relative",
+                transition: "all 0.2s"
               }}
             >
               <img
@@ -382,11 +535,58 @@ export default function CreateQuest() {
                   width: "100%",
                   height: 80,
                   objectFit: "cover",
-                  borderRadius: 4
+                  borderRadius: 4,
+                  pointerEvents: "none"
                 }}
               />
-              <div style={{ fontSize: 12, textAlign: "center", marginTop: 5 }}>
+              <div style={{ fontSize: 12, textAlign: "center", marginTop: 5, paddingRight: 20 }}>
                 {room.template.name}
+              </div>
+              
+              {/* Кнопка удаления комнаты */}
+              <button
+                onClick={(e) => removeRoom(index, e)}
+                className="btn-remove-room"
+                style={{
+                  position: "absolute",
+                  top: 2,
+                  right: 2,
+                  width: 20,
+                  height: 20,
+                  background: "#dc3545",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "50%",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 12,
+                  fontWeight: "bold",
+                  zIndex: 10
+                }}
+                title="Удалить комнату"
+              >
+                ✕
+              </button>
+              
+              {/* Индикатор порядка */}
+              <div style={{
+                position: "absolute",
+                top: 2,
+                left: 2,
+                background: "rgba(0,0,0,0.5)",
+                color: "white",
+                width: 20,
+                height: 20,
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 11,
+                zIndex: 10
+              }}>
+                {index + 1}
               </div>
             </div>
           ))}
