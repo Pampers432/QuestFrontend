@@ -71,7 +71,7 @@ export default function Navbar() {
         )}
 
         {canManageTemplates(role) && (
-          <Link href="/" className={styles.link}>
+          <Link href="/Templates/CreateTemplate" className={styles.link}>
             Редактор шаблонов
           </Link>
         )}

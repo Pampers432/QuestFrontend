@@ -9,6 +9,7 @@ export const TemplateCard = ({ template }: { template: RoomTemplate }) => {
   const router = useRouter();
 
   const zonesCount = calculateZonesCount(template.sceneData);
+  const doorCount = calculateDoorCount(template.sceneData);
 
   return (
     <div className={styles.card}>
@@ -25,25 +26,39 @@ export const TemplateCard = ({ template }: { template: RoomTemplate }) => {
       <p>
         Вопросов: <b>{zonesCount}</b>
       </p>
+      <p>
+        Дверей: <b>{doorCount}</b>
+      </p>
 
-      <button
-        className={styles.button}
-        onClick={() => {
-          const saved = localStorage.getItem("selectedTemplates");
-          const templates = saved ? JSON.parse(saved) : [];
+      <div className={styles.actions}>
+        <button
+          className={styles.button}
+          onClick={() => {
+            const saved = localStorage.getItem("selectedTemplates");
+            const templates = saved ? JSON.parse(saved) : [];
 
-          const exists = templates.some((t: RoomTemplate) => t.id === template.id);
-          if (!exists) {
-            templates.push(template);
-          }
+            const exists = templates.some((t: RoomTemplate) => t.id === template.id);
+            if (!exists) {
+              templates.push(template);
+            }
 
-          localStorage.setItem("selectedTemplates", JSON.stringify(templates));
+            localStorage.setItem("selectedTemplates", JSON.stringify(templates));
 
-          router.push("/Templates/CreateQuest");
-        }}
-      >
-        Использовать
-      </button>
+            router.push("/Templates/CreateQuest");
+          }}
+        >
+          Использовать
+        </button>
+
+        {template.id && (
+          <button
+            className={styles.secondaryButton}
+            onClick={() => router.push(`/Templates/EditTemplate/${template.id}`)}
+          >
+            Редактировать
+          </button>
+        )}
+      </div>
     </div>
   );
 };

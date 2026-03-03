@@ -12,12 +12,28 @@
   border-radius: 6px;
 }
 
-.button {
+.actions {
   margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.button {
   padding: 8px 12px;
   background: #1e1e1e;
   color: white;
   border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 15px;
+}
+
+.secondaryButton {
+  padding: 8px 12px;
+  background: #f2f2f2;
+  color: #1e1e1e;
+  border: 1px solid #ccc;
   border-radius: 6px;
   cursor: pointer;
   width: 100%;

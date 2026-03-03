@@ -25,5 +25,9 @@ export function useZones(initial: QuestionPosition[]) {
     console.log(JSON.stringify(zones, null, 2));
   };
 
-  return { zones, addZone, updateZone, printZones };
+  const removeZone = (index: number) => {
+    setZones((prev) => prev.filter((_, zoneIndex) => zoneIndex !== index));
+  };
+
+  return { zones, addZone, updateZone, printZones, setZones, removeZone };
 }
