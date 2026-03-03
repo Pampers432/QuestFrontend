@@ -34,9 +34,13 @@ export default function EditTemplatePage({ params }: { params: { id: string } })
         initialZones={template.sceneData}
         initialPreviewUrl={`https://localhost:7240${template.previewImageUrl}`}
         onSubmit={async (payload) => {
-          await updateTemplate(params.id, payload);
-          alert("Шаблон успешно обновлен");
-          router.push("/Templates");
+          try {
+            await updateTemplate(params.id, payload);
+            alert("Шаблон успешно обновлен");
+            router.push("/Templates");
+          } catch {
+            alert("Не удалось обновить шаблон");
+          }
         }}
       />
     </RoleGuard>

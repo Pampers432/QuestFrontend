@@ -16,9 +16,13 @@ export default function CreateTemplatePage() {
       <TemplateEditorForm
         mode="create"
         onSubmit={async (payload) => {
-          await createTemplate(payload);
-          alert("Шаблон успешно создан");
-          router.push("/Templates");
+          try {
+            await createTemplate(payload);
+            alert("Шаблон успешно создан");
+            router.push("/Templates");
+          } catch {
+            alert("Не удалось создать шаблон");
+          }
         }}
       />
     </RoleGuard>

@@ -29,5 +29,5 @@ export function useZones(initial: QuestionPosition[]) {
     setZones((prev) => prev.filter((_, zoneIndex) => zoneIndex !== index));
   };
 
-  return { zones, addZone, updateZone, printZones, setZones, removeZone };
+  return { zones, addZone, updateZone, printZones, removeZone };
 }

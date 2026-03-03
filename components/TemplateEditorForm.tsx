@@ -47,6 +47,8 @@ export function TemplateEditorForm({
     setPreviewUrl(URL.createObjectURL(file));
   };
 
+  const hasDoorZone = zones.some((zone) => zone.name.trim().toLowerCase() === "door");
+
   const saveTemplate = async () => {
     if (!templateName.trim()) {
       alert("Введите название шаблона");
@@ -55,6 +57,11 @@ export function TemplateEditorForm({
 
     if (!previewUrl) {
       alert("Загрузите изображение комнаты");
+      return;
+    }
+
+    if (!hasDoorZone) {
+      alert("В шаблоне обязательно должна быть зона door");
       return;
     }
 
@@ -102,7 +109,9 @@ export function TemplateEditorForm({
                 <input
                   className="editor-input"
                   value={zone.name}
+                  disabled={isDoor}
                   onChange={(e) => updateZone(index, { name: e.target.value })}
+                  title={isDoor ? "Название зоны door нельзя менять" : "Название объекта"}
                 />
 
                 <button
@@ -119,6 +128,9 @@ export function TemplateEditorForm({
             );
           })}
         </div>
+        <p style={{ marginTop: 8, color: "#666" }}>
+          Зона <b>door</b> обязательна и не может быть удалена или переименована.
+        </p>
       </div>
     </div>
   );
