@@ -60,7 +60,7 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
         setPreviewUrl(
           normalized.previewImageUrl?.startsWith("http")
             ? normalized.previewImageUrl
-            : `https://localhost:7240${normalized.previewImageUrl}`
+            : `https://localhost:7240${normalized.previewImage}`
         );
       })
       .catch((error) => {
@@ -85,32 +85,34 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
 
     setSaving(true);
     try {
-      const res = await fetch(`https://localhost:7240/api/Quests/${template.id}`, {
+        const res = await fetch(`https://localhost:7240/api/Quests/${template.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: templateName,
-          previewImageUrl: template.previewImageUrl,
-          sceneData: zones
+            name: templateName,
+            description: null,
+            previewImageUrl: template.previewImage, 
+            sceneData: JSON.stringify(zones)
         })
-      });
+        });
 
-      if (!res.ok) {
+        if (!res.ok) {
         const errorData = await res.text();
         throw new Error(errorData || "Ошибка при сохранении");
-      }
+        }
 
-      alert("Сохранено!");
-      router.push("/Templates");
+        alert("Сохранено!");
+        router.push("/Templates");
     } catch (error) {
-      console.error("Ошибка сохранения:", error);
-      alert(
+        console.error("Ошибка сохранения:", error);
+        alert(
         `Ошибка при сохранении: ${error instanceof Error ? error.message : "Неизвестная ошибка"}`
-      );
+        );
     } finally {
-      setSaving(false);
+        setSaving(false);
     }
-  };
+    };
+
 
   if (loading) return <div style={{ padding: 24 }}>Загрузка...</div>;
   if (!template) return <div style={{ padding: 24 }}>Шаблон не найден</div>;
