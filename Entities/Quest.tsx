@@ -1,5 +1,11 @@
 import { QuestRoom } from "./QuestRoom";
 
+export interface Category {
+  id: string;
+  name: string;
+  description?: string;
+}
+
 export interface Quest {
   id: string;
 
@@ -11,6 +17,8 @@ export interface Quest {
 
   authorId: string;
   status: string;
+  categoryId?: string;
+  category?: Category;
 
   questRooms: QuestRoom[];
 }

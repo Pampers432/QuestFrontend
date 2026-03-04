@@ -74,6 +74,12 @@ export default function Navbar() {
           Квесты
         </Link>
 
+        {canManageTemplates(role) && (
+          <Link href="/Categories" className={styles.link}>
+            Категории
+          </Link>
+        )}
+
         <Link href="/Auth" className={styles.link}>
           Вход / Регистрация
         </Link>

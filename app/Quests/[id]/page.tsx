@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Quest } from "@/Entities/Quest";
 import { useRouter } from "next/navigation";
+import { getStoredRole } from "@/utils/auth";
 
 export default function QuestPage({ params }: { params: { id: string } }) {
   const [quest, setQuest] = useState<Quest | null>(null);
@@ -76,7 +77,13 @@ export default function QuestPage({ params }: { params: { id: string } }) {
   const session = await res.json();
 
   localStorage.setItem("activeSession", JSON.stringify(session));
-  router.push(`/Session/${session.id}`);
+  
+  const role = getStoredRole();
+  if (role === "Teacher" || role === "Admin") {
+    router.push(`/Sessions/Dashboard/${session.id}`);
+  } else {
+    router.push(`/Session/${session.id}`);
+  }
 };
 
 

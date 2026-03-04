@@ -7,6 +7,7 @@ import { CreateQuestRequest, CreateQuestRoomRequest, CreateQuestionRequest, Crea
 import { Question } from "@/Entities/Question";
 import { AnswerOption } from "@/Entities/AnswerOption";
 import RoleGuard from "@/components/RoleGuard";
+import { fetchCategories } from "@/services/categoriesService";
 
 type LocalQuestionState = {
   text: string;
@@ -38,8 +39,11 @@ export default function CreateQuest() {
     description: "",
     subject: "",
     difficulty: "Easy",
-    status: "Draft"
+    status: "Draft",
+    categoryId: "" as string | undefined
   });
+
+  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
 
   const addOption = (zoneName: string) => {
     setRooms(prev => {
@@ -219,7 +223,8 @@ export default function CreateQuest() {
         description: "",
         subject: "",
         difficulty: "Easy",
-        status: "Draft"
+        status: "Draft",
+        categoryId: undefined
       });
       setCurrentRoomIndex(0);
       
@@ -247,6 +252,12 @@ export default function CreateQuest() {
       [name]: value
     }));
   };
+
+  useEffect(() => {
+    fetchCategories()
+      .then(setCategories)
+      .catch(console.error);
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem("selectedTemplates");
@@ -376,6 +387,7 @@ export default function CreateQuest() {
       subject: questData.subject,
       difficulty: questData.difficulty,
       status: questData.status,
+      categoryId: questData.categoryId || undefined,
       rooms: rooms.map((room, roomIndex): CreateQuestRoomRequest => ({
         roomTemplateId: room.template.id!,
         title: room.title,
@@ -692,6 +704,21 @@ export default function CreateQuest() {
             className="quest-input"
             style={{ width: "100%", marginBottom: 10, padding: 8 }}
           />
+
+          <select
+            name="categoryId"
+            value={questData.categoryId || ""}
+            onChange={(e) => setQuestData(prev => ({ ...prev, categoryId: e.target.value || undefined }))}
+            className="quest-select"
+            style={{ width: "100%", marginBottom: 10, padding: 8 }}
+          >
+            <option value="">Выберите категорию (необязательно)</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
 
           <select
             name="difficulty"

@@ -4,6 +4,7 @@ export interface CreateQuestRequest {
   subject: string;
   difficulty: string;
   status: string;
+  categoryId?: string;
 
   rooms: CreateQuestRoomRequest[];
 }

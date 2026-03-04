@@ -28,21 +28,22 @@ export default function SessionAccessPage() {
   const [error, setError] = useState("");
 
   const getSessionByCode = async (code: string) => {
-    const requests = [
-      `${API}/ByAccessCode/${encodeURIComponent(code)}`,
-      `${API}/GetByAccessCode/${encodeURIComponent(code)}`,
-      `${API}?accessCode=${encodeURIComponent(code)}`
-    ];
+    try {
+      const res = await fetch(`${API}/GetByAccessCode/${encodeURIComponent(code)}`);
+      
+      if (!res.ok) {
+        if (res.status === 404) {
+          return null;
+        }
+        throw new Error(`HTTP ${res.status}`);
+      }
 
-    for (const url of requests) {
-      const res = await fetch(url);
-      if (!res.ok) continue;
-
-      const session = (await res.json()) as SessionPayload;
-      if (session?.id) return session;
+      const session = await res.json();
+      return session;
+    } catch (error) {
+      console.error("Error fetching session:", error);
+      return null;
     }
-
-    return null;
   };
 
   const handleSubmit = async (event: FormEvent) => {
@@ -60,7 +61,7 @@ export default function SessionAccessPage() {
     try {
       const session = await getSessionByCode(trimmedCode);
 
-      if (!session) {
+      if (!session || !session.id) {
         setError("Сессия с таким AccessCode не найдена");
         return;
       }
@@ -70,7 +71,7 @@ export default function SessionAccessPage() {
         return;
       }
 
-      const quest = resolveQuest(session);
+      const quest = session.quest || resolveQuest(session);
       if (!quest) {
         setError("Не удалось получить данные теста для сессии");
         return;
