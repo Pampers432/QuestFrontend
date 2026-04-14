@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { fetchSessionDashboard, exportSessionReport, SessionDashboard } from "@/services/sessionsService";
 import { getStoredRole } from "@/utils/auth";
 import RoleGuard from "@/components/RoleGuard";
+import * as XLSX from 'xlsx';
 
-export default function SessionDashboardPage({ params }: { params: { id: string } }) {
+export default function SessionDashboardPage() {
+  const params = useParams();
+  const id = params.id as string;
+  
   const router = useRouter();
   const [dashboard, setDashboard] = useState<SessionDashboard | null>(null);
   const [loading, setLoading] = useState(true);
@@ -19,25 +23,125 @@ export default function SessionDashboardPage({ params }: { params: { id: string 
       return;
     }
 
-    fetchSessionDashboard(params.id)
+    fetchSessionDashboard(id)
       .then(setDashboard)
       .catch((err) => setError(err.message || "Ошибка загрузки дашборда"))
       .finally(() => setLoading(false));
-  }, [params.id, router]);
+  }, [id, router]);
 
-  const handleExport = async (format: "json" | "csv") => {
+  const exportToXLSX = () => {
+    if (!dashboard) return;
+
     try {
-      const blob = await exportSessionReport(params.id, format);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `session_${params.id}_${new Date().toISOString().split("T")[0]}.${format}`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      // Подготовка данных для Excel
+      const sessionInfo = [
+        ["Информация о сессии"],
+        ["Код доступа", dashboard.accessCode],
+        ["Название квеста", dashboard.questTitle],
+        ["Дата начала", new Date(dashboard.startsAt).toLocaleString()],
+        ["Дата окончания", dashboard.endsAt ? new Date(dashboard.endsAt).toLocaleString() : "-"],
+        ["Статус", dashboard.isActive ? "Активна" : "Завершена"],
+        ["Всего попыток", dashboard.totalAttempts],
+        ["Завершено", dashboard.completedAttempts],
+        []
+      ];
+
+      // Заголовки для таблицы результатов
+      const resultsHeaders = [
+        ["Результаты прохождения"],
+        ["Ученик", "Статус", "Баллы", "Макс. баллы", "Начало", "Завершение", "Процент выполнения"]
+      ];
+
+      // Данные по попыткам
+      const resultsData = dashboard.attempts.map(attempt => {
+        const percentage = attempt.maxScore > 0 
+          ? Math.round((attempt.score / attempt.maxScore) * 100) 
+          : 0;
+        
+        return [
+          attempt.username,
+          attempt.status === "completed" ? "Завершено" : "В процессе",
+          attempt.score,
+          attempt.maxScore,
+          new Date(attempt.startedAt).toLocaleString(),
+          attempt.finishedAt ? new Date(attempt.finishedAt).toLocaleString() : "-",
+          `${percentage}%`
+        ];
+      });
+
+      // Итоговая статистика
+      const summary = [
+        [],
+        ["Статистика"],
+        ["Средний балл", dashboard.attempts.length > 0 
+          ? (dashboard.attempts.reduce((sum, a) => sum + a.score, 0) / dashboard.attempts.length).toFixed(2)
+          : 0
+        ],
+        ["Максимальный балл", dashboard.attempts.length > 0 
+          ? Math.max(...dashboard.attempts.map(a => a.score))
+          : 0
+        ],
+        ["Минимальный балл", dashboard.attempts.length > 0 
+          ? Math.min(...dashboard.attempts.map(a => a.score))
+          : 0
+        ]
+      ];
+
+      // Объединяем все данные
+      const worksheetData = [
+        ...sessionInfo,
+        ...resultsHeaders,
+        ...resultsData,
+        ...summary
+      ];
+
+      // Создаем рабочий лист
+      const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+
+      // Настраиваем ширину колонок
+      ws['!cols'] = [
+        { wch: 25 }, // Ученик
+        { wch: 15 }, // Статус
+        { wch: 10 }, // Баллы
+        { wch: 12 }, // Макс. баллы
+        { wch: 20 }, // Начало
+        { wch: 20 }, // Завершение
+        { wch: 15 }  // Процент
+      ];
+
+      // Создаем книгу и добавляем лист
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Результаты сессии");
+
+      // Генерируем имя файла
+      const fileName = `session_${dashboard.questTitle}_${new Date().toISOString().split('T')[0]}.xlsx`
+        .replace(/[^a-zA-Z0-9а-яА-Я._-]/g, '_'); // Убираем спецсимволы
+
+      // Сохраняем файл
+      XLSX.writeFile(wb, fileName);
     } catch (err) {
-      alert("Ошибка экспорта отчета");
+      console.error("Ошибка экспорта:", err);
+      alert("Ошибка при создании Excel файла");
+    }
+  };
+
+  const handleExport = async (format: "json" | "xlsx") => {
+    if (format === "xlsx") {
+      exportToXLSX();
+    } else {
+      try {
+        const blob = await exportSessionReport(id, format);
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `session_${id}_${new Date().toISOString().split("T")[0]}.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } catch (err) {
+        alert("Ошибка экспорта отчета");
+      }
     }
   };
 
@@ -110,7 +214,7 @@ export default function SessionDashboardPage({ params }: { params: { id: string 
               Экспорт JSON
             </button>
             <button
-              onClick={() => handleExport("csv")}
+              onClick={() => handleExport("xlsx")}
               style={{
                 padding: "8px 16px",
                 background: "#28a745",
@@ -120,7 +224,7 @@ export default function SessionDashboardPage({ params }: { params: { id: string 
                 cursor: "pointer"
               }}
             >
-              Экспорт CSV
+              Экспорт Excel
             </button>
           </div>
         </div>
@@ -133,7 +237,7 @@ export default function SessionDashboardPage({ params }: { params: { id: string 
         }}>
           <div style={{
             display: "grid",
-            gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr",
+            gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr",
             gap: "10px",
             padding: "15px",
             background: "#f8f9fa",
@@ -144,6 +248,7 @@ export default function SessionDashboardPage({ params }: { params: { id: string 
             <div>Статус</div>
             <div>Баллы</div>
             <div>Макс. баллы</div>
+            <div>%</div>
             <div>Начало</div>
             <div>Завершение</div>
           </div>
@@ -153,40 +258,54 @@ export default function SessionDashboardPage({ params }: { params: { id: string 
               Пока нет попыток прохождения
             </div>
           ) : (
-            dashboard.attempts.map((attempt) => (
-              <div
-                key={attempt.attemptId}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr",
-                  gap: "10px",
-                  padding: "15px",
-                  borderBottom: "1px solid #eee",
-                  alignItems: "center"
-                }}
-              >
-                <div>{attempt.username}</div>
-                <div>
-                  <span style={{
-                    padding: "4px 8px",
-                    borderRadius: "4px",
-                    fontSize: "12px",
-                    background: attempt.status === "completed" ? "#d4edda" : "#fff3cd",
-                    color: attempt.status === "completed" ? "#155724" : "#856404"
-                  }}>
-                    {attempt.status === "completed" ? "Завершено" : "В процессе"}
-                  </span>
+            dashboard.attempts.map((attempt) => {
+              const percentage = attempt.maxScore > 0 
+                ? Math.round((attempt.score / attempt.maxScore) * 100) 
+                : 0;
+              
+              return (
+                <div
+                  key={attempt.attemptId}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr",
+                    gap: "10px",
+                    padding: "15px",
+                    borderBottom: "1px solid #eee",
+                    alignItems: "center"
+                  }}
+                >
+                  <div>{attempt.username}</div>
+                  <div>
+                    <span style={{
+                      padding: "4px 8px",
+                      borderRadius: "4px",
+                      fontSize: "12px",
+                      background: attempt.status === "completed" ? "#d4edda" : "#fff3cd",
+                      color: attempt.status === "completed" ? "#155724" : "#856404"
+                    }}>
+                      {attempt.status === "completed" ? "Завершено" : "В процессе"}
+                    </span>
+                  </div>
+                  <div style={{ fontWeight: "bold" }}>{attempt.score}</div>
+                  <div>{attempt.maxScore}</div>
+                  <div>
+                    <span style={{
+                      color: percentage >= 80 ? "#28a745" : percentage >= 60 ? "#ffc107" : "#dc3545",
+                      fontWeight: "bold"
+                    }}>
+                      {percentage}%
+                    </span>
+                  </div>
+                  <div style={{ fontSize: "14px" }}>
+                    {new Date(attempt.startedAt).toLocaleString()}
+                  </div>
+                  <div style={{ fontSize: "14px" }}>
+                    {attempt.finishedAt ? new Date(attempt.finishedAt).toLocaleString() : "-"}
+                  </div>
                 </div>
-                <div style={{ fontWeight: "bold" }}>{attempt.score}</div>
-                <div>{attempt.maxScore}</div>
-                <div style={{ fontSize: "14px" }}>
-                  {new Date(attempt.startedAt).toLocaleString()}
-                </div>
-                <div style={{ fontSize: "14px" }}>
-                  {attempt.finishedAt ? new Date(attempt.finishedAt).toLocaleString() : "-"}
-                </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
@@ -201,7 +320,11 @@ export default function SessionDashboardPage({ params }: { params: { id: string 
         }}>
           <div>
             <strong>Всего попыток:</strong> {dashboard.totalAttempts} |{" "}
-            <strong>Завершено:</strong> {dashboard.completedAttempts}
+            <strong>Завершено:</strong> {dashboard.completedAttempts} |{" "}
+            <strong>Средний балл:</strong> {dashboard.attempts.length > 0 
+              ? (dashboard.attempts.reduce((sum, a) => sum + a.score, 0) / dashboard.attempts.length).toFixed(1)
+              : 0
+            }
           </div>
           <button
             onClick={() => router.back()}
@@ -221,4 +344,3 @@ export default function SessionDashboardPage({ params }: { params: { id: string 
     </RoleGuard>
   );
 }
-

@@ -14,6 +14,10 @@ export const fetchCategories = async (): Promise<Category[]> => {
 
 export const createCategory = async (category: { name: string; description?: string }): Promise<Category> => {
   const token = localStorage.getItem("auth_token");
+  if (!token) {
+    throw new Error("Токен авторизации не найден. Пожалуйста, войдите в систему.");
+  }
+
   const res = await fetch(API_BASE_URL, {
     method: "POST",
     headers: {
@@ -22,15 +26,26 @@ export const createCategory = async (category: { name: string; description?: str
     },
     body: JSON.stringify(category)
   });
+  
   if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.message || "Ошибка создания категории");
+    let errorMessage = "Ошибка создания категории";
+    try {
+      const error = await res.json();
+      errorMessage = error.message || errorMessage;
+    } catch {
+      errorMessage = `Ошибка ${res.status}: ${res.statusText}`;
+    }
+    throw new Error(errorMessage);
   }
   return await res.json();
 };
 
 export const updateCategory = async (id: string, category: { name: string; description?: string }): Promise<Category> => {
   const token = localStorage.getItem("auth_token");
+  if (!token) {
+    throw new Error("Токен авторизации не найден. Пожалуйста, войдите в систему.");
+  }
+
   const res = await fetch(`${API_BASE_URL}/${id}`, {
     method: "PUT",
     headers: {
@@ -39,21 +54,48 @@ export const updateCategory = async (id: string, category: { name: string; descr
     },
     body: JSON.stringify(category)
   });
+  
   if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.message || "Ошибка обновления категории");
+    let errorMessage = "Ошибка обновления категории";
+    try {
+      const error = await res.json();
+      errorMessage = error.message || errorMessage;
+    } catch {
+      errorMessage = `Ошибка ${res.status}: ${res.statusText}`;
+    }
+    throw new Error(errorMessage);
   }
   return await res.json();
 };
 
 export const deleteCategory = async (id: string): Promise<void> => {
   const token = localStorage.getItem("auth_token");
+  if (!token) {
+    throw new Error("Токен авторизации не найден. Пожалуйста, войдите в систему.");
+  }
+
   const res = await fetch(`${API_BASE_URL}/${id}`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`
     }
   });
-  if (!res.ok) throw new Error("Ошибка удаления категории");
+  
+  if (!res.ok) {
+    let errorMessage = "Ошибка удаления категории";
+    try {
+      const error = await res.json();
+      errorMessage = error.message || errorMessage;
+    } catch {
+      errorMessage = `Ошибка ${res.status}: ${res.statusText}`;
+    }
+    throw new Error(errorMessage);
+  }
+  
+  // DELETE может вернуть пустой ответ или JSON с сообщением
+  try {
+    await res.json();
+  } catch {
+    // Игнорируем, если ответ пустой
+  }
 };
-

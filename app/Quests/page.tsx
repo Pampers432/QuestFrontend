@@ -7,6 +7,8 @@ import { fetchCategories } from "@/services/categoriesService";
 import { QuestCard } from "@/components/QuestCard";
 import styles from "./QuestsPage.module.css";
 import { useRouter } from "next/navigation";
+import RoleGuard from "@/components/RoleGuard";
+import { getStoredRole } from "@/utils/auth";
 
 export default function QuestsPage() {
   const [quests, setQuests] = useState<Quest[]>([]);
@@ -89,10 +91,15 @@ export default function QuestsPage() {
           <QuestCard key={quest.id} quest={quest} />
         ))}
 
-        <div className={styles.addCard} onClick={() => router.push("/Quests/CreateQuest")}>
-          <div className={styles.plus}>+</div>
-          <div className={styles.addText}>Добавить квест</div>
-        </div>
+        {(() => {
+          const role = getStoredRole();
+          return (role === "Teacher" || role === "Admin") && (
+            <div className={styles.addCard} onClick={() => router.push("/Quests/CreateQuest")}>
+              <div className={styles.plus}>+</div>
+              <div className={styles.addText}>Добавить квест</div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

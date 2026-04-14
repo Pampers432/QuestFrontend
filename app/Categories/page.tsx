@@ -73,7 +73,7 @@ export default function CategoriesPage() {
       await deleteCategory(id);
       await loadCategories();
     } catch (err) {
-      alert("Ошибка удаления категории");
+      alert(err instanceof Error ? err.message : "Ошибка удаления категории");
     }
   };
 
@@ -223,4 +223,3 @@ export default function CategoriesPage() {
     </RoleGuard>
   );
 }
-
