@@ -24,6 +24,10 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
 
   const [doorMessage, setDoorMessage] = useState<string | null>(null);
   const [finishMessage, setFinishMessage] = useState<string | null>(null);
+
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+  const [textAnswer, setTextAnswer] = useState("");
+  const [numberAnswer, setNumberAnswer] = useState("");
   
   const goToResults = () => {
     setFinishMessage(null);
@@ -124,20 +128,55 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
   if (!room || !activeSession || !quest)
     return <div>Загрузка...</div>;
 
-  const handleAnswer = async (option: any, question: any) => {
-    const isCorrect = option.isCorrect;
-    const points = isCorrect ? question.points ?? 1 : 0;
+  const handleAnswer = async (option?: any, question?: any, answerValue?: string) => {
+    let isCorrect = false;
+    let points = 0;
+
+    if (question.type === "text_input" || question.type === "number_input") {
+      const correctOption = question.answerOptions?.[0];
+      if (correctOption) {
+        if (question.type === "text_input") {
+          isCorrect = answerValue?.trim().toLowerCase() === correctOption.text?.trim().toLowerCase();
+        } else {
+          isCorrect = parseFloat(answerValue) === parseFloat(correctOption.text);
+        }
+      }
+      points = isCorrect ? question.points ?? 1 : 0;
+    } else if (selectedOptions.length > 0) {
+      const correctOptions = question.answerOptions?.filter((o: any) => o.isCorrect) || [];
+      
+      if (question.type === "single_choice") {
+        isCorrect = correctOptions.some((o: any) => o.id === selectedOptions[0]);
+        points = isCorrect ? question.points ?? 1 : 0;
+      } else if (question.type === "multiple_choice") {
+        const selectedCorrect = correctOptions.filter((o: any) => 
+          selectedOptions.includes(o.id)
+        ).length;
+        isCorrect = selectedCorrect === correctOptions.length && selectedCorrect === selectedOptions.length;
+        points = isCorrect ? question.points ?? 1 : 0;
+      }
+    } else if (option) {
+      isCorrect = option.isCorrect;
+      points = isCorrect ? question.points ?? 1 : 0;
+    } else {
+      return;
+    }
 
     const updatedSession = { ...activeSession };
+
+    const answerData: any = {
+      selected_options: selectedOptions
+    };
+    if (question.type === "text_input" || question.type === "number_input") {
+      answerData.text_answer = answerValue;
+    }
 
     updatedSession.attempts.push({
       questionId: question.id,
       isCorrect,
       pointsAwarded: points,
       answeredAt: new Date().toISOString(),
-      answerData: JSON.stringify({
-        selected_options: [option.id]
-      })
+      answerData: JSON.stringify(answerData)
     });
 
     updatedSession.score += points;
@@ -151,15 +190,16 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
       body: JSON.stringify({
         attemptId: updatedSession.attemptId,
         questionId: question.id,
-        answerData: JSON.stringify({
-          selected_options: [option.id]
-        }),
+        answerData: JSON.stringify(answerData),
         isCorrect,
         pointsAwarded: points
       })
     });
 
     setActiveQuestion(null);
+    setSelectedOptions([]);
+    setTextAnswer("");
+    setNumberAnswer("");
   };
 
   const handleDoorClick = async () => {
@@ -194,7 +234,14 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
     }
 
     const answeredIds = activeSession.attempts.map((a: any) => a.questionId);
-    const unanswered = room.questions.filter(
+    
+    // Filter questions (exclude door zones)
+    const validQuestions = room.questions.filter((q: any) => {
+      const targetObj = q.targetObject?.toLowerCase();
+      return targetObj && targetObj !== "door";
+    });
+    
+    const unanswered = validQuestions.filter(
       (q: any) => !answeredIds.includes(q.id)
     );
 
@@ -227,10 +274,21 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
       return;
     }
 
-    const question = room.questions[zoneIndex];
+    // Try to find by targetObject first (new format), fallback to index (old format)
+    let question = room.questions.find(
+      (q: any) => q.targetObject === zone.name
+    );
+
+    // Fallback: for old quests without targetObject, use zoneIndex
+    if (!question && room.questions[zoneIndex]) {
+      question = room.questions[zoneIndex];
+    }
 
     if (question) {
       setActiveQuestion(question);
+      setSelectedOptions([]);
+      setTextAnswer("");
+      setNumberAnswer("");
     } else {
       setActiveQuestion({
         text: "Для этой зоны нет вопроса",
@@ -334,20 +392,194 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
 
       {/* Модалка вопроса */}
       {activeQuestion && (
-        <Modal onClose={() => setActiveQuestion(null)}>
-          <h2>{activeQuestion.text}</h2>
+        <Modal onClose={() => { setActiveQuestion(null); setSelectedOptions([]); setTextAnswer(""); setNumberAnswer(""); }}>
+          <h2 style={{ marginBottom: 20, fontSize: 24 }}>{activeQuestion.text}</h2>
+          
+          {/* Тип вопроса: Один вариант ответа (radio) */}
+          {activeQuestion.type === "single_choice" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+              {activeQuestion.answerOptions?.map((a: any, idx: number) => (
+                <label
+                  key={idx}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "10px 15px",
+                    border: "2px solid #ddd",
+                    borderRadius: 8,
+                    cursor: "pointer",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="answer"
+                    value={a.id}
+                    checked={selectedOptions.includes(a.id)}
+                    onChange={() => {
+                      setSelectedOptions([a.id]);
+                      setTimeout(() => {
+                        handleAnswer(a, activeQuestion);
+                      }, 100);
+                    }}
+                    style={{ width: 20, height: 20, cursor: "pointer" }}
+                  />
+                  <span style={{ fontSize: 16 }}>{a.text}</span>
+                </label>
+              ))}
+            </div>
+          )}
 
-          {activeQuestion.answerOptions?.map((a: any, idx: number) => (
-            <button
-              key={idx}
-              style={{ width: "100%", marginBottom: 10 }}
-              onClick={() => handleAnswer(a, activeQuestion)}
-            >
-              {a.text}
-            </button>
-          ))}
+          {/* Тип вопроса: Несколько вариантов ответа (checkbox) */}
+          {activeQuestion.type === "multiple_choice" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+              {activeQuestion.answerOptions?.map((a: any, idx: number) => (
+                <label
+                  key={idx}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    padding: "10px 15px",
+                    border: "2px solid #ddd",
+                    borderRadius: 8,
+                    cursor: "pointer",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedOptions.includes(a.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedOptions([...selectedOptions, a.id]);
+                      } else {
+                        setSelectedOptions(selectedOptions.filter(id => id !== a.id));
+                      }
+                    }}
+                    style={{ width: 20, height: 20, cursor: "pointer" }}
+                  />
+                  <span style={{ fontSize: 16 }}>{a.text}</span>
+                </label>
+              ))}
+              <button
+                onClick={() => handleAnswer(undefined, activeQuestion)}
+                disabled={selectedOptions.length === 0}
+                style={{
+                  marginTop: 10,
+                  padding: "12px 20px",
+                  background: selectedOptions.length === 0 ? "#ccc" : "#007bff",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 6,
+                  cursor: selectedOptions.length === 0 ? "not-allowed" : "pointer",
+                  fontSize: 16
+                }}
+              >
+                Ответить ({selectedOptions.length} выбрано)
+              </button>
+            </div>
+          )}
 
-          <button onClick={() => setActiveQuestion(null)}>
+          {/* Тип вопроса: Текстовый ответ */}
+          {activeQuestion.type === "text_input" && (
+            <div style={{ marginBottom: 20 }}>
+              <textarea
+                value={textAnswer}
+                onChange={(e) => setTextAnswer(e.target.value)}
+                placeholder="Введите ваш ответ..."
+                style={{
+                  width: "100%",
+                  padding: 12,
+                  fontSize: 16,
+                  border: "2px solid #ddd",
+                  borderRadius: 8,
+                  minHeight: 100,
+                  resize: "vertical"
+                }}
+              />
+              <button
+                onClick={() => handleAnswer(undefined, activeQuestion, textAnswer)}
+                disabled={!textAnswer.trim()}
+                style={{
+                  marginTop: 10,
+                  padding: "12px 20px",
+                  background: !textAnswer.trim() ? "#ccc" : "#007bff",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 6,
+                  cursor: !textAnswer.trim() ? "not-allowed" : "pointer",
+                  fontSize: 16
+                }}
+              >
+                Ответить
+              </button>
+            </div>
+          )}
+
+          {/* Тип вопроса: Числовой ответ */}
+          {activeQuestion.type === "number_input" && (
+            <div style={{ marginBottom: 20 }}>
+              <input
+                type="number"
+                value={numberAnswer}
+                onChange={(e) => setNumberAnswer(e.target.value)}
+                placeholder="Введите число..."
+                style={{
+                  width: "100%",
+                  padding: 12,
+                  fontSize: 16,
+                  border: "2px solid #ddd",
+                  borderRadius: 8,
+                  marginBottom: 10
+                }}
+              />
+              <button
+                onClick={() => handleAnswer(undefined, activeQuestion, numberAnswer)}
+                disabled={!numberAnswer.trim()}
+                style={{
+                  padding: "12px 20px",
+                  background: !numberAnswer.trim() ? "#ccc" : "#007bff",
+                  color: "white",
+                  border: "none",
+                  borderRadius: 6,
+                  cursor: !numberAnswer.trim() ? "not-allowed" : "pointer",
+                  fontSize: 16
+                }}
+              >
+                Ответить
+              </button>
+            </div>
+          )}
+
+          {/* Fallback для старых вопросов без типа */}
+          {!activeQuestion.type && activeQuestion.answerOptions?.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {activeQuestion.answerOptions?.map((a: any, idx: number) => (
+                <button
+                  key={idx}
+                  style={{ width: "100%", marginBottom: 10, padding: 12 }}
+                  onClick={() => handleAnswer(a, activeQuestion)}
+                >
+                  {a.text}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <button 
+            onClick={() => { setActiveQuestion(null); setSelectedOptions([]); setTextAnswer(""); setNumberAnswer(""); }}
+            style={{
+              marginTop: 10,
+              padding: "8px 16px",
+              background: "#6c757d",
+              color: "white",
+              border: "none",
+              borderRadius: 6,
+              cursor: "pointer"
+            }}
+          >
             Закрыть
           </button>
         </Modal>
@@ -382,7 +614,7 @@ function Modal({ children, onClose }: any) {
         top: 0,
         width: "100vw",
         height: "100vh",
-        background: "rgba(0,0,0,0.5)",
+        background: "rgba(0,0,0,0.7)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -393,9 +625,13 @@ function Modal({ children, onClose }: any) {
       <div
         style={{
           background: "white",
-          padding: 20,
-          borderRadius: 10,
-          minWidth: 350
+          padding: 40,
+          borderRadius: 16,
+          minWidth: 600,
+          maxWidth: "80vw",
+          maxHeight: "80vh",
+          overflowY: "auto",
+          boxShadow: "0 10px 40px rgba(0,0,0,0.3)"
         }}
         onClick={(e) => e.stopPropagation()}
       >

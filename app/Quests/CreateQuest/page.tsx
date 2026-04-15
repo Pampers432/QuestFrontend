@@ -14,7 +14,7 @@ type LocalQuestionState = {
   type: string;
   points: number;
   hint: string;
-  answerOptions: (AnswerOption & { id: string })[];
+  answerOptions?: (AnswerOption & { id: string })[];
 };
 
 type LocalRoomData = {
@@ -87,7 +87,7 @@ export default function CreateQuest() {
           ...currentRoom.questions,
           [zoneName]: {
             ...currentRoom.questions[zoneName],
-            answerOptions: currentRoom.questions[zoneName].answerOptions
+            answerOptions: (currentRoom.questions[zoneName].answerOptions || [])
               .filter(o => o.id !== optionId)
               .map((o, index) => ({ ...o, orderIndex: index }))
           }
@@ -111,7 +111,7 @@ export default function CreateQuest() {
             ...currentRoom.questions,
             [zoneName]: {
               ...question,
-              answerOptions: question.answerOptions.map(o => ({
+              answerOptions: (question.answerOptions || []).map(o => ({
                 ...o,
                 isCorrect: o.id === optionId
               }))
@@ -125,7 +125,7 @@ export default function CreateQuest() {
             ...currentRoom.questions,
             [zoneName]: {
               ...question,
-              answerOptions: question.answerOptions.map(o =>
+              answerOptions: (question.answerOptions || []).map(o =>
                 o.id === optionId ? { ...o, isCorrect: !o.isCorrect } : o
               )
             }
@@ -269,6 +269,10 @@ export default function CreateQuest() {
         const initialQuestions: any = {};
         
         template.sceneData.forEach((z, index) => {
+          if (z.name.trim().toLowerCase() === "door") {
+            return;
+          }
+          
           initialQuestions[z.name] = {
             text: "",
             type: "single_choice",
@@ -343,6 +347,10 @@ export default function CreateQuest() {
       const zoneEntries = Object.entries(room.questions);
 
       for (const [zoneName, question] of zoneEntries) {
+        if (zoneName.trim().toLowerCase() === "door") {
+          continue;
+        }
+
         if (!question.text.trim()) {
           alert(`В зоне "${zoneName}" комнаты "${room.template.name}" не введен текст вопроса`);
           return false;
@@ -350,22 +358,31 @@ export default function CreateQuest() {
 
         // Проверка вариантов ответа для типов с вариантами
         if (["single_choice", "multiple_choice"].includes(question.type)) {
-          if (question.answerOptions.length < 2) {
+          const options = question.answerOptions || [];
+          if (options.length < 2) {
             alert(`В зоне "${zoneName}" комнаты "${room.template.name}" должно быть минимум 2 варианта ответа`);
             return false;
           }
 
           // Проверка что все варианты заполнены
-          const emptyOptions = question.answerOptions.filter(opt => !opt.text?.trim());
+          const emptyOptions = options.filter(opt => !opt.text?.trim());
           if (emptyOptions.length > 0) {
             alert(`В зоне "${zoneName}" комнаты "${room.template.name}" есть пустые варианты ответа`);
             return false;
           }
 
           // Проверка что есть хотя бы один правильный ответ
-          const hasCorrect = question.answerOptions.some(opt => opt.isCorrect);
+          const hasCorrect = options.some(opt => opt.isCorrect);
           if (!hasCorrect) {
             alert(`В зоне "${zoneName}" комнаты "${room.template.name}" не выбран правильный ответ`);
+            return false;
+          }
+        }
+
+        // Проверка правильного ответа для text_input и number_input
+        if (["text_input", "number_input"].includes(question.type)) {
+          if (!question.answerOptions || question.answerOptions.length === 0 || !question.answerOptions[0]?.text?.trim()) {
+            alert(`В зоне "${zoneName}" комнаты "${room.template.name}" не введён правильный ответ`);
             return false;
           }
         }
@@ -392,18 +409,21 @@ export default function CreateQuest() {
         roomTemplateId: room.template.id!,
         title: room.title,
         orderIndex: roomIndex,
-        questions: Object.entries(room.questions).map(([zoneName, question], qIndex): CreateQuestionRequest => ({
-          text: question.text,
-          type: question.type,
-          points: question.points,
-          hint: question.hint || undefined,
-          orderIndex: qIndex,
-          answerOptions: question.answerOptions.map((opt, optIndex): CreateAnswerOptionRequest => ({
-            text: opt.text || undefined,
-            isCorrect: opt.isCorrect || false,
-            orderIndex: optIndex
+        questions: Object.entries(room.questions)
+          .filter(([zoneName]) => zoneName.trim().toLowerCase() !== "door")
+          .map(([zoneName, question], qIndex): CreateQuestionRequest => ({
+            text: question.text,
+            type: question.type,
+            points: question.points,
+            hint: question.hint || undefined,
+            targetObject: zoneName,
+            orderIndex: qIndex,
+            answerOptions: (question.answerOptions || []).map((opt, optIndex): CreateAnswerOptionRequest => ({
+              text: opt.text || undefined,
+              isCorrect: opt.isCorrect || false,
+              orderIndex: optIndex
+            }))
           }))
-        }))
       }))
     };
 
@@ -778,7 +798,9 @@ export default function CreateQuest() {
         Вопросы по зонам (Комната: {currentRoom.template.name})
       </h3>
 
-      {currentRoom.template.sceneData.map((zone, zoneIndex) => (
+      {currentRoom.template.sceneData
+        .filter((zone) => zone.name.trim().toLowerCase() !== "door")
+        .map((zone, zoneIndex) => (
         <div key={zone.name} className="question-card" style={{ 
           border: "1px solid #ddd", 
           padding: 20, 
@@ -801,35 +823,40 @@ export default function CreateQuest() {
               onChange={(e) => {
                 setRooms(prev => {
                   const newRooms = [...prev];
+                  const currentQuestion = newRooms[currentRoomIndex].questions[zone.name];
+                  const isChoiceType = e.target.value === "single_choice" || e.target.value === "multiple_choice";
+                  
                   newRooms[currentRoomIndex] = {
                     ...newRooms[currentRoomIndex],
                     questions: {
                       ...newRooms[currentRoomIndex].questions,
                       [zone.name]: {
-                        ...newRooms[currentRoomIndex].questions[zone.name],
+                        ...currentQuestion,
                         type: e.target.value,
-                        answerOptions: e.target.value === "single_choice" || e.target.value === "multiple_choice"
-                          ? [
-                              { 
-                                id: crypto.randomUUID(), 
-                                questionId: "",
-                                text: "", 
-                                isCorrect: false,
-                                matchPair: null,
-                                sequenceOrder: null,
-                                orderIndex: 0 
-                              },
-                              { 
-                                id: crypto.randomUUID(), 
-                                questionId: "",
-                                text: "", 
-                                isCorrect: false,
-                                matchPair: null,
-                                sequenceOrder: null,
-                                orderIndex: 1 
-                              }
-                            ]
-                          : []
+                        answerOptions: isChoiceType && currentQuestion?.answerOptions && currentQuestion.answerOptions.length >= 2 
+                          ? currentQuestion.answerOptions.slice(0, 2).map((opt, idx) => ({ ...opt, orderIndex: idx }))
+                          : isChoiceType
+                            ? [
+                                { 
+                                  id: crypto.randomUUID(), 
+                                  questionId: "",
+                                  text: "", 
+                                  isCorrect: false,
+                                  matchPair: null,
+                                  sequenceOrder: null,
+                                  orderIndex: 0 
+                                },
+                                { 
+                                  id: crypto.randomUUID(), 
+                                  questionId: "",
+                                  text: "", 
+                                  isCorrect: false,
+                                  matchPair: null,
+                                  sequenceOrder: null,
+                                  orderIndex: 1 
+                                }
+                              ]
+                            : []
                       }
                     }
                   };
@@ -919,6 +946,51 @@ export default function CreateQuest() {
             style={{ width: "100%", marginBottom: 15, padding: 8 }}
           />
 
+          {/* Для типов text_input и number_input - поле ввода правильного ответа */}
+          {currentRoom.questions[zone.name] && ["text_input", "number_input"].includes(
+            currentRoom.questions[zone.name]?.type
+          ) && (
+            <div style={{ marginTop: 10, marginBottom: 15 }}>
+              <div style={{ fontWeight: "bold", marginBottom: 10 }}>Правильный ответ:</div>
+              <input
+                type={currentRoom.questions[zone.name]?.type === "number_input" ? "number" : "text"}
+                placeholder={currentRoom.questions[zone.name]?.type === "number_input" ? "Введите число" : "Введите текст"}
+                value={currentRoom.questions[zone.name]?.answerOptions?.[0]?.text || ""}
+                onChange={(e) => {
+                  setRooms(prev => {
+                    const newRooms = [...prev];
+                    const currentOptions = newRooms[currentRoomIndex].questions[zone.name]?.answerOptions || [];
+                    const newOptions = currentOptions.length > 0
+                      ? currentOptions.map((opt, idx) => idx === 0 ? { ...opt, text: e.target.value, isCorrect: true, orderIndex: 0 } : { ...opt, orderIndex: idx + 1 })
+                      : [{ 
+                          id: crypto.randomUUID(), 
+                          questionId: "",
+                          text: e.target.value, 
+                          isCorrect: true,
+                          matchPair: null,
+                          sequenceOrder: null,
+                          orderIndex: 0 
+                        }];
+                    
+                    newRooms[currentRoomIndex] = {
+                      ...newRooms[currentRoomIndex],
+                      questions: {
+                        ...newRooms[currentRoomIndex].questions,
+                        [zone.name]: {
+                          ...newRooms[currentRoomIndex].questions[zone.name],
+                          answerOptions: newOptions
+                        }
+                      }
+                    };
+                    return newRooms;
+                  });
+                }}
+                className="quest-input"
+                style={{ width: "100%", padding: 8 }}
+              />
+            </div>
+          )}
+
           {/* Варианты ответа */}
           {currentRoom.questions[zone.name] && ["single_choice", "multiple_choice"].includes(
             currentRoom.questions[zone.name]?.type
@@ -926,7 +998,7 @@ export default function CreateQuest() {
             <div style={{ marginTop: 10 }}>
               <div style={{ fontWeight: "bold", marginBottom: 10 }}>Варианты ответа:</div>
               
-              {currentRoom.questions[zone.name]?.answerOptions.map(option => (
+              {(currentRoom.questions[zone.name]?.answerOptions || []).map(option => (
                 <div key={option.id} className="answer-row" style={{ 
                   display: "flex", 
                   gap: 10, 
@@ -955,7 +1027,7 @@ export default function CreateQuest() {
                             ...newRooms[currentRoomIndex].questions,
                             [zone.name]: {
                               ...newRooms[currentRoomIndex].questions[zone.name],
-                              answerOptions: newRooms[currentRoomIndex].questions[zone.name].answerOptions.map(o =>
+                              answerOptions: (newRooms[currentRoomIndex].questions[zone.name].answerOptions || []).map(o =>
                                 o.id === option.id
                                   ? { ...o, text: e.target.value }
                                   : o

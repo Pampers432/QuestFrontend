@@ -21,6 +21,7 @@ export interface CreateQuestionRequest {
   type: string;
   points: number;
   hint?: string;
+  targetObject?: string;
   orderIndex: number;
   answerOptions: CreateAnswerOptionRequest[];
 }
