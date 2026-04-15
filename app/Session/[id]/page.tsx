@@ -484,7 +484,7 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
 
           {/* Тип вопроса: Текстовый ответ */}
           {activeQuestion.type === "text_input" && (
-            <div style={{ marginBottom: 20 }}>
+            <div style={{ marginBottom: 20, width: "100%" }}>
               <textarea
                 value={textAnswer}
                 onChange={(e) => setTextAnswer(e.target.value)}
@@ -496,7 +496,8 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
                   border: "2px solid #ddd",
                   borderRadius: 8,
                   minHeight: 100,
-                  resize: "vertical"
+                  resize: "vertical",
+                  boxSizing: "border-box"
                 }}
               />
               <button
@@ -520,7 +521,7 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
 
           {/* Тип вопроса: Числовой ответ */}
           {activeQuestion.type === "number_input" && (
-            <div style={{ marginBottom: 20 }}>
+            <div style={{ marginBottom: 20, width: "100%" }}>
               <input
                 type="number"
                 value={numberAnswer}
@@ -532,7 +533,8 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
                   fontSize: 16,
                   border: "2px solid #ddd",
                   borderRadius: 8,
-                  marginBottom: 10
+                  marginBottom: 10,
+                  boxSizing: "border-box"
                 }}
               />
               <button
