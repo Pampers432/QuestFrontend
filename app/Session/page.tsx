@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
-const API = "https://localhost:7240/api/QuestSessions";
+const API_BASE = "http://localhost:7240";
 
 type SessionPayload = {
   id?: string;
@@ -29,7 +29,7 @@ export default function SessionAccessPage() {
 
   const getSessionByCode = async (code: string) => {
     try {
-      const res = await fetch(`${API}/GetByAccessCode/${encodeURIComponent(code)}`);
+      const res = await fetch(`${API_BASE}/api/QuestSessions/GetByAccessCode/${encodeURIComponent(code)}`);
       
       if (!res.ok) {
         if (res.status === 404) {

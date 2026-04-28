@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 export const QuestCard = ({ quest }: { quest: Quest }) => {
   const router = useRouter();
+  const baseUrl = "http://localhost:7240";
 
   return (
     <div className={styles.card}>
@@ -15,7 +16,7 @@ export const QuestCard = ({ quest }: { quest: Quest }) => {
         <p className={styles.description}>{quest.description}</p>
       )}
 
-      <img src={`https://localhost:7240${quest.questRooms[0].roomTemplate.previewImageUrl}`} style={{ width: "100%", borderRadius: 8 }} />
+      <img src={`${baseUrl}${quest.questRooms[0]?.roomTemplate?.previewImageUrl}`} style={{ width: "100%", borderRadius: 8 }} />
 
       <p className={styles.info}>
         Предмет: <b>{quest.subject}</b>

@@ -25,6 +25,9 @@ type LocalRoomData = {
   };
 };
 
+const API_BASE = "http://localhost:7240";
+const STATIC_BASE = "http://localhost:7240";
+
 export default function CreateQuest() {
   const router = useRouter();
   const [rooms, setRooms] = useState<LocalRoomData[]>([]);
@@ -429,7 +432,7 @@ export default function CreateQuest() {
 
     try {
       // Отправляем запрос на сервер
-      const response = await fetch("https://localhost:7240/api/Quests/CreateQuest", {
+      const response = await fetch(`${API_BASE}/api/Quests/CreateQuest`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -561,7 +564,7 @@ export default function CreateQuest() {
               }}
             >
               <img
-                src={`https://localhost:7240${room.template.previewImageUrl}`}
+                  src={`${STATIC_BASE}${room.template.previewImageUrl}`}
                 alt={room.template.name}
                 style={{
                   width: "100%",
@@ -651,7 +654,7 @@ export default function CreateQuest() {
         <div className="room-preview-wrapper" style={{ position: "relative", width: displayWidth }}>
           <img
             ref={imageRef}
-            src={`https://localhost:7240${currentRoom.template.previewImageUrl}`}
+            src={`${STATIC_BASE}${currentRoom.template.previewImageUrl}`}
             alt="preview"
             className="room-preview"
             onLoad={handleImageLoad}

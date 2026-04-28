@@ -8,6 +8,8 @@ import { useDragResize } from "@/hooks/useDragResize";
 import { EditorPanel } from "@/components/EditorPanel";
 import { EditorCanvas } from "@/components/EditorCanvas";
 
+const API_BASE = "http://localhost:7240";
+
 export default function Home() {
   const router = useRouter();
   const { zones, addZone, updateZone, removeZone, printZones } = useZones([
@@ -54,7 +56,7 @@ export default function Home() {
       formData.append("PreviewImage", previewFile);
       formData.append("SceneData", JSON.stringify(zones));
 
-      const response = await fetch("https://localhost:7240/api/Quests/PostTemplate", {
+      const response = await fetch(`${API_BASE}/api/Quests/PostTemplate`, {
         method: "POST",
         body: formData,
       });

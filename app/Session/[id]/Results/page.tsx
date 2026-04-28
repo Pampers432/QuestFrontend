@@ -2,6 +2,8 @@
 
 import { use, useEffect, useState } from "react";
 
+const STATIC_BASE = "http://localhost:7240";
+
 export default function ResultsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
 
@@ -233,7 +235,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
             <img
-              src={`https://localhost:7240${currentRoom.roomTemplate.previewImageUrl}`}
+              src={`${STATIC_BASE}${currentRoom.roomTemplate.previewImageUrl}`}
               alt={currentRoom.title}
               style={{
                 width: "80px",

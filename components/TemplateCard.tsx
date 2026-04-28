@@ -14,6 +14,7 @@ export const TemplateCard = ({
 }) => {
   const router = useRouter();
   const role = getStoredRole();
+  const baseUrl = "http://localhost:7240";
 
   const handleDelete = async () => {
     if (!template.id) return;
@@ -21,7 +22,7 @@ export const TemplateCard = ({
     if (!confirm("Вы уверены, что хотите удалить этот шаблон?")) return;
 
     const res = await fetch(
-      `https://localhost:7240/api/Quests/${template.id}`,
+      `${baseUrl}/api/Quests/${template.id}`,
       { method: "DELETE" }
     );
 
@@ -67,15 +68,16 @@ export const TemplateCard = ({
 
       {template.previewImageUrl && (
         <img
-          src={`https://localhost:7240${template.previewImageUrl ?? ""}`}
+          src={`${baseUrl}${template.previewImageUrl ?? ""}`}
           alt={template.name}
           className={styles.image}
         />
       )}
-    
+
       <button className={styles.button} onClick={handleUse}>
         Использовать
       </button>
     </div>
   );
 };
+

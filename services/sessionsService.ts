@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://localhost:7240/api/QuestSessions";
+const API_BASE_URL = "http://localhost:7240/api/QuestSessions";
 
 export interface SessionDashboard {
   sessionId: string;
@@ -41,7 +41,6 @@ export const exportSessionReport = async (sessionId: string, format: "json" | "c
       Authorization: `Bearer ${token}`
     }
   });
-  if (!res.ok) throw new Error("Ошибка экспорта отчета");
+  if (!res.ok) throw new Error("Ошибка экспорт отчета");
   return await res.blob();
 };
-

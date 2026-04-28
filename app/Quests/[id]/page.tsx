@@ -13,6 +13,9 @@ export default function QuestPage({ params }: { params: { id: string } }) {
   const [allowPartial, setAllowPartial] = useState(false);
   const [allowSkip, setAllowSkip] = useState(false);
   const [startsAt, setStartsAt] = useState("");
+
+  const API_BASE = "http://localhost:7240";
+  const STATIC_BASE = "http://localhost:7240";
   const [endsAt, setEndsAt] = useState("");
   const [accessCode, setAccessCode] = useState("");
 
@@ -32,7 +35,7 @@ export default function QuestPage({ params }: { params: { id: string } }) {
   }
 
   // получаем текущего пользователя
-  const meRes = await fetch("https://localhost:7240/api/Auth/me", {
+  const meRes = await fetch(`${API_BASE}/api/Auth/me`, {
     headers: {
       Authorization: `Bearer ${token}`
     }
@@ -61,7 +64,7 @@ export default function QuestPage({ params }: { params: { id: string } }) {
   };
 
   const res = await fetch(
-    "https://localhost:7240/api/QuestSessions/CreateSession",
+    `${API_BASE}/api/QuestSessions/CreateSession`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -143,16 +146,16 @@ export default function QuestPage({ params }: { params: { id: string } }) {
                 background: index === currentRoomIndex ? "#f0f0f0" : "white"
               }}
             >
-              <img
-                src={`https://localhost:7240${room.roomTemplate.previewImageUrl}`}
-                alt={room.title || room.roomTemplate.name}
-                style={{
-                  width: "100%",
-                  height: "80px",
-                  objectFit: "cover",
-                  borderRadius: 4
-                }}
-              />
+               <img
+                 src={`${STATIC_BASE}${room.roomTemplate.previewImageUrl}`}
+                 alt={room.title || room.roomTemplate.name}
+                 style={{
+                   width: "100%",
+                   height: "80px",
+                   objectFit: "cover",
+                   borderRadius: 4
+                 }}
+               />
             </div>
           ))}
         </div>
@@ -172,7 +175,7 @@ export default function QuestPage({ params }: { params: { id: string } }) {
               <h3>{room.title}</h3>
 
               <img
-                src={`https://localhost:7240${room.roomTemplate.previewImageUrl}`}
+                src={`${STATIC_BASE}${room.roomTemplate.previewImageUrl}`}
                 style={{ width: "100%", maxWidth: 600, borderRadius: 8 }}
               />
             </div>

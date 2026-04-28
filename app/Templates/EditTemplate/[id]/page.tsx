@@ -11,6 +11,9 @@ import { useDragResize } from "@/hooks/useDragResize";
 import { EditorPanel } from "@/components/EditorPanel";
 import { EditorCanvas } from "@/components/EditorCanvas";
 
+const API_BASE = "http://localhost:7240";
+const STATIC_BASE = "http://localhost:7240";
+
 export default function EditTemplatePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const router = useRouter();
@@ -40,7 +43,7 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
   }, [template, resetZones]);
 
   useEffect(() => {
-    fetch(`https://localhost:7240/api/Quests/${id}`)
+    fetch(`${API_BASE}/api/Quests/${id}`)
       .then((res) => {
         if (!res.ok) {
           throw new Error("Failed to fetch template");
@@ -63,7 +66,7 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
         setPreviewUrl(
           imageUrl?.startsWith("http")
             ? imageUrl
-            : `https://localhost:7240${imageUrl}`
+            : `${STATIC_BASE}${imageUrl}`
         );
       })
       .catch((error) => {
@@ -100,7 +103,7 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
         formData.append("PreviewImage", previewFile);
       }
 
-      const response = await fetch(`https://localhost:7240/api/Quests/${template.id}`, {
+      const response = await fetch(`${API_BASE}/api/Quests/${template.id}`, {
         method: "PUT",
         body: formData,
       });
@@ -133,12 +136,12 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
           };
         });
         
-        // Обновляем URL превью
-        setPreviewUrl(
-          responseData.path.startsWith("http")
-            ? responseData.path
-            : `https://localhost:7240${responseData.path}`
-        );
+         // Обновляем URL превью
+         setPreviewUrl(
+           responseData.path.startsWith("http")
+             ? responseData.path
+             : `${STATIC_BASE}${responseData.path}`
+         );
       } else {
         // Это ответ от UpdateTemplate - используем полученные данные
         const updatedTemplate: RoomTemplate = {
@@ -150,13 +153,13 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
         };
         setTemplate(updatedTemplate);
         
-        if (updatedTemplate.previewImage) {
-          setPreviewUrl(
-            updatedTemplate.previewImage.startsWith("http")
-              ? updatedTemplate.previewImage
-              : `https://localhost:7240${updatedTemplate.previewImage}`
-          );
-        }
+         if (updatedTemplate.previewImage) {
+           setPreviewUrl(
+             updatedTemplate.previewImage.startsWith("http")
+               ? updatedTemplate.previewImage
+               : `${STATIC_BASE}${updatedTemplate.previewImage}`
+           );
+         }
       }
       
       setPreviewFile(null);

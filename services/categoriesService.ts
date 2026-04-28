@@ -4,7 +4,7 @@ export interface Category {
   description?: string;
 }
 
-const API_BASE_URL = "https://localhost:7240/api/Category";
+const API_BASE_URL = "http://localhost:7240/api/Category";
 
 export const fetchCategories = async (): Promise<Category[]> => {
   const res = await fetch(API_BASE_URL);
@@ -26,7 +26,7 @@ export const createCategory = async (category: { name: string; description?: str
     },
     body: JSON.stringify(category)
   });
-  
+   
   if (!res.ok) {
     let errorMessage = "Ошибка создания категории";
     try {
@@ -54,7 +54,7 @@ export const updateCategory = async (id: string, category: { name: string; descr
     },
     body: JSON.stringify(category)
   });
-  
+   
   if (!res.ok) {
     let errorMessage = "Ошибка обновления категории";
     try {
@@ -80,7 +80,7 @@ export const deleteCategory = async (id: string): Promise<void> => {
       Authorization: `Bearer ${token}`
     }
   });
-  
+   
   if (!res.ok) {
     let errorMessage = "Ошибка удаления категории";
     try {
@@ -91,8 +91,7 @@ export const deleteCategory = async (id: string): Promise<void> => {
     }
     throw new Error(errorMessage);
   }
-  
-  // DELETE может вернуть пустой ответ или JSON с сообщением
+   
   try {
     await res.json();
   } catch {

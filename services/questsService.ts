@@ -1,6 +1,6 @@
 import { Quest } from "@/Entities/Quest";
 
-const API_BASE_URL = "https://localhost:7240/api/Quests";
+const API_BASE_URL = "http://localhost:7240/api/Quests";
 
 export const fetchQuests = async (): Promise<Quest[]> => {
   const res = await fetch(`${API_BASE_URL}/GetAllQuests`);

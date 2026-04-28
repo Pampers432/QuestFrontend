@@ -1,20 +1,33 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { fetchSessionDashboard, exportSessionReport, SessionDashboard } from "@/services/sessionsService";
 import { getStoredRole } from "@/utils/auth";
 import RoleGuard from "@/components/RoleGuard";
 import * as XLSX from 'xlsx';
+import { signalRService } from "@/services/signalRService";
 
 export default function SessionDashboardPage() {
   const params = useParams();
   const id = params.id as string;
-  
+
   const router = useRouter();
   const [dashboard, setDashboard] = useState<SessionDashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Load dashboard data
+  const loadData = useCallback(async () => {
+    try {
+      const data = await fetchSessionDashboard(id);
+      setDashboard(data);
+    } catch (err: any) {
+      setError(err.message || "Ошибка загрузки дашборда");
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
 
   useEffect(() => {
     const role = getStoredRole();
@@ -23,11 +36,44 @@ export default function SessionDashboardPage() {
       return;
     }
 
-    fetchSessionDashboard(id)
-      .then(setDashboard)
-      .catch((err) => setError(err.message || "Ошибка загрузки дашборда"))
-      .finally(() => setLoading(false));
-  }, [id, router]);
+    loadData();
+  }, [id, router, loadData]);
+
+  // SignalR integration
+  useEffect(() => {
+    let mounted = true;
+
+    const initSignalR = async () => {
+      try {
+        await signalRService.startConnection();
+        await signalRService.subscribeToSession(id);
+
+        window.addEventListener("signalr:SessionUpdated", handleSessionUpdated);
+      } catch (error) {
+        console.error("[Dashboard] SignalR connection failed:", error);
+      }
+    };
+
+    if (mounted) {
+      initSignalR();
+    }
+
+    return () => {
+      mounted = false;
+      signalRService.stopConnection();
+      window.removeEventListener("signalr:SessionUpdated", handleSessionUpdated);
+    };
+  }, [id]);
+
+  const handleSessionUpdated = (e: Event) => {
+    const event = e as CustomEvent<string>;
+    const updatedSessionId = event.detail;
+    console.log("[Dashboard] Session updated:", updatedSessionId);
+    // If this is the current session, refresh data
+    if (updatedSessionId === id) {
+      loadData();
+    }
+  };
 
   const exportToXLSX = () => {
     if (!dashboard) return;

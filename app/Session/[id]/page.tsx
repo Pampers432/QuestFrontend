@@ -3,7 +3,8 @@
 import { use, useEffect, useState, useRef } from "react";
 import { QuestionPosition } from "@/Entities/QuestionPosition";
 
-const API = "https://localhost:7240/api/QuestSessions";
+const API_BASE = "http://localhost:7240";
+const STATIC_BASE = "http://localhost:7240";
 
 export default function SessionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -57,7 +58,7 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
   }, [id]);
 
   const startAttempt = async (session: any) => {
-    const res = await fetch(`${API}/StartAttempt`, {
+    const res = await fetch(`${API_BASE}/api/QuestSessions/StartAttempt`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -79,7 +80,7 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
     setRoom(r);
     setRoomIndex(index);
 
-    setPreviewUrl(`https://localhost:7240${r.roomTemplate.previewImageUrl}`);
+    setPreviewUrl(`${STATIC_BASE}${r.roomTemplate.previewImageUrl}`);
 
     const parsedZones: QuestionPosition[] = JSON.parse(
       r.roomTemplate.sceneData
@@ -132,17 +133,17 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
     let isCorrect = false;
     let points = 0;
 
-    if (question.type === "text_input" || question.type === "number_input") {
-      const correctOption = question.answerOptions?.[0];
-      if (correctOption) {
-        if (question.type === "text_input") {
-          isCorrect = answerValue?.trim().toLowerCase() === correctOption.text?.trim().toLowerCase();
-        } else {
-          isCorrect = parseFloat(answerValue) === parseFloat(correctOption.text);
-        }
-      }
-      points = isCorrect ? question.points ?? 1 : 0;
-    } else if (selectedOptions.length > 0) {
+     if (question.type === "text_input" || question.type === "number_input") {
+       const correctOption = question.answerOptions?.[0];
+       if (correctOption) {
+         if (question.type === "text_input") {
+           isCorrect = answerValue?.trim().toLowerCase() === correctOption.text?.trim().toLowerCase();
+         } else {
+           isCorrect = parseFloat(answerValue ?? "") === parseFloat(correctOption.text ?? "");
+         }
+       }
+       points = isCorrect ? question.points ?? 1 : 0;
+     } else if (selectedOptions.length > 0) {
       const correctOptions = question.answerOptions?.filter((o: any) => o.isCorrect) || [];
       
       if (question.type === "single_choice") {
@@ -184,7 +185,7 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
     localStorage.setItem("activeSession", JSON.stringify(updatedSession));
     setActiveSession(updatedSession);
 
-    await fetch(`${API}/SaveAnswer`, {
+    await fetch(`${API_BASE}/api/QuestSessions/SaveAnswer`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -259,7 +260,7 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
 
     // Завершение
     await fetch(
-      `${API}/FinishAttempt/${activeSession.attemptId}`,
+      `${API_BASE}/api/QuestSessions/FinishAttempt/${activeSession.attemptId}`,
       { method: "POST" }
     );
 
