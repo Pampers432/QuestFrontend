@@ -430,15 +430,24 @@ export default function CreateQuest() {
       }))
     };
 
-    try {
-      // Отправляем запрос на сервер
-      const response = await fetch(`${API_BASE}/api/Quests/CreateQuest`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(questRequest),
-      });
+     try {
+       // Получаем токен авторизации
+       const token = localStorage.getItem("auth_token");
+       if (!token) {
+         alert("Необходимо авторизоваться");
+         router.push("/login");
+         return;
+       }
+
+       // Отправляем запрос на сервер
+       const response = await fetch(`${API_BASE}/api/Quests/CreateQuest`, {
+         method: "POST",
+         headers: {
+           "Content-Type": "application/json",
+           Authorization: `Bearer ${token}`,
+         },
+         body: JSON.stringify(questRequest),
+       });
 
       if (!response.ok) {
         const errorText = await response.text();
