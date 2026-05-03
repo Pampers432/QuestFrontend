@@ -31,3 +31,40 @@
   width: 100%;
   font-size: 15px;
 }
+
+.cardHeader {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.editBtn,
+.deleteBtn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.editBtn {
+  background: #e0e7ff;
+}
+
+.editBtn:hover {
+  background: #c7d2fe;
+}
+
+.deleteBtn {
+  background: #fee2e2;
+}
+
+.deleteBtn:hover {
+  background: #fecaca;
+}
