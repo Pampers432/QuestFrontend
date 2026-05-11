@@ -58,6 +58,26 @@ class SignalRService {
         this.notifyTemplateSubscribers("TemplateDeleted", templateId);
       });
 
+      this.hubConnection.on("SubscribedToQuests", (message: string) => {
+        console.log("[SignalR] SubscribedToQuests", message);
+      });
+
+      this.hubConnection.on("SubscribedToTemplates", (message: string) => {
+        console.log("[SignalR] SubscribedToTemplates", message);
+      });
+
+      this.hubConnection.on("SubscribedToTemplate", (message: string) => {
+        console.log("[SignalR] SubscribedToTemplate", message);
+      });
+
+      this.hubConnection.on("SubscribedToSessions", (message: string) => {
+        console.log("[SignalR] SubscribedToSessions", message);
+      });
+
+      this.hubConnection.on("SubscribedToSession", (message: string) => {
+        console.log("[SignalR] SubscribedToSession", message);
+      });
+
       this.hubConnection.on("SessionUpdated", (sessionId: string) => {
         console.log("[SignalR] SessionUpdated", sessionId);
         this.notifySessionSubscribers("SessionUpdated", sessionId);

@@ -6,6 +6,9 @@ export interface CreateQuestRequest {
   status: string;
   categoryId?: string;
 
+  // "Public" — в общем каталоге, "Private" — только автору
+  visibility: "Public" | "Private";
+
   rooms: CreateQuestRoomRequest[];
 }
 

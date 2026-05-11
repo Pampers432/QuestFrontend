@@ -1,0 +1,60 @@
+.group {
+  position: relative;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+.field {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-family: var(--font-sans);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  transition: border-color var(--transition-normal);
+  outline: none;
+  text-align: center;
+}
+
+.field:focus {
+  border-color: var(--color-primary);
+}
+
+.field.hasError {
+  border-color: var(--color-error);
+}
+
+.label {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  transition: all var(--transition-fast);
+  pointer-events: none;
+  background: var(--color-surface);
+  padding: 0 4px;
+  font-size: 16px;
+}
+
+.label.floating,
+.field:focus ~ .label,
+.field:not(:placeholder-shown) ~ .label {
+  top: 0;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: var(--color-primary);
+}
+
+.field.hasError ~ .label {
+  color: var(--color-error);
+}
+
+.error {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--color-error);
+}

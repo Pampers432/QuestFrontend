@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { fetchCategories, createCategory, updateCategory, deleteCategory, Category } from "@/services/categoriesService";
 import RoleGuard from "@/components/RoleGuard";
 import { getStoredRole } from "@/utils/auth";
+import Button from "@/components/Button";
+import Input from "@/components/Input";
+import { SkeletonCard } from "@/components/Skeleton";
 
 export default function CategoriesPage() {
   const router = useRouter();
@@ -20,7 +23,6 @@ export default function CategoriesPage() {
       router.replace("/");
       return;
     }
-
     loadCategories();
   }, [router]);
 
@@ -36,11 +38,7 @@ export default function CategoriesPage() {
   };
 
   const handleCreate = async () => {
-    if (!formData.name.trim()) {
-      alert("Введите название категории");
-      return;
-    }
-
+    if (!formData.name.trim()) return;
     try {
       await createCategory(formData);
       setFormData({ name: "", description: "" });
@@ -51,11 +49,7 @@ export default function CategoriesPage() {
   };
 
   const handleUpdate = async (id: string) => {
-    if (!formData.name.trim()) {
-      alert("Введите название категории");
-      return;
-    }
-
+    if (!formData.name.trim()) return;
     try {
       await updateCategory(id, formData);
       setEditingId(null);
@@ -67,8 +61,7 @@ export default function CategoriesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Вы уверены, что хотите удалить эту категорию?")) return;
-
+    if (!confirm("Вы уверены?")) return;
     try {
       await deleteCategory(id);
       await loadCategories();
@@ -82,138 +75,108 @@ export default function CategoriesPage() {
     setFormData({ name: category.name, description: category.description || "" });
   };
 
-  if (loading) return <div style={{ padding: 24 }}>Загрузка...</div>;
-  if (error) return <div style={{ padding: 24 }}>{error}</div>;
+  if (loading) return <div className="page-container"><SkeletonCard /></div>;
+  if (error) return <div className="page-container" style={{ color: "var(--color-error)" }}>{error}</div>;
 
   return (
     <RoleGuard allowedRoles={["Admin"]}>
-      <div style={{ padding: "30px", maxWidth: "1000px", margin: "0 auto" }}>
-        <h1 style={{ marginBottom: "20px" }}>Управление категориями</h1>
+      <div className="page-container" style={{ maxWidth: 800 }}>
+        <h1 className="page-title">Управление категориями</h1>
 
         <div style={{
-          background: "#f5f5f5",
-          padding: "20px",
-          borderRadius: "10px",
-          marginBottom: "30px"
+          background: "var(--color-surface)",
+          padding: 24,
+          borderRadius: "var(--radius-lg)",
+          marginBottom: 32,
+          border: "1px solid var(--color-border)",
         }}>
-          <h2 style={{ marginTop: 0, marginBottom: "15px" }}>
+          <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>
             {editingId ? "Редактировать категорию" : "Создать категорию"}
           </h2>
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <input
               type="text"
               placeholder="Название категории *"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              style={{ padding: "8px 12px", border: "1px solid #ddd", borderRadius: "6px" }}
+              style={{
+                padding: "10px 12px",
+                border: "2px solid var(--color-border)",
+                borderRadius: "var(--radius-md)",
+                fontSize: 15,
+                background: "var(--color-surface)",
+                color: "var(--color-text-primary)",
+                outline: "none",
+              }}
             />
             <textarea
               placeholder="Описание (необязательно)"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              style={{ padding: "8px 12px", border: "1px solid #ddd", borderRadius: "6px", minHeight: "60px" }}
+              style={{
+                padding: "10px 12px",
+                border: "2px solid var(--color-border)",
+                borderRadius: "var(--radius-md)",
+                fontSize: 15,
+                minHeight: 60,
+                background: "var(--color-surface)",
+                color: "var(--color-text-primary)",
+                outline: "none",
+                resize: "vertical",
+              }}
             />
-            <div style={{ display: "flex", gap: "10px" }}>
-              <button
-                onClick={() => editingId ? handleUpdate(editingId) : handleCreate()}
-                style={{
-                  padding: "8px 16px",
-                  background: "#007bff",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "6px",
-                  cursor: "pointer"
-                }}
-              >
+            <div style={{ display: "flex", gap: 10 }}>
+              <Button variant="primary" onClick={() => editingId ? handleUpdate(editingId) : handleCreate()}>
                 {editingId ? "Сохранить" : "Создать"}
-              </button>
+              </Button>
               {editingId && (
-                <button
-                  onClick={() => {
-                    setEditingId(null);
-                    setFormData({ name: "", description: "" });
-                  }}
-                  style={{
-                    padding: "8px 16px",
-                    background: "#6c757d",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "6px",
-                    cursor: "pointer"
-                  }}
-                >
+                <Button variant="ghost" onClick={() => { setEditingId(null); setFormData({ name: "", description: "" }); }}>
                   Отмена
-                </button>
+                </Button>
               )}
             </div>
           </div>
         </div>
 
         <div style={{
-          background: "#fff",
-          border: "1px solid #ddd",
-          borderRadius: "10px",
-          overflow: "hidden"
+          background: "var(--color-surface)",
+          border: "1px solid var(--color-border)",
+          borderRadius: "var(--radius-lg)",
+          overflow: "hidden",
         }}>
           <div style={{
-            padding: "15px",
-            background: "#f8f9fa",
-            borderBottom: "2px solid #ddd",
-            fontWeight: "bold"
+            padding: "16px 20px",
+            borderBottom: "2px solid var(--color-border)",
+            fontWeight: 600,
+            color: "var(--color-text-secondary)",
+            fontSize: 14,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
           }}>
             Список категорий
           </div>
           {categories.length === 0 ? (
-            <div style={{ padding: "40px", textAlign: "center", color: "#999" }}>
+            <div style={{ padding: 40, textAlign: "center", color: "var(--color-text-secondary)" }}>
               Категории не найдены
             </div>
           ) : (
             categories.map((category) => (
-              <div
-                key={category.id}
-                style={{
-                  padding: "15px",
-                  borderBottom: "1px solid #eee",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center"
-                }}
-              >
+              <div key={category.id} style={{
+                padding: "16px 20px",
+                borderBottom: "1px solid var(--color-border)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}>
                 <div>
-                  <div style={{ fontWeight: "bold", fontSize: "16px" }}>{category.name}</div>
+                  <div style={{ fontWeight: 600, color: "var(--color-text-primary)" }}>{category.name}</div>
                   {category.description && (
-                    <div style={{ color: "#666", fontSize: "14px", marginTop: "5px" }}>
-                      {category.description}
-                    </div>
+                    <div style={{ color: "var(--color-text-secondary)", fontSize: 14, marginTop: 4 }}>{category.description}</div>
                   )}
                 </div>
-                <div style={{ display: "flex", gap: "10px" }}>
-                  <button
-                    onClick={() => startEdit(category)}
-                    style={{
-                      padding: "6px 12px",
-                      background: "#ffc107",
-                      color: "#000",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer"
-                    }}
-                  >
-                    Редактировать
-                  </button>
-                  <button
-                    onClick={() => handleDelete(category.id)}
-                    style={{
-                      padding: "6px 12px",
-                      background: "#dc3545",
-                      color: "white",
-                      border: "none",
-                      borderRadius: "4px",
-                      cursor: "pointer"
-                    }}
-                  >
-                    Удалить
-                  </button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <Button variant="ghost" size="sm" onClick={() => startEdit(category)}>Редактировать</Button>
+                  <Button variant="danger" size="sm" onClick={() => handleDelete(category.id)}>Удалить</Button>
                 </div>
               </div>
             ))

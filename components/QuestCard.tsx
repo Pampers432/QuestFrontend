@@ -5,94 +5,101 @@ import styles from "./QuestCard.module.css";
 import { useRouter } from "next/navigation";
 import { getStoredRole } from "@/utils/auth";
 import { deleteQuest } from "@/services/questsService";
+import Badge from "./Badge";
+import Button from "./Button";
+
+const statusConfig: Record<string, { label: string; variant: "success" | "warning" | "default" }> = {
+  Draft: { label: "Черновик", variant: "warning" },
+  Published: { label: "Опубликован", variant: "success" },
+  Archive: { label: "Архив", variant: "default" },
+};
 
 export const QuestCard = ({ quest, onDelete }: { quest: Quest; onDelete?: () => void }) => {
   const router = useRouter();
-  const baseUrl = "http://localhost:7240";
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7240";
   const role = getStoredRole();
   const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
   const canEdit = role === "Admin" || (role === "Teacher" && quest.authorId === userId);
 
-  const statusLabels: Record<string, string> = {
-    Draft: "Черновик",
-    Published: "Опубликован",
-    Archive: "Архив"
-  };
-
-  const statusColors: Record<string, string> = {
-    Draft: "#ffc107",
-    Published: "#28a745",
-    Archive: "#6c757d"
+  const difficultyStars: Record<string, string> = {
+    Easy: "★",
+    Medium: "★★",
+    Hard: "★★★",
   };
 
   const handleDelete = async () => {
     if (!confirm("Вы уверены, что хотите удалить этот квест?")) return;
     try {
       await deleteQuest(quest.id);
-      alert("Квест удалён");
       onDelete?.();
     } catch (error) {
       console.error("Ошибка удаления квеста:", error);
-      alert("Не удалось удалить квест");
     }
   };
 
+  const previewUrl = quest.questRooms[0]?.roomTemplate?.previewImageUrl;
+
   return (
     <div className={styles.card}>
+      <div className={styles.badges}>
+        {quest.visibility === "Private" && <Badge variant="private">Private</Badge>}
+        <Badge variant={statusConfig[quest.status]?.variant || "default"}>
+          {statusConfig[quest.status]?.label || quest.status}
+        </Badge>
+      </div>
+
       {canEdit && (
         <div className={styles.cardHeader}>
-          <button className={styles.editBtn} onClick={() => router.push(`/Quests/EditQuest/${quest.id}`)}>
+          <button className={styles.editBtn} onClick={(e) => { e.stopPropagation(); router.push(`/Quests/EditQuest/${quest.id}`); }} title="Редактировать">
             ✏️
           </button>
-          <button className={styles.deleteBtn} onClick={handleDelete}>
+          <button className={styles.deleteBtn} onClick={(e) => { e.stopPropagation(); handleDelete(); }} title="Удалить">
             🗑️
           </button>
         </div>
       )}
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-        <h3 className={styles.title} style={{ margin: 0 }}>{quest.title}</h3>
-        <span
-          style={{
-            padding: "4px 8px",
-            borderRadius: 4,
-            fontSize: 12,
-            fontWeight: 600,
-            background: statusColors[quest.status] || "#ccc",
-            color: quest.status === "Draft" ? "#000" : "#fff"
-          }}
-        >
-          {statusLabels[quest.status] || quest.status}
-        </span>
+      <div className={styles.imageWrapper}>
+        {previewUrl ? (
+          <img src={`${baseUrl}${previewUrl}`} alt={quest.title} className={styles.image} />
+        ) : (
+          <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-text-secondary)", fontSize: 14 }}>
+            Нет превью
+          </div>
+        )}
       </div>
 
-      {quest.description && (
-        <p className={styles.description}>{quest.description}</p>
-      )}
+      <div className={styles.body}>
+        <h3 className={styles.title}>{quest.title}</h3>
+        {quest.description && <p className={styles.description}>{quest.description}</p>}
+        <div className={styles.meta}>
+          <span className={styles.metaItem}>
+            <span className={styles.stars}>{difficultyStars[quest.difficulty] || "★"}</span>
+          </span>
+          <span className={styles.metaItem}>{quest.subject}</span>
+          <span className={styles.metaItem}>{quest.questRooms.length} ком.</span>
+        </div>
+      </div>
 
-      <img src={`${baseUrl}${quest.questRooms[0]?.roomTemplate?.previewImageUrl}`} style={{ width: "100%", borderRadius: 8 }} />
-
-      <p className={styles.info}>
-        Предмет: <b>{quest.subject}</b>
-      </p>
-
-      <p className={styles.info}>
-        Сложность: <b>{quest.difficulty}</b>
-      </p>
-
-      <p className={styles.info}>
-        Комнат: <b>{quest.questRooms.length}</b>
-      </p>
-
-      <button
-        className={styles.button}
-        onClick={() => {
-          localStorage.setItem("selectedQuest", JSON.stringify(quest));
-          router.push(`/Quests/${quest.id}`);
-        }}
-      >
-        Открыть
-      </button>
+      <div className={styles.footer}>
+        <button
+          className={`${styles.footerBtn} ${styles.footerBtnPrimary}`}
+          onClick={() => {
+            localStorage.setItem("selectedQuest", JSON.stringify(quest));
+            router.push(`/Quests/${quest.id}`);
+          }}
+        >
+          Открыть
+        </button>
+        {canEdit && (
+          <button
+            className={`${styles.footerBtn} ${styles.footerBtnSecondary}`}
+            onClick={() => router.push(`/Quests/EditQuest/${quest.id}`)}
+          >
+            Редактировать
+          </button>
+        )}
+      </div>
     </div>
   );
 };

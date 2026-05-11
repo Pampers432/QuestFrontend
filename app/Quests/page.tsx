@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { Quest, Category } from "@/Entities/Quest";
-import { fetchQuests, searchQuests, fetchQuestsByStatus } from "@/services/questsService";
+import { fetchQuests, searchQuests, fetchQuestsByStatus, fetchQuestsByAuthor, fetchLatestQuests } from "@/services/questsService";
 import { fetchCategories } from "@/services/categoriesService";
 import { QuestCard } from "@/components/QuestCard";
-import styles from "./QuestsPage.module.css";
 import { useRouter } from "next/navigation";
 import RoleGuard from "@/components/RoleGuard";
 import { getStoredRole } from "@/utils/auth";
+import Button from "@/components/Button";
+import { SkeletonCard } from "@/components/Skeleton";
 
 export default function QuestsPage() {
   const [quests, setQuests] = useState<Quest[]>([]);
@@ -18,21 +19,28 @@ export default function QuestsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<string>("");
+  const [mode, setMode] = useState<"public" | "private">("public");
   const router = useRouter();
 
   const loadQuests = () => {
+    if (mode === "private") {
+      fetchQuestsByAuthor()
+        .then((data) => {
+          let filtered = data;
+          if (searchTerm) filtered = filtered.filter((q) => q.title.toLowerCase().includes(searchTerm.toLowerCase()));
+          if (selectedCategoryId) filtered = filtered.filter((q) => q.categoryId === selectedCategoryId);
+          setQuests(filtered);
+        })
+        .catch(() => setError("Не удалось загрузить ваши квесты"));
+      return;
+    }
+
     if (selectedStatus) {
       fetchQuestsByStatus(selectedStatus)
         .then((data) => {
           let filtered = data;
-          if (searchTerm) {
-            filtered = filtered.filter(q =>
-              q.title.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-          }
-          if (selectedCategoryId) {
-            filtered = filtered.filter(q => q.categoryId === selectedCategoryId);
-          }
+          if (searchTerm) filtered = filtered.filter((q) => q.title.toLowerCase().includes(searchTerm.toLowerCase()));
+          if (selectedCategoryId) filtered = filtered.filter((q) => q.categoryId === selectedCategoryId);
           setQuests(filtered);
         })
         .catch(() => setError("Не удалось загрузить квесты по статусу"));
@@ -58,14 +66,10 @@ export default function QuestsPage() {
   }, []);
 
   useEffect(() => {
-    const handleQuestChanged = () => {
-      loadQuests();
-    };
-
+    const handleQuestChanged = () => loadQuests();
     window.addEventListener("signalr:QuestCreated", handleQuestChanged);
     window.addEventListener("signalr:QuestUpdated", handleQuestChanged);
     window.addEventListener("signalr:QuestDeleted", handleQuestChanged);
-
     return () => {
       window.removeEventListener("signalr:QuestCreated", handleQuestChanged);
       window.removeEventListener("signalr:QuestUpdated", handleQuestChanged);
@@ -74,19 +78,58 @@ export default function QuestsPage() {
   }, [searchTerm, selectedCategoryId, selectedStatus]);
 
   useEffect(() => {
-    if (!loading) {
-      loadQuests();
-    }
-  }, [searchTerm, selectedCategoryId, selectedStatus]);
+    if (!loading) loadQuests();
+  }, [mode, searchTerm, selectedCategoryId, selectedStatus]);
 
-  if (loading) return <div>Загрузка...</div>;
-  if (error) return <div>{error}</div>;
+  const role = getStoredRole();
+  const canCreate = role === "Teacher" || role === "Admin";
 
   return (
-    <div className={styles.container}>
-      <h1>Все квесты</h1>
+    <div className="page-container">
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+        <h1 className="page-title" style={{ margin: 0 }}>Квесты</h1>
+        {canCreate && (
+          <Button variant="primary" onClick={() => router.push("/Quests/CreateQuest")}>
+            + Создать квест
+          </Button>
+        )}
+      </div>
 
-      <div style={{ marginBottom: 20, display: "flex", gap: 10, flexWrap: "wrap" }}>
+      {/* Filter bar */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 0, border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", overflow: "hidden" }}>
+          <button
+            onClick={() => setMode("public")}
+            style={{
+              padding: "8px 16px",
+              border: "none",
+              background: mode === "public" ? "var(--color-primary)" : "transparent",
+              color: mode === "public" ? "white" : "var(--color-text-secondary)",
+              fontSize: 14,
+              fontWeight: 500,
+              cursor: "pointer",
+              transition: "all var(--transition-fast)",
+            }}
+          >
+            Общий каталог
+          </button>
+          <button
+            onClick={() => setMode("private")}
+            style={{
+              padding: "8px 16px",
+              border: "none",
+              background: mode === "private" ? "var(--color-primary)" : "transparent",
+              color: mode === "private" ? "white" : "var(--color-text-secondary)",
+              fontSize: 14,
+              fontWeight: 500,
+              cursor: "pointer",
+              transition: "all var(--transition-fast)",
+            }}
+          >
+            Мои квесты
+          </button>
+        </div>
+
         <input
           type="text"
           placeholder="Поиск по названию..."
@@ -94,11 +137,13 @@ export default function QuestsPage() {
           onChange={(e) => setSearchTerm(e.target.value)}
           style={{
             padding: "8px 12px",
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-            fontSize: "14px",
-            minWidth: "200px",
-            flex: 1
+            border: "1px solid var(--color-border)",
+            borderRadius: "var(--radius-md)",
+            fontSize: 14,
+            minWidth: 200,
+            flex: 1,
+            background: "var(--color-surface)",
+            color: "var(--color-text-primary)",
           }}
         />
         <select
@@ -106,17 +151,17 @@ export default function QuestsPage() {
           onChange={(e) => setSelectedCategoryId(e.target.value)}
           style={{
             padding: "8px 12px",
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-            fontSize: "14px",
-            minWidth: "150px"
+            border: "1px solid var(--color-border)",
+            borderRadius: "var(--radius-md)",
+            fontSize: 14,
+            minWidth: 150,
+            background: "var(--color-surface)",
+            color: "var(--color-text-primary)",
           }}
         >
           <option value="">Все категории</option>
           {categories.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
-            </option>
+            <option key={cat.id} value={cat.id}>{cat.name}</option>
           ))}
         </select>
         <select
@@ -124,10 +169,12 @@ export default function QuestsPage() {
           onChange={(e) => setSelectedStatus(e.target.value)}
           style={{
             padding: "8px 12px",
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-            fontSize: "14px",
-            minWidth: "150px"
+            border: "1px solid var(--color-border)",
+            borderRadius: "var(--radius-md)",
+            fontSize: 14,
+            minWidth: 150,
+            background: "var(--color-surface)",
+            color: "var(--color-text-primary)",
           }}
         >
           <option value="">Все статусы</option>
@@ -137,21 +184,31 @@ export default function QuestsPage() {
         </select>
       </div>
 
-      <div className={styles.grid}>
-        {quests.map((quest) => (
-          <QuestCard key={quest.id} quest={quest} onDelete={() => loadQuests()} />
-        ))}
-
-        {(() => {
-          const role = getStoredRole();
-          return (role === "Teacher" || role === "Admin") && (
-            <div className={styles.addCard} onClick={() => router.push("/Quests/CreateQuest")}>
-              <div className={styles.plus}>+</div>
-              <div className={styles.addText}>Добавить квест</div>
-            </div>
-          );
-        })()}
-      </div>
+      {loading ? (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 24 }}>
+          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+        </div>
+      ) : error ? (
+        <div style={{ textAlign: "center", padding: 40, color: "var(--color-error)" }}>
+          <p>{error}</p>
+          <Button variant="secondary" onClick={loadQuests}>Повторить</Button>
+        </div>
+      ) : quests.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "60px 24px", color: "var(--color-text-secondary)" }}>
+          <p style={{ fontSize: 18, marginBottom: 16 }}>Квесты не найдены</p>
+          {canCreate && (
+            <Button variant="primary" onClick={() => router.push("/Quests/CreateQuest")}>
+              Создать первый квест
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 24 }}>
+          {quests.map((quest) => (
+            <QuestCard key={quest.id} quest={quest} onDelete={() => loadQuests()} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

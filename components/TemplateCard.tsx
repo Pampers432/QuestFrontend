@@ -1,83 +1,58 @@
 "use client";
 
 import { RoomTemplate } from "@/Entities/RoomTemplate";
-import { useRouter } from "next/navigation";
 import styles from "./TemplateCard.module.css";
-import { getStoredRole } from "@/utils/auth";
+import Button from "./Button";
+import { useRouter } from "next/navigation";
+import { canManageTemplates, getStoredRole } from "@/utils/auth";
 
-export const TemplateCard = ({
-  template,
-  onDelete
-}: {
+interface TemplateCardProps {
   template: RoomTemplate;
+  onSelectForQuest?: (template: RoomTemplate) => void;
   onDelete?: (id: string) => void;
-}) => {
+}
+
+export default function TemplateCard({ template, onSelectForQuest, onDelete }: TemplateCardProps) {
   const router = useRouter();
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7240";
   const role = getStoredRole();
-  const baseUrl = "http://localhost:7240";
-
-  const handleDelete = async () => {
-    if (!template.id) return;
-
-    if (!confirm("Вы уверены, что хотите удалить этот шаблон?")) return;
-
-    const res = await fetch(
-      `${baseUrl}/api/Quests/${template.id}`,
-      { method: "DELETE" }
-    );
-
-    if (!res.ok) {
-      alert("Ошибка при удалении шаблона");
-      return;
-    }
-
-    onDelete?.(template.id);
-  };
-
-  const handleEdit = () => {
-    if (!template.id) return;
-    router.push(`/Templates/EditTemplate/${template.id}`);
-  };
-
-  const handleUse = () => {
-    const existingRaw = localStorage.getItem("selectedTemplates");
-    const existing: RoomTemplate[] = existingRaw ? JSON.parse(existingRaw) : [];
-
-    existing.push(template);
-
-    localStorage.setItem("selectedTemplates", JSON.stringify(existing));
-
-    router.push("/Quests/CreateQuest");
-  };
+  const canEdit = canManageTemplates(role);
 
   return (
     <div className={styles.card}>
-      {role === "Admin" && (
-        <div className={styles.cardHeader}>
-          <button className={styles.editBtn} onClick={handleEdit}>
-            ✏️
-          </button>
-
-          <button className={styles.deleteBtn} onClick={handleDelete}>
-            🗑️
-          </button>
-        </div>
-      )}
-
-      <h3>{template.name}</h3>
-
-      {template.previewImageUrl && (
+      <div className={styles.imageWrapper}>
         <img
-          src={`${baseUrl}${template.previewImageUrl ?? ""}`}
+          src={`${baseUrl}${template.previewImageUrl}`}
           alt={template.name}
           className={styles.image}
         />
-      )}
-
-      <button className={styles.button} onClick={handleUse}>
-        Использовать
-      </button>
+      </div>
+      <div className={styles.body}>
+        <h3 className={styles.name}>{template.name}</h3>
+        <p className={styles.zones}>{template.sceneData?.length || 0} зон</p>
+      </div>
+      <div className={styles.actions}>
+        {onSelectForQuest && (
+          <Button variant="primary" size="sm" onClick={() => onSelectForQuest(template)}>
+            Использовать
+          </Button>
+        )}
+        {canEdit && (
+          <>
+            <Button variant="ghost" size="sm" onClick={() => router.push(`/Templates/EditTemplate/${template.id}`)}>
+              Редактировать
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => router.push(`/Templates/${template.id}/Renames`)}>
+              Переименовать
+            </Button>
+            {onDelete && (
+              <Button variant="danger" size="sm" onClick={() => onDelete(template.id!)}>
+                Удалить
+              </Button>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
-};
-
+}

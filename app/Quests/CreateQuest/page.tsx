@@ -8,6 +8,8 @@ import { Question } from "@/Entities/Question";
 import { AnswerOption } from "@/Entities/AnswerOption";
 import RoleGuard from "@/components/RoleGuard";
 import { fetchCategories } from "@/services/categoriesService";
+import { fetchTemplateRenames } from "@/services/templatesService";
+import { useTemplateRenames } from "@/hooks/useTemplateRenames";
 
 type LocalQuestionState = {
   text: string;
@@ -43,12 +45,18 @@ export default function CreateQuest() {
     subject: "",
     difficulty: "Easy",
     status: "Draft",
-    categoryId: "" as string | undefined
+    categoryId: "" as string | undefined,
+    visibility: "Public" as "Public" | "Private"
   });
 
-  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
+   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
 
-  const addOption = (zoneName: string) => {
+   // Calculate effective template ID safely even when rooms is empty
+   const currentRoom = rooms[currentRoomIndex];
+   const effectiveTemplateId = currentRoom?.template?.id || "";
+   const renameMap = useTemplateRenames(effectiveTemplateId);
+
+   const addOption = (zoneName: string) => {
     setRooms(prev => {
       const newRooms = [...prev];
       const currentRoom = newRooms[currentRoomIndex];
@@ -227,7 +235,8 @@ export default function CreateQuest() {
         subject: "",
         difficulty: "Easy",
         status: "Draft",
-        categoryId: undefined
+        categoryId: undefined,
+        visibility: "Public"
       });
       setCurrentRoomIndex(0);
       
@@ -408,6 +417,7 @@ export default function CreateQuest() {
       difficulty: questData.difficulty,
       status: questData.status,
       categoryId: questData.categoryId || undefined,
+      visibility: questData.visibility,
       rooms: rooms.map((room, roomIndex): CreateQuestRoomRequest => ({
         roomTemplateId: room.template.id!,
         title: room.title,
@@ -509,7 +519,6 @@ export default function CreateQuest() {
     );
   }
 
-  const currentRoom = rooms[currentRoomIndex];
   const displayWidth = 600;
 
   return (
@@ -670,40 +679,42 @@ export default function CreateQuest() {
             style={{ width: "100%", height: "auto" }}
           />
 
-          {/* Зоны */}
-          {imageSize.width > 0 && currentRoom.template.sceneData.map((zone) => {
-            const scaleX = imageSize.width / imageNaturalSize.width;
-            const scaleY = imageSize.height / imageNaturalSize.height;
-            
-            const x = zone.x * scaleX;
-            const y = zone.y * scaleY;
-            const w = zone.w * scaleX;
-            const h = zone.h * scaleY;
+           {/* Зоны */}
+           {imageSize.width > 0 && currentRoom.template.sceneData.map((zone) => {
+             const scaleX = imageSize.width / imageNaturalSize.width;
+             const scaleY = imageSize.height / imageNaturalSize.height;
+             
+             const x = zone.x * scaleX;
+             const y = zone.y * scaleY;
+             const w = zone.w * scaleX;
+             const h = zone.h * scaleY;
 
-            return (
-              <div
-                key={zone.name}
-                className="zone-box"
-                style={{
-                  position: "absolute",
-                  border: "2px solid #007bff",
-                  backgroundColor: "rgba(0, 123, 255, 0.1)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "white",
-                  fontWeight: "bold",
-                  textShadow: "1px 1px 2px black",
-                  left: x,
-                  top: y,
-                  width: w,
-                  height: h
-                }}
-              >
-                {zone.name}
-              </div>
-            );
-          })}
+             const displayName = renameMap[zone.name] || zone.name;
+
+             return (
+               <div
+                 key={zone.name}
+                 className="zone-box"
+                 style={{
+                   position: "absolute",
+                   border: "2px solid #007bff",
+                   backgroundColor: "rgba(0, 123, 255, 0.1)",
+                   display: "flex",
+                   alignItems: "center",
+                   justifyContent: "center",
+                   color: "white",
+                   fontWeight: "bold",
+                   textShadow: "1px 1px 2px black",
+                   left: x,
+                   top: y,
+                   width: w,
+                   height: h
+                 }}
+               >
+                 {displayName}
+               </div>
+             );
+           })}
         </div>
 
         {/* Форма */}
@@ -776,6 +787,15 @@ export default function CreateQuest() {
             <option value="Archived">Архив</option>
           </select>
 
+          <label style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 20 }}>
+            <input
+              type="checkbox"
+              checked={questData.visibility === "Private"}
+              onChange={(e) => setQuestData(prev => ({ ...prev, visibility: e.target.checked ? "Private" : "Public" }))}
+            />
+            Private (видно только вам)
+          </label>
+
           <h3 style={{ marginBottom: 15 }}>Текущая комната</h3>
           
           <input
@@ -826,7 +846,7 @@ export default function CreateQuest() {
             fontSize: 16,
             color: "#007bff"
           }}>
-            Зона: {zone.name}
+            Зона: {renameMap[zone.name] || zone.name}
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: 10, marginBottom: 10 }}>

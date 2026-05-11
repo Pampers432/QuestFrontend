@@ -17,6 +17,10 @@ export interface Quest {
 
   authorId: string;
   status: string;
+
+  // "Public" / "Private"
+  visibility?: "Public" | "Private";
+
   categoryId?: string;
   category?: Category;
 

@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState, useRef } from "react";
 import { QuestionPosition } from "@/Entities/QuestionPosition";
+import { useTemplateRenames } from "@/hooks/useTemplateRenames";
 
 const API_BASE = "http://localhost:7240";
 const STATIC_BASE = "http://localhost:7240";
@@ -29,6 +30,10 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [textAnswer, setTextAnswer] = useState("");
   const [numberAnswer, setNumberAnswer] = useState("");
+
+  // Rename handling
+  const currentTemplateId = room?.roomTemplate?.id || "";
+  const renameMap = useTemplateRenames(currentTemplateId);
   
   const goToResults = () => {
     setFinishMessage(null);
@@ -358,6 +363,7 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
         {/* Зоны */}
         {zones.map((z, i) => {
           const zoneStyle = getZoneStyle(z);
+          const displayName = renameMap[z.name] || z.name;
           
           return (
             <div
@@ -384,7 +390,7 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
                 textShadow: "1px 1px 2px black",
                 fontSize: "14px"
               }}>
-                {z.name}
+                {displayName}
               </span>
             </div>
           );

@@ -50,7 +50,8 @@ export default function EditQuest() {
     subject: "",
     difficulty: "Easy",
     status: "Draft",
-    categoryId: "" as string | undefined
+    categoryId: "" as string | undefined,
+    visibility: "Public" as "Public" | "Private"
   });
 
   const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([]);
@@ -71,7 +72,8 @@ export default function EditQuest() {
           subject: quest.subject,
           difficulty: quest.difficulty,
           status: quest.status,
-          categoryId: quest.categoryId || ""
+          categoryId: quest.categoryId || "",
+          visibility: (quest.visibility as "Public" | "Private") || "Public"
         });
 
         const loadedRooms: LocalRoomData[] = quest.questRooms.map(room => {
@@ -332,6 +334,7 @@ export default function EditQuest() {
       difficulty: questData.difficulty,
       status: questData.status,
       categoryId: questData.categoryId || undefined,
+      visibility: questData.visibility,
       rooms: rooms.map((room, roomIndex): CreateQuestRoomRequest => ({
         roomTemplateId: room.template.id!,
         title: room.title,

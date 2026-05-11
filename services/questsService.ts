@@ -37,6 +37,18 @@ export const fetchQuestsByStatus = async (status: string): Promise<Quest[]> => {
   return await res.json();
 };
 
+export const fetchQuestsByAuthor = async (): Promise<Quest[]> => {
+  const token = localStorage.getItem("auth_token");
+  if (!token) throw new Error("Необходимо авторизоваться");
+
+  const res = await fetch(`${API_BASE_URL}/ByAuthor`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Ошибка загрузки моих квестов");
+  return await res.json();
+};
+
 export const updateQuest = async (id: string, request: CreateQuestRequest): Promise<void> => {
   const token = localStorage.getItem("auth_token");
   if (!token) throw new Error("Необходимо авторизоваться");

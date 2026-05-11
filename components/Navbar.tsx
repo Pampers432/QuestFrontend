@@ -2,21 +2,20 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   getStoredRole,
   canUseTemplates,
   canManageTemplates,
   clearAuthStorage,
-  UserRole
+  UserRole,
 } from "@/utils/auth";
 import styles from "./Navbar.module.css";
-
-const getHomeHrefByRole = (role: UserRole | null) =>
-  role === "Student" ? "/Session" : "/Quests";
+import Button from "./Button";
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname();
   const [role, setRole] = useState<UserRole | null>(null);
 
   useEffect(() => {
@@ -35,63 +34,47 @@ export default function Navbar() {
   const logout = () => {
     clearAuthStorage();
     setRole(null);
-
-    window.history.pushState(null, "", window.location.href);
-    window.history.forward();
-
     router.replace("/Auth");
   };
 
+  const homeHref = role === "Student" ? "/Session" : "/Quests";
 
-  if (role === null) {
-    return (
-      <nav className={styles.nav}>
-        <div className={styles.logo}>Quest Builder</div>
-      </nav>
-    );
-  }
+  const links = role
+    ? [
+        { href: homeHref, label: "Главная" },
+        { href: "/Session", label: "Тест" },
+        ...(canUseTemplates(role) ? [{ href: "/Templates", label: "Шаблоны" }] : []),
+        { href: "/Quests", label: "Квесты" },
+        ...(canManageTemplates(role) ? [{ href: "/Categories", label: "Категории" }] : []),
+        ...(role === "Teacher" || role === "Admin" ? [{ href: "/Analytics", label: "Аналитика" }] : []),
+      ]
+    : [];
 
   return (
     <nav className={styles.nav}>
-      <div className={styles.logo}>Quest Builder</div>
+      <div className={styles.logo} onClick={() => router.push(homeHref)}>
+        Quest Platform
+      </div>
 
       <div className={styles.links}>
-        <Link href={getHomeHrefByRole(role)} className={styles.link}>
-          Главная
-        </Link>
-
-        <Link href="/Session" className={styles.link}>
-          Прохождение теста
-        </Link>
-
-        {canUseTemplates(role) && (
-          <Link href="/Templates" className={styles.link}>
-            Шаблоны
-          </Link>
-        )}
-
-        <Link href="/Quests" className={styles.link}>
-          Квесты
-        </Link>
-
-        {canManageTemplates(role) && (
-          <Link href="/Categories" className={styles.link}>
-            Категории
-          </Link>
-        )}
-
-        <Link href="/Auth" className={styles.link}>
-          Вход / Регистрация
-        </Link>
-
-        {role && (
-          <button
-            onClick={logout}
-            className={styles.link}
-            style={{ background: "none", border: "none", cursor: "pointer" }}
+        {links.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className={`${styles.link} ${pathname === link.href ? styles.active : ""}`}
           >
+            {link.label}
+          </Link>
+        ))}
+
+        {!role ? (
+          <Link href="/Auth" className={styles.link}>
+            Войти
+          </Link>
+        ) : (
+          <Button variant="ghost" size="sm" onClick={logout}>
             Выйти
-          </button>
+          </Button>
         )}
       </div>
     </nav>
