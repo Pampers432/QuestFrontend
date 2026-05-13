@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
+import NavbarWrapper from "@/components/NavbarWrapper";
 import { ToastProvider } from "@/components/Toast";
 
 const inter = Inter({
@@ -18,7 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ru">
       <body className={`${inter.variable} antialiased`} style={{ fontFamily: "var(--font-inter)" }}>
         <ToastProvider>
-          <Navbar />
+          <NavbarWrapper />
           {children}
         </ToastProvider>
       </body>

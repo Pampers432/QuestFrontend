@@ -7,6 +7,7 @@ import { CreateQuestRequest, CreateQuestRoomRequest, CreateQuestionRequest, Crea
 import { Question } from "@/Entities/Question";
 import { AnswerOption } from "@/Entities/AnswerOption";
 import RoleGuard from "@/components/RoleGuard";
+import Button from "@/components/Button";
 import { fetchCategories } from "@/services/categoriesService";
 import { fetchQuestById, updateQuest } from "@/services/questsService";
 import { Quest } from "@/Entities/Quest";
@@ -413,13 +414,9 @@ export default function EditQuest() {
           <h1 className="page-title">Редактирование квеста</h1>
           <div style={{ textAlign: "center", padding: 40 }}>
             <p>Комнаты не найдены</p>
-            <button
-              onClick={() => router.push('/Quests')}
-              className="btn"
-              style={{ padding: "10px 20px", background: "#007bff", color: "white", border: "none", borderRadius: 4, cursor: "pointer" }}
-            >
+            <Button variant="primary" onClick={() => router.push('/Quests')}>
               Вернуться к списку квестов
-            </button>
+            </Button>
           </div>
         </div>
       </RoleGuard>
@@ -444,13 +441,9 @@ export default function EditQuest() {
     <div className="page-container">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
         <h1 className="page-title">Редактирование квеста</h1>
-        <button
-          onClick={() => router.push('/Quests')}
-          className="btn"
-          style={{ padding: "10px 20px", background: "#6c757d", color: "white", border: "none", borderRadius: 4, cursor: "pointer" }}
-        >
+        <Button variant="ghost" onClick={() => router.push('/Quests')}>
           Отмена
-        </button>
+        </Button>
       </div>
 
       <div style={{ display: "flex", gap: 20 }}>
@@ -494,14 +487,13 @@ export default function EditQuest() {
               </div>
               <button
                 onClick={(e) => removeRoom(index, e)}
-                className="btn-remove-room"
+                title="Удалить комнату"
                 style={{
                   position: "absolute", top: 2, right: 2, width: 20, height: 20,
                   background: "#dc3545", color: "white", border: "none", borderRadius: "50%",
                   cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: 12, fontWeight: "bold", zIndex: 10
                 }}
-                title="Удалить комнату"
               >
                 ✕
               </button>
@@ -656,23 +648,9 @@ export default function EditQuest() {
             style={{ width: "100%", marginBottom: 20, padding: 8 }}
           />
 
-          <button 
-            onClick={saveQuest}
-            className="btn"
-            style={{ 
-              width: "100%", 
-              padding: 12, 
-              background: "#28a745", 
-              color: "white", 
-              border: "none", 
-              borderRadius: 4, 
-              cursor: "pointer",
-              fontSize: 16,
-              fontWeight: "bold"
-            }}
-          >
+          <Button variant="primary" onClick={saveQuest} style={{ width: "100%" }}>
             Сохранить изменения
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -890,38 +868,15 @@ export default function EditQuest() {
                     style={{ flex: 1, padding: 5 }}
                   />
 
-                  <button
-                    onClick={() => removeOption(zone.name, option.id)}
-                    className="btn-small"
-                    style={{ 
-                      padding: "5px 10px", 
-                      background: "#dc3545", 
-                      color: "white", 
-                      border: "none", 
-                      borderRadius: 4, 
-                      cursor: "pointer" 
-                    }}
-                  >
+                  <Button variant="danger" size="sm" onClick={() => removeOption(zone.name, option.id)}>
                     ✕
-                  </button>
+                  </Button>
                 </div>
               ))}
 
-              <button
-                onClick={() => addOption(zone.name)}
-                className="btn-small"
-                style={{ 
-                  padding: "8px 15px", 
-                  background: "#28a745", 
-                  color: "white", 
-                  border: "none", 
-                  borderRadius: 4, 
-                  cursor: "pointer",
-                  marginTop: 5
-                }}
-              >
+              <Button variant="primary" size="sm" onClick={() => addOption(zone.name)} style={{ marginTop: 5 }}>
                 + Добавить вариант
-              </button>
+              </Button>
             </div>
           )}
         </div>

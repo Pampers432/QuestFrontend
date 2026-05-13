@@ -37,11 +37,11 @@ export default function Navbar() {
     router.replace("/Auth");
   };
 
-  const homeHref = role === "Student" ? "/Session" : "/Quests";
+  const homeHref = "/";
 
   const links = role
     ? [
-        { href: homeHref, label: "Главная" },
+        { href: "/", label: "Главная" },
         { href: "/Session", label: "Тест" },
         ...(canUseTemplates(role) ? [{ href: "/Templates", label: "Шаблоны" }] : []),
         { href: "/Quests", label: "Квесты" },

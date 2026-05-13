@@ -50,12 +50,12 @@ export const QuestCard = ({ quest, onDelete }: { quest: Quest; onDelete?: () => 
 
       {canEdit && (
         <div className={styles.cardHeader}>
-          <button className={styles.editBtn} onClick={(e) => { e.stopPropagation(); router.push(`/Quests/EditQuest/${quest.id}`); }} title="Редактировать">
+          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); router.push(`/Quests/EditQuest/${quest.id}`); }} title="Редактировать">
             ✏️
-          </button>
-          <button className={styles.deleteBtn} onClick={(e) => { e.stopPropagation(); handleDelete(); }} title="Удалить">
+          </Button>
+          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDelete(); }} title="Удалить">
             🗑️
-          </button>
+          </Button>
         </div>
       )}
 
@@ -82,22 +82,16 @@ export const QuestCard = ({ quest, onDelete }: { quest: Quest; onDelete?: () => 
       </div>
 
       <div className={styles.footer}>
-        <button
-          className={`${styles.footerBtn} ${styles.footerBtnPrimary}`}
-          onClick={() => {
+        <Button variant="primary" size="sm" onClick={() => {
             localStorage.setItem("selectedQuest", JSON.stringify(quest));
             router.push(`/Quests/${quest.id}`);
-          }}
-        >
+          }}>
           Открыть
-        </button>
+        </Button>
         {canEdit && (
-          <button
-            className={`${styles.footerBtn} ${styles.footerBtnSecondary}`}
-            onClick={() => router.push(`/Quests/EditQuest/${quest.id}`)}
-          >
+          <Button variant="secondary" size="sm" onClick={() => router.push(`/Quests/EditQuest/${quest.id}`)}>
             Редактировать
-          </button>
+          </Button>
         )}
       </div>
     </div>

@@ -1,14 +1,17 @@
 "use client";
 
 import { use, useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { QuestionPosition } from "@/Entities/QuestionPosition";
 import { useTemplateRenames } from "@/hooks/useTemplateRenames";
+import Button from "@/components/Button";
 
 const API_BASE = "http://localhost:7240";
 const STATIC_BASE = "http://localhost:7240";
 
 export default function SessionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
 
@@ -37,7 +40,7 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
   
   const goToResults = () => {
     setFinishMessage(null);
-    window.location.href = `/Session/${activeSession.id}/Results`;
+    router.push(`/Session/${activeSession.id}/Results`);
   };
 
   useEffect(() => {
@@ -470,22 +473,9 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
                   <span style={{ fontSize: 16 }}>{a.text}</span>
                 </label>
               ))}
-              <button
-                onClick={() => handleAnswer(undefined, activeQuestion)}
-                disabled={selectedOptions.length === 0}
-                style={{
-                  marginTop: 10,
-                  padding: "12px 20px",
-                  background: selectedOptions.length === 0 ? "#ccc" : "#007bff",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 6,
-                  cursor: selectedOptions.length === 0 ? "not-allowed" : "pointer",
-                  fontSize: 16
-                }}
-              >
+              <Button variant="primary" onClick={() => handleAnswer(undefined, activeQuestion)} disabled={selectedOptions.length === 0}>
                 Ответить ({selectedOptions.length} выбрано)
-              </button>
+              </Button>
             </div>
           )}
 
@@ -507,22 +497,9 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
                   boxSizing: "border-box"
                 }}
               />
-              <button
-                onClick={() => handleAnswer(undefined, activeQuestion, textAnswer)}
-                disabled={!textAnswer.trim()}
-                style={{
-                  marginTop: 10,
-                  padding: "12px 20px",
-                  background: !textAnswer.trim() ? "#ccc" : "#007bff",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 6,
-                  cursor: !textAnswer.trim() ? "not-allowed" : "pointer",
-                  fontSize: 16
-                }}
-              >
+              <Button variant="primary" onClick={() => handleAnswer(undefined, activeQuestion, textAnswer)} disabled={!textAnswer.trim()}>
                 Ответить
-              </button>
+              </Button>
             </div>
           )}
 
@@ -544,21 +521,9 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
                   boxSizing: "border-box"
                 }}
               />
-              <button
-                onClick={() => handleAnswer(undefined, activeQuestion, numberAnswer)}
-                disabled={!numberAnswer.trim()}
-                style={{
-                  padding: "12px 20px",
-                  background: !numberAnswer.trim() ? "#ccc" : "#007bff",
-                  color: "white",
-                  border: "none",
-                  borderRadius: 6,
-                  cursor: !numberAnswer.trim() ? "not-allowed" : "pointer",
-                  fontSize: 16
-                }}
-              >
+              <Button variant="primary" onClick={() => handleAnswer(undefined, activeQuestion, numberAnswer)} disabled={!numberAnswer.trim()}>
                 Ответить
-              </button>
+              </Button>
             </div>
           )}
 
@@ -566,31 +531,16 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
           {!activeQuestion.type && activeQuestion.answerOptions?.length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               {activeQuestion.answerOptions?.map((a: any, idx: number) => (
-                <button
-                  key={idx}
-                  style={{ width: "100%", marginBottom: 10, padding: 12 }}
-                  onClick={() => handleAnswer(a, activeQuestion)}
-                >
+                <Button key={idx} variant="secondary" onClick={() => handleAnswer(a, activeQuestion)} style={{ width: "100%" }}>
                   {a.text}
-                </button>
+                </Button>
               ))}
             </div>
           )}
 
-          <button 
-            onClick={() => { setActiveQuestion(null); setSelectedOptions([]); setTextAnswer(""); setNumberAnswer(""); }}
-            style={{
-              marginTop: 10,
-              padding: "8px 16px",
-              background: "#6c757d",
-              color: "white",
-              border: "none",
-              borderRadius: 6,
-              cursor: "pointer"
-            }}
-          >
+          <Button variant="ghost" onClick={() => { setActiveQuestion(null); setSelectedOptions([]); setTextAnswer(""); setNumberAnswer(""); }}>
             Закрыть
-          </button>
+          </Button>
         </Modal>
       )}
 
@@ -598,9 +548,9 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
       {doorMessage && (
         <Modal onClose={() => setDoorMessage(null)}>
           <h2>{doorMessage}</h2>
-          <button onClick={() => setDoorMessage(null)}>
+          <Button variant="primary" onClick={() => setDoorMessage(null)}>
             Закрыть
-          </button>
+          </Button>
         </Modal>
       )}
 

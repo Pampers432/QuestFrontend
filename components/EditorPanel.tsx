@@ -1,4 +1,5 @@
 import React from "react";
+import Button from "./Button";
 
 interface EditorPanelProps {
   templateName: string;
@@ -56,49 +57,17 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
         />
       </div>
 
-      <button
-        onClick={addZone}
-        style={{
-          padding: "8px 15px",
-          background: "#28a745",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-          cursor: saving ? "not-allowed" : "pointer"
-        }}
-        disabled={saving}
-      >
+      <Button variant="primary" size="sm" onClick={addZone} disabled={saving}>
         + Добавить зону
-      </button>
+      </Button>
 
-      <button
-        onClick={saveTemplate}
-        style={{
-          padding: "8px 15px",
-          background: saving ? "#6c757d" : "#007bff",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-          cursor: saving ? "not-allowed" : "pointer"
-        }}
-        disabled={saving}
-      >
+      <Button variant="secondary" size="sm" onClick={saveTemplate} loading={saving}>
         {saving ? "Сохранение..." : "Сохранить шаблон"}
-      </button>
+      </Button>
 
-      <button
-        onClick={printZones}
-        style={{
-          padding: "8px 15px",
-          background: "#17a2b8",
-          color: "white",
-          border: "none",
-          borderRadius: "4px",
-          cursor: "pointer"
-        }}
-      >
+      <Button variant="ghost" size="sm" onClick={printZones}>
         Вывести зоны
-      </button>
+      </Button>
     </div>
   );
 };

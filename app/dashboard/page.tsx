@@ -9,7 +9,7 @@ import { QuestCard } from "@/components/QuestCard";
 import Button from "@/components/Button";
 import { SkeletonCard } from "@/components/Skeleton";
 
-export default function Home() {
+export default function Dashboard() {
   const router = useRouter();
   const [latestQuests, setLatestQuests] = useState<Quest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,7 +31,6 @@ export default function Home() {
 
   return (
     <div>
-      {/* Hero */}
       <section
         style={{
           background: "linear-gradient(135deg, var(--color-primary) 0%, #2a5298 100%)",
@@ -55,7 +54,6 @@ export default function Home() {
         </Button>
       </section>
 
-      {/* Latest Quests */}
       <section className="page-container">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
           <h2 className="page-title" style={{ margin: 0 }}>Последние квесты</h2>

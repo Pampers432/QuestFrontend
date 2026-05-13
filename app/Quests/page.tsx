@@ -97,37 +97,13 @@ export default function QuestsPage() {
 
       {/* Filter bar */}
       <div style={{ display: "flex", gap: 12, marginBottom: 24, flexWrap: "wrap", alignItems: "center" }}>
-        <div style={{ display: "flex", gap: 0, border: "1px solid var(--color-border)", borderRadius: "var(--radius-md)", overflow: "hidden" }}>
-          <button
-            onClick={() => setMode("public")}
-            style={{
-              padding: "8px 16px",
-              border: "none",
-              background: mode === "public" ? "var(--color-primary)" : "transparent",
-              color: mode === "public" ? "white" : "var(--color-text-secondary)",
-              fontSize: 14,
-              fontWeight: 500,
-              cursor: "pointer",
-              transition: "all var(--transition-fast)",
-            }}
-          >
+        <div style={{ display: "flex", gap: 8 }}>
+          <Button variant={mode === "public" ? "primary" : "ghost"} size="sm" onClick={() => setMode("public")}>
             Общий каталог
-          </button>
-          <button
-            onClick={() => setMode("private")}
-            style={{
-              padding: "8px 16px",
-              border: "none",
-              background: mode === "private" ? "var(--color-primary)" : "transparent",
-              color: mode === "private" ? "white" : "var(--color-text-secondary)",
-              fontSize: 14,
-              fontWeight: 500,
-              cursor: "pointer",
-              transition: "all var(--transition-fast)",
-            }}
-          >
+          </Button>
+          <Button variant={mode === "private" ? "primary" : "ghost"} size="sm" onClick={() => setMode("private")}>
             Мои квесты
-          </button>
+          </Button>
         </div>
 
         <input
@@ -185,8 +161,12 @@ export default function QuestsPage() {
       </div>
 
       {loading ? (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 24 }}>
-          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 24, justifyContent: "center" }}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} style={{ flex: "0 0 300px" }}>
+              <SkeletonCard />
+            </div>
+          ))}
         </div>
       ) : error ? (
         <div style={{ textAlign: "center", padding: 40, color: "var(--color-error)" }}>
@@ -203,9 +183,11 @@ export default function QuestsPage() {
           )}
         </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 24 }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 24, justifyContent: "center" }}>
           {quests.map((quest) => (
-            <QuestCard key={quest.id} quest={quest} onDelete={() => loadQuests()} />
+            <div key={quest.id} style={{ flex: "0 0 300px" }}>
+              <QuestCard quest={quest} onDelete={() => loadQuests()} />
+            </div>
           ))}
         </div>
       )}

@@ -1,11 +1,14 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Button from "@/components/Button";
 
 const STATIC_BASE = "http://localhost:7240";
 
 export default function ResultsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const router = useRouter();
 
   const [session, setSession] = useState<any>(null);
   const [quest, setQuest] = useState<any>(null);
@@ -380,40 +383,13 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
         marginTop: "40px",
         justifyContent: "center"
       }}>
-        <button
-          onClick={() => window.location.href = "/"}
-          style={{
-            padding: "15px 40px",
-            fontSize: "16px",
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            color: "white",
-            border: "none",
-            borderRadius: "10px",
-            cursor: "pointer",
-            fontWeight: "600",
-            transition: "transform 0.2s",
-            boxShadow: "0 5px 20px rgba(102, 126, 234, 0.3)"
-          }}
-        >
+        <Button variant="primary" onClick={() => router.push("/")}>
           На главную
-        </button>
+        </Button>
 
-        <button
-          onClick={() => window.print()}
-          style={{
-            padding: "15px 40px",
-            fontSize: "16px",
-            background: "white",
-            color: "#667eea",
-            border: "2px solid #667eea",
-            borderRadius: "10px",
-            cursor: "pointer",
-            fontWeight: "600",
-            transition: "transform 0.2s"
-          }}
-        >
+        <Button variant="secondary" onClick={() => window.print()}>
           Сохранить результаты
-        </button>
+        </Button>
       </div>
     </div>
   );

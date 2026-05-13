@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { fetchSessionDashboard, exportSessionReport, SessionDashboard } from "@/services/sessionsService";
 import { getStoredRole } from "@/utils/auth";
 import RoleGuard from "@/components/RoleGuard";
+import Button from "@/components/Button";
 import * as XLSX from 'xlsx';
 import { signalRService } from "@/services/signalRService";
 
@@ -246,32 +247,12 @@ export default function SessionDashboardPage() {
         }}>
           <h2>Результаты прохождения</h2>
           <div style={{ display: "flex", gap: "10px" }}>
-            <button
-              onClick={() => handleExport("json")}
-              style={{
-                padding: "8px 16px",
-                background: "#007bff",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer"
-              }}
-            >
+            <Button variant="primary" size="sm" onClick={() => handleExport("json")}>
               Экспорт JSON
-            </button>
-            <button
-              onClick={() => handleExport("xlsx")}
-              style={{
-                padding: "8px 16px",
-                background: "#28a745",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer"
-              }}
-            >
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => handleExport("xlsx")}>
               Экспорт Excel
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -372,19 +353,9 @@ export default function SessionDashboardPage() {
               : 0
             }
           </div>
-          <button
-            onClick={() => router.back()}
-            style={{
-              padding: "8px 16px",
-              background: "#6c757d",
-              color: "white",
-              border: "none",
-              borderRadius: "6px",
-              cursor: "pointer"
-            }}
-          >
+          <Button variant="ghost" onClick={() => router.back()}>
             Назад
-          </button>
+          </Button>
         </div>
       </div>
     </RoleGuard>

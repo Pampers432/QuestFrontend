@@ -32,18 +32,27 @@
   --radius-lg: 12px;
   --radius-xl: 16px;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
+   /* Shadows */
+   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
 
-  /* Transitions */
-  --transition-fast: 0.15s ease;
-  --transition-normal: 0.2s ease;
-  --transition-slow: 0.3s ease;
-}
+   /* Transitions */
+   --transition-fast: 0.15s ease;
+   --transition-normal: 0.2s ease;
+   --transition-slow: 0.3s ease;
 
-[data-theme="dark"] {
+   /* Container widths (semantic) */
+   --max-width-text: 36rem;        /* comfortable reading (≈576px) */
+   --max-width-content: 42rem;     /* main content with sidebar (≈672px) */
+   --max-width-narrow: 64rem;      /* cards grid, preview (≈1024px) — maps to Tailwind 5xl */
+   --max-width-medium: 72rem;      /* standard content (≈1152px) — maps to Tailwind 6xl */
+    --max-width-site: 75rem;        /* standard site (1200px) */
+    --max-width-wide: 80rem;        /* landing/hero sections (≈1280px) — maps to Tailwind 7xl */
+    --max-width-screen: 100%;       /* full-width sections */
+  }
+
+  [data-theme="dark"] {
   --color-background: #1a1d23;
   --color-surface: #252930;
   --color-text-primary: #F5F7FA;
@@ -82,8 +91,22 @@ a {
 /* ===== Layout ===== */
 .page-container {
   padding: var(--space-xl);
-  max-width: 1200px;
-  margin: 0 auto;
+  max-width: var(--max-width-site);
+  margin-inline: auto;
+}
+
+/* Fluid container variant (for full-width sections) */
+.container-fluid {
+  width: 100%;
+  max-width: var(--max-width-screen);
+  margin-inline: auto;
+}
+
+/* Prose container (for text-heavy content) */
+.container-prose {
+  max-width: var(--max-width-text);
+  margin-inline: auto;
+  padding-inline: var(--space-lg);
 }
 
 .page-title {
@@ -300,6 +323,13 @@ a {
   font-size: 16px;
   background: var(--color-surface);
   color: var(--color-text-primary);
+}
+
+/* Fluid container with clamp() — adapts between min and max */
+.container-responsive {
+  width: clamp(20rem, 92vw, var(--max-width-site));
+  margin-inline: auto;
+  padding-inline: var(--space-lg);
 }
 
 /* ===== Utility ===== */
