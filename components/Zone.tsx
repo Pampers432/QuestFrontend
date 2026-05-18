@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from "react";
 import { QuestionPosition } from "@/Entities/QuestionPosition";
 
 interface ZoneProps {
@@ -7,6 +8,7 @@ interface ZoneProps {
   startResize: (index: number, e: React.MouseEvent) => void;
   onRemove?: (index: number) => void;
   canRemove?: boolean;
+  onRename?: (index: number, name: string) => void;
 }
 
 export function Zone({
@@ -15,8 +17,45 @@ export function Zone({
   startDrag,
   startResize,
   onRemove,
-  canRemove = false
+  canRemove = false,
+  onRename
 }: ZoneProps) {
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState(zone.name);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editing]);
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const lower = zone.name.trim().toLowerCase();
+    if (lower === "дверь" || lower === "door") return;
+    setEditValue(zone.name);
+    setEditing(true);
+  };
+
+  const commitRename = () => {
+    const trimmed = editValue.trim();
+    if (trimmed && trimmed !== zone.name && onRename) {
+      onRename(index, trimmed);
+    }
+    setEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      commitRename();
+    } else if (e.key === "Escape") {
+      setEditValue(zone.name);
+      setEditing(false);
+    }
+  };
+
   return (
     <div
       className="editor-zone"
@@ -28,7 +67,20 @@ export function Zone({
         height: zone.h
       }}
     >
-      <span>{zone.name}</span>
+      {editing ? (
+        <input
+          ref={inputRef}
+          type="text"
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onBlur={commitRename}
+          onKeyDown={handleKeyDown}
+          onMouseDown={(e) => e.stopPropagation()}
+          className="zone-rename-input"
+        />
+      ) : (
+        <span onDoubleClick={handleDoubleClick} onMouseDown={(e) => e.stopPropagation()}>{zone.name}</span>
+      )}
 
       {canRemove && onRemove && (
         <button

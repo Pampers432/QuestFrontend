@@ -10,6 +10,7 @@ import { useZones } from "@/hooks/useZones";
 import { useDragResize } from "@/hooks/useDragResize";
 import { EditorPanel } from "@/components/EditorPanel";
 import { EditorCanvas } from "@/components/EditorCanvas";
+import { PageSun, PageCloud, PageStars } from "@/components/PageDoodles";
 
 const API_BASE = "http://localhost:7240";
 const STATIC_BASE = "http://localhost:7240";
@@ -31,7 +32,6 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
     updateZone,
     removeZone,
     resetZones,
-    printZones
   } = useZones([]);
 
   const drag = useDragResize(zones, updateZone);
@@ -76,7 +76,10 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
   }, [id]);
 
   const canRemoveZone = useMemo(
-    () => (zone: QuestionPosition) => zone.name.trim().toLowerCase() !== "door",
+    () => (zone: QuestionPosition) => {
+      const lower = zone.name.trim().toLowerCase();
+      return lower !== "дверь" && lower !== "door";
+    },
     []
   );
 
@@ -173,21 +176,23 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
     }
   };
 
-  if (loading) return <div style={{ padding: 24 }}>Загрузка...</div>;
-  if (!template) return <div style={{ padding: 24 }}>Шаблон не найден</div>;
+  if (loading) return <div style={{ padding: 24, minHeight: "calc(100vh - 64px)", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, color: "var(--color-text-secondary)" }}><span style={{ fontSize: 24 }}>⏳</span> Загрузка...</div>;
+  if (!template) return <div style={{ padding: 24, minHeight: "calc(100vh - 64px)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-text-secondary)" }}>🧭 Шаблон не найден</div>;
 
   return (
     <RoleGuard
       allowedRoles={["Admin"]}
       fallbackMessage="Только администратор может редактировать шаблоны."
     >
-      <div>
+      <div style={{ position: "relative", minHeight: "calc(100vh - 64px)" }}>
+        <PageSun style={{ position: "fixed", top: "3%", right: "5%", width: 65, height: 65, opacity: 0.3, zIndex: 0 }} className="animate-float-slow" />
+        <PageCloud style={{ position: "fixed", top: "8%", left: "3%", width: 85, height: 42, opacity: 0.25, zIndex: 0 }} className="animate-drift" />
+        <PageStars style={{ position: "fixed", top: "12%", left: "60%", width: 120, height: 18, opacity: 0.15, zIndex: 0 }} />
         <EditorPanel
           templateName={templateName}
           setTemplateName={setTemplateName}
           addZone={addZone}
           saveTemplate={handleSave}
-          printZones={printZones}
           handleFileChange={handleFileChange}
           saving={saving}
         />
@@ -198,6 +203,7 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
           drag={drag}
           onRemoveZone={removeZone}
           canRemoveZone={canRemoveZone}
+          onRenameZone={(index, name) => updateZone(index, { name })}
         />
 
         {saving && <p style={{ padding: "0 15px", color: "#666" }}>Сохранение...</p>}

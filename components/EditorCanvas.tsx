@@ -13,6 +13,7 @@ interface EditorCanvasProps {
   };
   onRemoveZone?: (index: number) => void;
   canRemoveZone?: (zone: QuestionPosition, index: number) => boolean;
+  onRenameZone?: (index: number, name: string) => void;
 }
 
 export function EditorCanvas({
@@ -20,7 +21,8 @@ export function EditorCanvas({
   zones,
   drag,
   onRemoveZone,
-  canRemoveZone
+  canRemoveZone,
+  onRenameZone
 }: EditorCanvasProps) {
   return (
     <div
@@ -39,6 +41,7 @@ export function EditorCanvas({
           startResize={drag.startResize}
           onRemove={onRemoveZone}
           canRemove={canRemoveZone ? canRemoveZone(zone, index) : false}
+          onRename={onRenameZone}
         />
       ))}
     </div>

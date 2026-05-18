@@ -50,6 +50,11 @@ export default function Navbar() {
       ]
     : [];
 
+  const isActive = (href: string) => {
+    if (href === "/") return pathname === "/";
+    return pathname.startsWith(href);
+  };
+
   return (
     <nav className={styles.nav}>
       <div className={styles.logo} onClick={() => router.push(homeHref)}>
@@ -61,20 +66,24 @@ export default function Navbar() {
           <Link
             key={link.href}
             href={link.href}
-            className={`${styles.link} ${pathname === link.href ? styles.active : ""}`}
+            className={`${styles.link} ${isActive(link.href) ? styles.active : ""}`}
           >
             {link.label}
           </Link>
         ))}
 
         {!role ? (
-          <Link href="/Auth" className={styles.link}>
-            Войти
-          </Link>
+          <span className={styles.loginLink}>
+            <Link href="/Auth" className={styles.link}>
+              Войти
+            </Link>
+          </span>
         ) : (
-          <Button variant="ghost" size="sm" onClick={logout}>
-            Выйти
-          </Button>
+          <span className={styles.logoutBtn}>
+            <Button variant="ghost" size="sm" onClick={logout}>
+              Выйти
+            </Button>
+          </span>
         )}
       </div>
     </nav>

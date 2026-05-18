@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import RoleGuard from "@/components/RoleGuard";
 import { useEffect, useState } from "react";
 import { RoomTemplate } from "@/Entities/RoomTemplate";
@@ -10,11 +11,15 @@ import { getStoredRole } from "@/utils/auth";
 import { signalRService } from "@/services/signalRService";
 import Button from "@/components/Button";
 import { SkeletonCard } from "@/components/Skeleton";
+import { PageSun, PageCloud, PageSparkle, PageStars } from "@/components/PageDoodles";
 
-export default function Home() {
+export default function Home({ searchParams }: { searchParams: Promise<{ select?: string }> }) {
   const router = useRouter();
+  const sp = React.use(searchParams);
+  const selectMode = sp.select === "true";
   const role = getStoredRole();
   const [templates, setTemplates] = useState<RoomTemplate[]>([]);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,8 +80,26 @@ export default function Home() {
     setTemplates(prev => prev.filter(t => t.id !== id));
   };
 
+  const handleSelectForQuest = (template: RoomTemplate) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(template.id!)) {
+        next.delete(template.id!);
+      } else {
+        next.add(template.id!);
+      }
+      return next;
+    });
+  };
+
+  const confirmSelection = () => {
+    const selected = templates.filter(t => selectedIds.has(t.id!));
+    localStorage.setItem("selectedTemplates", JSON.stringify(selected));
+    router.push("/Quests/CreateQuest");
+  };
+
   if (loading) return (
-    <div className="page-container">
+    <div className="page-container" style={{ position: "relative", zIndex: 1 }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 24 }}>
         {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
       </div>
@@ -89,24 +112,73 @@ export default function Home() {
       allowedRoles={["Teacher", "Admin"]}
       fallbackMessage="Доступ к шаблонам открыт только для преподавателя и администратора."
     >
-      <div className="page-container">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-          <h1 className="page-title" style={{ margin: 0 }}>Шаблоны комнат</h1>
-          {role === "Admin" && (
-            <Button variant="primary" onClick={() => router.push("/Templates/CreateTemplate")}>
-              + Создать шаблон
-            </Button>
-          )}
-        </div>
+      <div style={{ position: "relative", minHeight: "calc(100vh - 64px)" }}>
+        <PageSun
+          style={{ position: "fixed", top: "3%", right: "6%", width: 70, height: 70, opacity: 0.3, zIndex: 0 }}
+          className="animate-float-slow"
+        />
+        <PageCloud
+          style={{ position: "fixed", top: "8%", left: "3%", width: 90, height: 45, opacity: 0.25, zIndex: 0 }}
+          className="animate-drift"
+        />
+        <PageSparkle
+          style={{ position: "fixed", bottom: "10%", right: "5%", width: 30, height: 30, opacity: 0.2, zIndex: 0 }}
+          className="animate-sparkle"
+        />
+        <PageStars
+          style={{ position: "fixed", top: "12%", left: "40%", width: 140, height: 22, opacity: 0.15, zIndex: 0 }}
+        />
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 24 }}>
-          {templates.map((template) => (
-            <TemplateCard
-              key={template.id}
-              template={template}
-              onDelete={handleDelete}
-            />
-          ))}
+        <div className="page-container" style={{ position: "relative", zIndex: 1 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+            <h1 className="page-title" style={{ margin: 0, background: "linear-gradient(135deg, var(--color-orange), var(--color-sky))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              🏗️ Шаблоны комнат
+            </h1>
+            {role === "Admin" && !selectMode && (
+              <Button variant="primary" onClick={() => router.push("/Templates/CreateTemplate")}>
+                + Создать шаблон
+              </Button>
+            )}
+          </div>
+
+          {selectMode && (
+            <div style={{
+              background: "rgba(255,255,255,0.9)",
+              borderRadius: 12,
+              padding: "12px 16px",
+              marginBottom: 16,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              border: "2px solid var(--color-orange)",
+            }}>
+              <span style={{ fontWeight: 600, color: "var(--color-orange)" }}>
+                {selectedIds.size === 0
+                  ? "Выберите шаблоны для квеста"
+                  : `Выбрано ${selectedIds.size} шаблон${selectedIds.size === 1 ? "" : "ов"}`}
+              </span>
+              <div style={{ display: "flex", gap: 8 }}>
+                <Button variant="ghost" size="sm" onClick={() => router.push("/Quests/CreateQuest")}>
+                  Отмена
+                </Button>
+                <Button variant="primary" size="sm" onClick={confirmSelection} disabled={selectedIds.size === 0}>
+                  Подтвердить выбор
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 24 }}>
+            {templates.map((template) => (
+              <TemplateCard
+                key={template.id}
+                template={template}
+                selected={selectedIds.has(template.id!)}
+                onSelectForQuest={selectMode ? () => handleSelectForQuest(template) : undefined}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </RoleGuard>

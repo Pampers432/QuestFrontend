@@ -8,6 +8,7 @@ import RoleGuard from "@/components/RoleGuard";
 import Button from "@/components/Button";
 import * as XLSX from 'xlsx';
 import { signalRService } from "@/services/signalRService";
+import { PageSun, PageCloud, PageStars } from "@/components/PageDoodles";
 
 export default function SessionDashboardPage() {
   const params = useParams();
@@ -18,7 +19,6 @@ export default function SessionDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load dashboard data
   const loadData = useCallback(async () => {
     try {
       const data = await fetchSessionDashboard(id);
@@ -40,7 +40,6 @@ export default function SessionDashboardPage() {
     loadData();
   }, [id, router, loadData]);
 
-  // SignalR integration
   useEffect(() => {
     let mounted = true;
 
@@ -69,8 +68,6 @@ export default function SessionDashboardPage() {
   const handleSessionUpdated = (e: Event) => {
     const event = e as CustomEvent<string>;
     const updatedSessionId = event.detail;
-    console.log("[Dashboard] Session updated:", updatedSessionId);
-    // If this is the current session, refresh data
     if (updatedSessionId === id) {
       loadData();
     }
@@ -80,7 +77,6 @@ export default function SessionDashboardPage() {
     if (!dashboard) return;
 
     try {
-      // Подготовка данных для Excel
       const sessionInfo = [
         ["Информация о сессии"],
         ["Код доступа", dashboard.accessCode],
@@ -93,13 +89,11 @@ export default function SessionDashboardPage() {
         []
       ];
 
-      // Заголовки для таблицы результатов
       const resultsHeaders = [
         ["Результаты прохождения"],
         ["Ученик", "Статус", "Баллы", "Макс. баллы", "Начало", "Завершение", "Процент выполнения"]
       ];
 
-      // Данные по попыткам
       const resultsData = dashboard.attempts.map(attempt => {
         const percentage = attempt.maxScore > 0 
           ? Math.round((attempt.score / attempt.maxScore) * 100) 
@@ -116,7 +110,6 @@ export default function SessionDashboardPage() {
         ];
       });
 
-      // Итоговая статистика
       const summary = [
         [],
         ["Статистика"],
@@ -134,7 +127,6 @@ export default function SessionDashboardPage() {
         ]
       ];
 
-      // Объединяем все данные
       const worksheetData = [
         ...sessionInfo,
         ...resultsHeaders,
@@ -142,29 +134,24 @@ export default function SessionDashboardPage() {
         ...summary
       ];
 
-      // Создаем рабочий лист
       const ws = XLSX.utils.aoa_to_sheet(worksheetData);
 
-      // Настраиваем ширину колонок
       ws['!cols'] = [
-        { wch: 25 }, // Ученик
-        { wch: 15 }, // Статус
-        { wch: 10 }, // Баллы
-        { wch: 12 }, // Макс. баллы
-        { wch: 20 }, // Начало
-        { wch: 20 }, // Завершение
-        { wch: 15 }  // Процент
+        { wch: 25 },
+        { wch: 15 },
+        { wch: 10 },
+        { wch: 12 },
+        { wch: 20 },
+        { wch: 20 },
+        { wch: 15 }
       ];
 
-      // Создаем книгу и добавляем лист
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Результаты сессии");
 
-      // Генерируем имя файла
       const fileName = `session_${dashboard.questTitle}_${new Date().toISOString().split('T')[0]}.xlsx`
-        .replace(/[^a-zA-Z0-9а-яА-Я._-]/g, '_'); // Убираем спецсимволы
+        .replace(/[^a-zA-Z0-9а-яА-Я._-]/g, '_');
 
-      // Сохраняем файл
       XLSX.writeFile(wb, fileName);
     } catch (err) {
       console.error("Ошибка экспорта:", err);
@@ -192,170 +179,195 @@ export default function SessionDashboardPage() {
     }
   };
 
-  if (loading) return <div style={{ padding: 24 }}>Загрузка...</div>;
+  if (loading) return <div style={{ padding: 24, minHeight: "calc(100vh - 64px)", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, color: "var(--color-text-secondary)" }}><span style={{ fontSize: 24 }}>⏳</span> Загрузка...</div>;
   if (error) return <div style={{ padding: 24 }}>{error}</div>;
   if (!dashboard) return <div style={{ padding: 24 }}>Дашборд не найден</div>;
 
   return (
     <RoleGuard allowedRoles={["Teacher", "Admin"]}>
-      <div style={{ padding: "30px", maxWidth: "1200px", margin: "0 auto" }}>
-        <h1 style={{ marginBottom: "10px" }}>Дашборд результатов сессии</h1>
+      <div style={{ position: "relative", minHeight: "calc(100vh - 64px)" }}>
+        <PageSun
+          style={{ position: "fixed", top: "3%", right: "6%", width: 65, height: 65, opacity: 0.3, zIndex: 0 }}
+          className="animate-float-slow"
+        />
+        <PageCloud
+          style={{ position: "fixed", top: "8%", left: "3%", width: 85, height: 42, opacity: 0.25, zIndex: 0 }}
+          className="animate-drift"
+        />
+        <PageStars
+          style={{ position: "fixed", top: "12%", left: "50%", width: 130, height: 20, opacity: 0.15, zIndex: 0 }}
+        />
 
-        <div style={{
-          background: "#f5f5f5",
-          padding: "20px",
-          borderRadius: "10px",
-          marginBottom: "30px"
-        }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "15px" }}>
-            <div>
-              <div style={{ fontSize: "14px", color: "#666" }}>Код доступа</div>
-              <div style={{ fontSize: "20px", fontWeight: "bold" }}>{dashboard.accessCode}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: "14px", color: "#666" }}>Название квеста</div>
-              <div style={{ fontSize: "20px", fontWeight: "bold" }}>{dashboard.questTitle}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: "14px", color: "#666" }}>Дата начала</div>
-              <div style={{ fontSize: "16px" }}>{new Date(dashboard.startsAt).toLocaleString()}</div>
-            </div>
-            {dashboard.endsAt && (
-              <div>
-                <div style={{ fontSize: "14px", color: "#666" }}>Дата окончания</div>
-                <div style={{ fontSize: "16px" }}>{new Date(dashboard.endsAt).toLocaleString()}</div>
-              </div>
-            )}
-            <div>
-              <div style={{ fontSize: "14px", color: "#666" }}>Статус</div>
-              <div style={{
-                fontSize: "16px",
-                color: dashboard.isActive ? "#28a745" : "#dc3545",
-                fontWeight: "bold"
-              }}>
-                {dashboard.isActive ? "Активна" : "Завершена"}
-              </div>
-            </div>
-          </div>
-        </div>
+        <div style={{ padding: "30px", maxWidth: "1200px", margin: "0 auto", position: "relative", zIndex: 1 }}>
+          <h1 style={{ marginBottom: "10px", background: "linear-gradient(135deg, var(--color-orange), var(--color-sky))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            📊 Дашборд результатов сессии
+          </h1>
 
-        <div style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px"
-        }}>
-          <h2>Результаты прохождения</h2>
-          <div style={{ display: "flex", gap: "10px" }}>
-            <Button variant="primary" size="sm" onClick={() => handleExport("json")}>
-              Экспорт JSON
-            </Button>
-            <Button variant="secondary" size="sm" onClick={() => handleExport("xlsx")}>
-              Экспорт Excel
-            </Button>
-          </div>
-        </div>
-
-        <div style={{
-          background: "#fff",
-          border: "1px solid #ddd",
-          borderRadius: "10px",
-          overflow: "hidden"
-        }}>
           <div style={{
-            display: "grid",
-            gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr",
-            gap: "10px",
-            padding: "15px",
-            background: "#f8f9fa",
-            fontWeight: "bold",
-            borderBottom: "2px solid #ddd"
+            background: "rgba(255,255,255,0.85)",
+            backdropFilter: "blur(12px)",
+            padding: "24px",
+            borderRadius: "20px",
+            marginBottom: "30px",
+            border: "2px solid rgba(255,107,53,0.08)",
           }}>
-            <div>Ученик</div>
-            <div>Статус</div>
-            <div>Баллы</div>
-            <div>Макс. баллы</div>
-            <div>%</div>
-            <div>Начало</div>
-            <div>Завершение</div>
-          </div>
-
-          {dashboard.attempts.length === 0 ? (
-            <div style={{ padding: "40px", textAlign: "center", color: "#999" }}>
-              Пока нет попыток прохождения
-            </div>
-          ) : (
-            dashboard.attempts.map((attempt) => {
-              const percentage = attempt.maxScore > 0 
-                ? Math.round((attempt.score / attempt.maxScore) * 100) 
-                : 0;
-              
-              return (
-                <div
-                  key={attempt.attemptId}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr",
-                    gap: "10px",
-                    padding: "15px",
-                    borderBottom: "1px solid #eee",
-                    alignItems: "center"
-                  }}
-                >
-                  <div>{attempt.username}</div>
-                  <div>
-                    <span style={{
-                      padding: "4px 8px",
-                      borderRadius: "4px",
-                      fontSize: "12px",
-                      background: attempt.status === "completed" ? "#d4edda" : "#fff3cd",
-                      color: attempt.status === "completed" ? "#155724" : "#856404"
-                    }}>
-                      {attempt.status === "completed" ? "Завершено" : "В процессе"}
-                    </span>
-                  </div>
-                  <div style={{ fontWeight: "bold" }}>{attempt.score}</div>
-                  <div>{attempt.maxScore}</div>
-                  <div>
-                    <span style={{
-                      color: percentage >= 80 ? "#28a745" : percentage >= 60 ? "#ffc107" : "#dc3545",
-                      fontWeight: "bold"
-                    }}>
-                      {percentage}%
-                    </span>
-                  </div>
-                  <div style={{ fontSize: "14px" }}>
-                    {new Date(attempt.startedAt).toLocaleString()}
-                  </div>
-                  <div style={{ fontSize: "14px" }}>
-                    {attempt.finishedAt ? new Date(attempt.finishedAt).toLocaleString() : "-"}
-                  </div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "15px" }}>
+              <div>
+                <div style={{ fontSize: "14px", color: "var(--color-text-secondary)" }}>🔑 Код доступа</div>
+                <div style={{ fontSize: "20px", fontWeight: "bold", color: "var(--color-orange)" }}>{dashboard.accessCode}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: "14px", color: "var(--color-text-secondary)" }}>🎮 Название квеста</div>
+                <div style={{ fontSize: "20px", fontWeight: "bold" }}>{dashboard.questTitle}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: "14px", color: "var(--color-text-secondary)" }}>📅 Дата начала</div>
+                <div style={{ fontSize: "16px" }}>{new Date(dashboard.startsAt).toLocaleString()}</div>
+              </div>
+              {dashboard.endsAt && (
+                <div>
+                  <div style={{ fontSize: "14px", color: "var(--color-text-secondary)" }}>📅 Дата окончания</div>
+                  <div style={{ fontSize: "16px" }}>{new Date(dashboard.endsAt).toLocaleString()}</div>
                 </div>
-              );
-            })
-          )}
-        </div>
-
-        <div style={{
-          marginTop: "20px",
-          padding: "15px",
-          background: "#e7f3ff",
-          borderRadius: "8px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center"
-        }}>
-          <div>
-            <strong>Всего попыток:</strong> {dashboard.totalAttempts} |{" "}
-            <strong>Завершено:</strong> {dashboard.completedAttempts} |{" "}
-            <strong>Средний балл:</strong> {dashboard.attempts.length > 0 
-              ? (dashboard.attempts.reduce((sum, a) => sum + a.score, 0) / dashboard.attempts.length).toFixed(1)
-              : 0
-            }
+              )}
+              <div>
+                <div style={{ fontSize: "14px", color: "var(--color-text-secondary)" }}>📊 Статус</div>
+                <div style={{
+                  fontSize: "16px",
+                  color: dashboard.isActive ? "var(--color-success)" : "var(--color-error)",
+                  fontWeight: "bold"
+                }}>
+                  {dashboard.isActive ? "✅ Активна" : "❌ Завершена"}
+                </div>
+              </div>
+            </div>
           </div>
-          <Button variant="ghost" onClick={() => router.back()}>
-            Назад
-          </Button>
+
+          <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "20px"
+          }}>
+            <h2 style={{ color: "var(--color-text-primary)" }}>📋 Результаты прохождения</h2>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <Button variant="primary" size="sm" onClick={() => handleExport("json")}>
+                📄 Экспорт JSON
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => handleExport("xlsx")}>
+                📊 Экспорт Excel
+              </Button>
+            </div>
+          </div>
+
+          <div style={{
+            background: "rgba(255,255,255,0.85)",
+            backdropFilter: "blur(12px)",
+            border: "2px solid rgba(255,107,53,0.08)",
+            borderRadius: "20px",
+            overflow: "hidden"
+          }}>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr",
+              gap: "10px",
+              padding: "16px 20px",
+              background: "linear-gradient(135deg, rgba(255,107,53,0.08), rgba(69,183,209,0.08))",
+              fontWeight: 700,
+              borderBottom: "2px solid rgba(255,107,53,0.1)",
+              color: "var(--color-text-secondary)",
+              fontSize: 13,
+            }}>
+              <div>👤 Ученик</div>
+              <div>📊 Статус</div>
+              <div>⭐ Баллы</div>
+              <div>🎯 Макс.</div>
+              <div>📈 %</div>
+              <div>🕐 Начало</div>
+              <div>🏁 Завершение</div>
+            </div>
+
+            {dashboard.attempts.length === 0 ? (
+              <div style={{ padding: "40px", textAlign: "center", color: "var(--color-text-secondary)" }}>
+                Пока нет попыток прохождения
+              </div>
+            ) : (
+              dashboard.attempts.map((attempt) => {
+                const percentage = attempt.maxScore > 0 
+                  ? Math.round((attempt.score / attempt.maxScore) * 100) 
+                  : 0;
+                
+                return (
+                  <div
+                    key={attempt.attemptId}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr 1fr 1fr",
+                      gap: "10px",
+                      padding: "14px 20px",
+                      borderBottom: "1px solid rgba(255,107,53,0.05)",
+                      alignItems: "center",
+                      fontSize: 14,
+                    }}
+                  >
+                    <div style={{ fontWeight: 500 }}>{attempt.username}</div>
+                    <div>
+                      <span style={{
+                        padding: "4px 12px",
+                        borderRadius: "9999px",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        background: attempt.status === "completed" ? "rgba(0,184,148,0.15)" : "rgba(255,234,167,0.4)",
+                        color: attempt.status === "completed" ? "var(--color-success)" : "#856404",
+                      }}>
+                        {attempt.status === "completed" ? "✅ Завершено" : "⏳ В процессе"}
+                      </span>
+                    </div>
+                    <div style={{ fontWeight: "bold", color: "var(--color-orange)" }}>{attempt.score}</div>
+                    <div>{attempt.maxScore}</div>
+                    <div>
+                      <span style={{
+                        color: percentage >= 80 ? "var(--color-success)" : percentage >= 60 ? "var(--color-orange)" : "var(--color-error)",
+                        fontWeight: "bold"
+                      }}>
+                        {percentage}%
+                      </span>
+                    </div>
+                    <div style={{ fontSize: "13px", color: "var(--color-text-secondary)" }}>
+                      {new Date(attempt.startedAt).toLocaleString()}
+                    </div>
+                    <div style={{ fontSize: "13px", color: "var(--color-text-secondary)" }}>
+                      {attempt.finishedAt ? new Date(attempt.finishedAt).toLocaleString() : "-"}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          <div style={{
+            marginTop: "20px",
+            padding: "20px",
+            background: "rgba(255,255,255,0.85)",
+            backdropFilter: "blur(12px)",
+            borderRadius: "16px",
+            border: "2px solid rgba(255,107,53,0.08)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center"
+          }}>
+            <div style={{ color: "var(--color-text-secondary)", fontSize: 14 }}>
+              <strong>📊 Всего попыток:</strong> {dashboard.totalAttempts} |{" "}
+              <strong>✅ Завершено:</strong> {dashboard.completedAttempts} |{" "}
+              <strong>⭐ Средний балл:</strong> {dashboard.attempts.length > 0 
+                ? (dashboard.attempts.reduce((sum, a) => sum + a.score, 0) / dashboard.attempts.length).toFixed(1)
+                : 0
+              }
+            </div>
+            <Button variant="ghost" onClick={() => router.back()}>
+              ← Назад
+            </Button>
+          </div>
         </div>
       </div>
     </RoleGuard>

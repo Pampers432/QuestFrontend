@@ -1,8 +1,8 @@
 /* ===== Design Tokens ===== */
 :root {
-  /* Colors */
   --color-primary: #1E3A5F;
   --color-accent: #FF6F3C;
+  --color-accent-light: #FF8C5A;
   --color-background: #F5F7FA;
   --color-surface: #FFFFFF;
   --color-text-primary: #2D3436;
@@ -14,11 +14,21 @@
   --color-hover: rgba(30, 58, 95, 0.04);
   --color-focus: rgba(30, 58, 95, 0.12);
 
-  /* Typography */
+  --color-orange: #FF6B35;
+  --color-orange-light: #FF8C5A;
+  --color-sky: #45B7D1;
+  --color-sky-light: #E0F7FA;
+  --color-teal: #4ECDC4;
+  --color-lime: #96CEB4;
+  --color-lime-light: #D4EDDA;
+  --color-yellow: #FFEAA7;
+  --color-plum: #DDA0DD;
+  --color-peach: #FFF3E0;
+  --color-footer: #2D3436;
+
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
-  /* Spacing */
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 16px;
@@ -26,46 +36,32 @@
   --space-xl: 32px;
   --space-2xl: 48px;
 
-  /* Borders */
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
+  --radius-card: 24px;
+  --radius-button: 9999px;
 
-   /* Shadows */
-   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
-   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --shadow-card-hover: 0 16px 48px rgba(0, 0, 0, 0.12);
 
-   /* Transitions */
-   --transition-fast: 0.15s ease;
-   --transition-normal: 0.2s ease;
-   --transition-slow: 0.3s ease;
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.2s ease;
+  --transition-slow: 0.3s ease;
 
-   /* Container widths (semantic) */
-   --max-width-text: 36rem;        /* comfortable reading (≈576px) */
-   --max-width-content: 42rem;     /* main content with sidebar (≈672px) */
-   --max-width-narrow: 64rem;      /* cards grid, preview (≈1024px) — maps to Tailwind 5xl */
-   --max-width-medium: 72rem;      /* standard content (≈1152px) — maps to Tailwind 6xl */
-    --max-width-site: 75rem;        /* standard site (1200px) */
-    --max-width-wide: 80rem;        /* landing/hero sections (≈1280px) — maps to Tailwind 7xl */
-    --max-width-screen: 100%;       /* full-width sections */
-  }
-
-  [data-theme="dark"] {
-  --color-background: #1a1d23;
-  --color-surface: #252930;
-  --color-text-primary: #F5F7FA;
-  --color-text-secondary: #A0A4A8;
-  --color-border: #3a3f48;
-  --color-hover: rgba(255, 255, 255, 0.04);
-  --color-focus: rgba(255, 255, 255, 0.12);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --max-width-text: 36rem;
+  --max-width-content: 42rem;
+  --max-width-narrow: 64rem;
+  --max-width-medium: 72rem;
+  --max-width-site: 75rem;
+  --max-width-wide: 80rem;
+  --max-width-screen: 100%;
 }
 
-/* ===== Reset ===== */
 *,
 *::before,
 *::after {
@@ -76,11 +72,27 @@
 
 body {
   font-family: var(--font-sans);
-  background: var(--color-background);
+  background: linear-gradient(180deg, var(--color-sky-light) 0%, var(--color-peach) 30%, var(--color-background) 60%, var(--color-sky-light) 100%);
+  background-attachment: fixed;
   color: var(--color-text-primary);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 15% 10%, var(--color-yellow) 0%, transparent 35%),
+    radial-gradient(circle at 85% 15%, var(--color-sky-light) 0%, transparent 30%),
+    radial-gradient(circle at 10% 85%, var(--color-peach) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, var(--color-lime-light) 0%, transparent 35%);
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.5;
 }
 
 a {
@@ -88,21 +100,18 @@ a {
   text-decoration: none;
 }
 
-/* ===== Layout ===== */
 .page-container {
   padding: var(--space-xl);
   max-width: var(--max-width-site);
   margin-inline: auto;
 }
 
-/* Fluid container variant (for full-width sections) */
 .container-fluid {
   width: 100%;
   max-width: var(--max-width-screen);
   margin-inline: auto;
 }
 
-/* Prose container (for text-heavy content) */
 .container-prose {
   max-width: var(--max-width-text);
   margin-inline: auto;
@@ -121,7 +130,6 @@ a {
   color: var(--color-text-secondary);
 }
 
-/* ===== Editor (Template Zone Editor) ===== */
 .editor-panel {
   display: flex;
   align-items: center;
@@ -164,33 +172,56 @@ a {
 
 .editor-zone {
   position: absolute;
-  border: 2px solid var(--color-success);
-  background-color: rgba(0, 184, 148, 0.15);
+  border: 3px solid var(--color-orange);
+  background-color: rgba(255, 107, 53, 0.2);
   box-sizing: border-box;
   user-select: none;
   cursor: grab;
-  font-size: 20px;
+  font-size: 15px;
+  font-weight: 700;
   text-align: center;
   align-content: center;
   border-radius: var(--radius-sm);
+  color: white;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8), 0 0 8px rgba(0,0,0,0.5);
+}
+
+.editor-zone:hover {
+  background-color: rgba(255, 107, 53, 0.35);
+  border-color: var(--color-orange-light);
+}
+
+.zone-rename-input {
+  background: rgba(0,0,0,0.7);
+  border: 2px solid white;
+  border-radius: 4px;
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 2px 6px;
+  text-align: center;
+  width: 90%;
+  outline: none;
 }
 
 .editor-zone-remove {
   position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 22px;
-  height: 22px;
-  border: none;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  border: 2px solid white;
   border-radius: 50%;
   background: var(--color-error);
   color: #fff;
   font-size: 16px;
+  font-weight: 700;
   line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 
 .editor-zone-remove:hover {
@@ -199,16 +230,17 @@ a {
 
 .editor-resize {
   position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 16px;
-  height: 16px;
-  background: var(--color-accent);
+  right: -6px;
+  bottom: -6px;
+  width: 18px;
+  height: 18px;
+  background: var(--color-orange);
+  border: 2px solid white;
   cursor: nwse-resize;
-  border-radius: 3px;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 
-/* ===== Room Preview ===== */
 .room-preview-wrapper {
   position: relative;
   display: inline-block;
@@ -235,7 +267,6 @@ a {
   color: var(--color-text-primary);
 }
 
-/* ===== Quest Form ===== */
 .quest-form {
   display: flex;
   flex-direction: column;
@@ -256,8 +287,8 @@ a {
 }
 
 .quest-textarea {
-  height: 80px;
-  resize: none;
+  min-height: 80px;
+  resize: vertical;
 }
 
 .question-card {
@@ -289,7 +320,6 @@ a {
   color: var(--color-text-primary);
 }
 
-/* ===== Legacy buttons (migrate to <Button> component) ===== */
 .btn {
   padding: 10px 14px;
   background: var(--color-primary);
@@ -310,7 +340,6 @@ a {
   font-size: 13px;
 }
 
-/* ===== Datepicker overrides ===== */
 .react-datepicker-wrapper {
   width: 100%;
 }
@@ -325,14 +354,12 @@ a {
   color: var(--color-text-primary);
 }
 
-/* Fluid container with clamp() — adapts between min and max */
 .container-responsive {
   width: clamp(20rem, 92vw, var(--max-width-site));
   margin-inline: auto;
   padding-inline: var(--space-lg);
 }
 
-/* ===== Utility ===== */
 .flex { display: flex; }
 .flex-col { flex-direction: column; }
 .items-center { align-items: center; }
@@ -345,3 +372,184 @@ a {
 .mb-md { margin-bottom: var(--space-md); }
 .text-center { text-align: center; }
 .w-full { width: 100%; }
+
+/* ===== Decorations shared styles ===== */
+.deco-absolute {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.page-with-deco {
+  position: relative;
+}
+
+/* ===== Shared Card Styles (like landing page) ===== */
+.card-doodle {
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-card);
+  transition: all var(--transition-slow);
+  position: relative;
+}
+
+.card-doodle:hover {
+  transform: translateY(-0.5rem);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.card-doodle::before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: calc(var(--radius-card) + 3px);
+  border: 2px dashed var(--color-orange);
+  opacity: 0;
+  transition: opacity var(--transition-slow);
+  pointer-events: none;
+}
+
+.card-doodle:hover::before {
+  opacity: 0.15;
+}
+
+/* ===== Shared doodle container for pages ===== */
+.page-doodles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.page-doodles > * {
+  position: absolute;
+}
+
+/* ===== Section background styles for pages ===== */
+.section-doodle-bg {
+  position: relative;
+}
+
+.section-doodle-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 10% 20%, var(--color-yellow) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, var(--color-sky-light) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, var(--color-peach) 0%, transparent 50%);
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+/* ===== Animations ===== */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes wave {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-15deg); }
+  75% { transform: rotate(15deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes wobble {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(-8deg); }
+  40% { transform: rotate(8deg); }
+  60% { transform: rotate(-4deg); }
+  80% { transform: rotate(4deg); }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(-5deg) scale(1.05); }
+  75% { transform: rotate(5deg) scale(1.05); }
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate(0px, 0px); }
+  25% { transform: translate(5px, -8px); }
+  50% { transform: translate(10px, 0px); }
+  75% { transform: translate(5px, 8px); }
+}
+
+@keyframes sparklePulse {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.6; }
+  50% { transform: scale(1.3) rotate(180deg); opacity: 1; }
+}
+
+@keyframes slowSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes bounceSoft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 107, 53, 0.3); }
+  50% { box-shadow: 0 0 20px rgba(255, 107, 53, 0.6); }
+}
+
+@keyframes gooeyText {
+  0% { filter: blur(0px); }
+  50% { filter: blur(0.5px); }
+  100% { filter: blur(0px); }
+}
+
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-wave { animation: wave 0.6s ease-in-out; }
+.animate-fadeInUp { animation: fadeInUp 0.6s ease forwards; }
+.animate-wobble { animation: wobble 2s ease-in-out infinite; }
+.animate-wiggle { animation: wiggle 3s ease-in-out infinite; }
+.animate-drift { animation: drift 6s ease-in-out infinite; }
+.animate-sparkle { animation: sparklePulse 2s ease-in-out infinite; }
+.animate-slowSpin { animation: slowSpin 20s linear infinite; }
+.animate-bounceSoft { animation: bounceSoft 2s ease-in-out infinite; }
+.animate-pulseGlow { animation: pulseGlow 2s ease-in-out infinite; }
+.animate-float-slow { animation: float 5s ease-in-out infinite; }
+.animate-float-fast { animation: float 2s ease-in-out infinite; }
+
+/* ===== Doodle SVG helpers ===== */
+.doodle-sun {
+  color: var(--color-yellow);
+}
+
+.doodle-cloud {
+  color: white;
+  opacity: 0.8;
+}
+
+.doodle-tree {
+  color: var(--color-lime);
+}
+
+.doodle-sparkle {
+  color: var(--color-yellow);
+}
+
+/* ===== Section zigzag divider ===== */
+.doodle-spacer {
+  height: 60px;
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;
+}
+
+@media (min-width: 768px) {
+  .doodle-spacer {
+    height: 80px;
+  }
+}

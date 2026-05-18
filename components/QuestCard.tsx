@@ -42,7 +42,7 @@ export const QuestCard = ({ quest, onDelete }: { quest: Quest; onDelete?: () => 
   return (
     <div className={styles.card}>
       <div className={styles.badges}>
-        {quest.visibility === "Private" && <Badge variant="private">Private</Badge>}
+        {quest.visibility === "Private" && <Badge variant="private">Приватный</Badge>}
         <Badge variant={statusConfig[quest.status]?.variant || "default"}>
           {statusConfig[quest.status]?.label || quest.status}
         </Badge>
@@ -50,12 +50,20 @@ export const QuestCard = ({ quest, onDelete }: { quest: Quest; onDelete?: () => 
 
       {canEdit && (
         <div className={styles.cardHeader}>
-          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); router.push(`/Quests/EditQuest/${quest.id}`); }} title="Редактировать">
+          <button
+            className={styles.editBtn}
+            onClick={(e) => { e.stopPropagation(); router.push(`/Quests/EditQuest/${quest.id}`); }}
+            title="Редактировать"
+          >
             ✏️
-          </Button>
-          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDelete(); }} title="Удалить">
+          </button>
+          <button
+            className={styles.deleteBtn}
+            onClick={(e) => { e.stopPropagation(); handleDelete(); }}
+            title="Удалить"
+          >
             🗑️
-          </Button>
+          </button>
         </div>
       )}
 

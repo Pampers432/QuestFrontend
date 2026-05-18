@@ -1,52 +1,81 @@
 .page {
-  min-height: calc(100vh - 70px);
+  min-height: calc(100vh - 64px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: #f7f7f8;
+  position: relative;
 }
 
 .card {
   width: 100%;
   max-width: 420px;
-  background: #fff;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
-  padding: 24px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 24px;
+  border: 2px solid rgba(255, 107, 53, 0.12);
+  box-shadow: 0 16px 48px rgba(255, 107, 53, 0.1);
+  padding: 32px;
+  position: relative;
+  z-index: 1;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 28px;
+  border: 2px dashed var(--color-orange);
+  opacity: 0.1;
+  pointer-events: none;
 }
 
 .title {
   font-size: 28px;
-  margin-bottom: 16px;
+  font-weight: 800;
+  margin-bottom: 20px;
   text-align: center;
+  background: linear-gradient(135deg, var(--color-orange), var(--color-sky));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .modeSwitch {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .modeButton {
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  background: #fff;
+  border: 2px solid var(--color-border);
+  border-radius: 9999px;
+  background: var(--color-surface);
   padding: 10px;
   cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  transition: all 0.3s ease;
+}
+
+.modeButton:hover {
+  border-color: var(--color-orange);
+  color: var(--color-orange);
 }
 
 .active {
-  border-color: #2563eb;
-  background: #eff6ff;
+  border-color: var(--color-orange);
+  background: linear-gradient(135deg, var(--color-orange), var(--color-accent));
+  color: white;
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
 }
 
 .label {
@@ -57,10 +86,18 @@
 }
 
 .input {
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  padding: 10px;
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+  padding: 12px 14px;
   font-size: 15px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.input:focus {
+  border-color: var(--color-orange);
 }
 
 .checkboxLabel {
@@ -68,31 +105,46 @@
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: #4b5563;
+  color: var(--color-text-secondary);
 }
 
 .submit {
   margin-top: 8px;
   border: none;
-  border-radius: 8px;
-  padding: 11px;
-  background: #111827;
+  border-radius: 9999px;
+  padding: 12px;
+  background: linear-gradient(135deg, var(--color-orange), var(--color-accent));
   color: white;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+}
+
+.submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+}
+
+.submit:active {
+  transform: scale(0.96);
 }
 
 .submit:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
 .error {
-  color: #dc2626;
+  color: var(--color-error);
   font-size: 14px;
+  text-align: center;
 }
 
 .success {
-  color: #059669;
+  color: var(--color-success);
   font-size: 14px;
+  text-align: center;
 }

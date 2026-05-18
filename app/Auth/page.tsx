@@ -6,6 +6,8 @@ import { loginUser, registerUser } from "@/services/authService";
 import { readRoleFromToken, setStoredRole } from "@/utils/auth";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
+import { PageSun, PageCloud, PageSmiley, PageFlower } from "@/components/PageDoodles";
+import styles from "./AuthPage.module.css";
 
 type Mode = "login" | "register";
 
@@ -76,54 +78,89 @@ export default function AuthPage() {
   };
 
   return (
-    <div style={{ minHeight: "calc(100vh - 56px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-      <div style={{ width: "100%", maxWidth: 400 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700, textAlign: "center", marginBottom: 8, color: "var(--color-text-primary)" }}>
-          {title}
-        </h1>
+    <div className={styles.page}>
+      <PageSun
+        style={{
+          position: "fixed",
+          top: "5%",
+          right: "8%",
+          width: 100,
+          height: 100,
+          opacity: 0.5,
+          zIndex: 0,
+        }}
+        className="animate-float-slow"
+      />
+      <PageCloud
+        style={{
+          position: "fixed",
+          top: "12%",
+          left: "5%",
+          width: 120,
+          height: 60,
+          opacity: 0.4,
+          zIndex: 0,
+        }}
+        className="animate-drift"
+      />
+      <PageCloud
+        style={{
+          position: "fixed",
+          bottom: "15%",
+          right: "10%",
+          width: 100,
+          height: 50,
+          opacity: 0.3,
+          zIndex: 0,
+        }}
+        className="animate-float"
+      />
+      <PageSmiley
+        style={{
+          position: "fixed",
+          bottom: "8%",
+          left: "10%",
+          width: 60,
+          height: 60,
+          opacity: 0.3,
+          zIndex: 0,
+        }}
+        className="animate-wobble"
+      />
+      <PageFlower
+        style={{
+          position: "fixed",
+          top: "40%",
+          right: "3%",
+          width: 40,
+          height: 40,
+          opacity: 0.3,
+          zIndex: 0,
+        }}
+        className="animate-bounceSoft"
+      />
 
-        <div style={{ display: "flex", gap: 0, marginBottom: 24, borderBottom: "2px solid var(--color-border)" }}>
+      <div className={styles.card}>
+        <h1 className={styles.title}>{title}</h1>
+
+        <div className={styles.modeSwitch}>
           <button
             type="button"
             onClick={() => { setMode("login"); setError(""); setSuccess(""); }}
-            style={{
-              flex: 1,
-              padding: "12px 0",
-              border: "none",
-              background: "transparent",
-              fontSize: 15,
-              fontWeight: mode === "login" ? 600 : 400,
-              color: mode === "login" ? "var(--color-primary)" : "var(--color-text-secondary)",
-              cursor: "pointer",
-              borderBottom: mode === "login" ? "2px solid var(--color-primary)" : "2px solid transparent",
-              marginBottom: -2,
-              transition: "all var(--transition-fast)",
-            }}
+            className={`${styles.modeButton} ${mode === "login" ? styles.active : ""}`}
           >
             Вход
           </button>
           <button
             type="button"
             onClick={() => { setMode("register"); setError(""); setSuccess(""); }}
-            style={{
-              flex: 1,
-              padding: "12px 0",
-              border: "none",
-              background: "transparent",
-              fontSize: 15,
-              fontWeight: mode === "register" ? 600 : 400,
-              color: mode === "register" ? "var(--color-primary)" : "var(--color-text-secondary)",
-              cursor: "pointer",
-              borderBottom: mode === "register" ? "2px solid var(--color-primary)" : "2px solid transparent",
-              marginBottom: -2,
-              transition: "all var(--transition-fast)",
-            }}
+            className={`${styles.modeButton} ${mode === "register" ? styles.active : ""}`}
           >
             Регистрация
           </button>
         </div>
 
-        <form onSubmit={onSubmit} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <form onSubmit={onSubmit} className={styles.form}>
           <Input
             label="Username"
             value={username}
@@ -140,39 +177,26 @@ export default function AuthPage() {
           />
 
           {mode === "register" && (
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: "block", fontSize: 14, fontWeight: 500, color: "var(--color-text-secondary)", marginBottom: 6 }}>
+            <div>
+              <label className={styles.label}>
                 Роль
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className={styles.input}
+                >
+                  <option value="student">Student</option>
+                  <option value="teacher">Teacher</option>
+                  <option value="admin">Admin</option>
+                </select>
               </label>
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  border: "2px solid var(--color-border)",
-                  borderRadius: "var(--radius-md)",
-                  fontSize: 15,
-                  background: "var(--color-surface)",
-                  color: "var(--color-text-primary)",
-                  outline: "none",
-                }}
-              >
-                <option value="student">Student</option>
-                <option value="teacher">Teacher</option>
-                <option value="admin">Admin</option>
-              </select>
             </div>
           )}
 
-          {error && (
-            <p style={{ color: "var(--color-error)", fontSize: 14, margin: "8px 0" }}>{error}</p>
-          )}
-          {success && (
-            <p style={{ color: "var(--color-success)", fontSize: 14, margin: "8px 0" }}>{success}</p>
-          )}
+          {error && <p className={styles.error}>{error}</p>}
+          {success && <p className={styles.success}>{success}</p>}
 
-          <Button type="submit" variant="primary" size="lg" loading={isSubmitting} style={{ marginTop: 8 }}>
+          <Button type="submit" variant="primary" size="lg" loading={isSubmitting} style={{ marginTop: 8, borderRadius: 9999 }}>
             {mode === "login" ? "Войти" : "Зарегистрироваться"}
           </Button>
         </form>

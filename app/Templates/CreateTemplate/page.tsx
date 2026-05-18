@@ -7,14 +7,15 @@ import { useZones } from "@/hooks/useZones";
 import { useDragResize } from "@/hooks/useDragResize";
 import { EditorPanel } from "@/components/EditorPanel";
 import { EditorCanvas } from "@/components/EditorCanvas";
+import { PageSun, PageCloud, PageStars } from "@/components/PageDoodles";
 
 const API_BASE = "http://localhost:7240";
 
 export default function Home() {
   const router = useRouter();
-  const { zones, addZone, updateZone, removeZone, printZones } = useZones([
-    { name: "Door", x: 100, y: 150, w: 200, h: 350 },
-    { name: "obj1", x: 350, y: 140, w: 120, h: 380 }
+  const { zones, addZone, updateZone, removeZone } = useZones([
+    { name: "Дверь", x: 100, y: 150, w: 200, h: 350 },
+    { name: "Объект1", x: 350, y: 140, w: 120, h: 380 }
   ]);
 
   const drag = useDragResize(zones, updateZone);
@@ -82,20 +83,25 @@ export default function Home() {
     }
   };
 
-  const canRemoveZone = (zoneName: string) => zoneName.trim().toLowerCase() !== "door";
+  const canRemoveZone = (zoneName: string) => {
+    const lower = zoneName.trim().toLowerCase();
+    return lower !== "дверь" && lower !== "door";
+  };
 
   return (
     <RoleGuard
       allowedRoles={["Admin"]}
       fallbackMessage="Только администратор может добавлять шаблоны."
     >
-      <div>
+      <div style={{ position: "relative", minHeight: "calc(100vh - 64px)" }}>
+        <PageSun style={{ position: "fixed", top: "3%", right: "5%", width: 65, height: 65, opacity: 0.3, zIndex: 0 }} className="animate-float-slow" />
+        <PageCloud style={{ position: "fixed", top: "8%", left: "3%", width: 85, height: 42, opacity: 0.25, zIndex: 0 }} className="animate-drift" />
+        <PageStars style={{ position: "fixed", top: "12%", left: "60%", width: 120, height: 18, opacity: 0.15, zIndex: 0 }} />
         <EditorPanel
           templateName={templateName}
           setTemplateName={setTemplateName}
           addZone={addZone}
           saveTemplate={saveTemplate}
-          printZones={printZones}
           handleFileChange={handleFileChange}
           saving={saving}
         />
@@ -106,6 +112,7 @@ export default function Home() {
           drag={drag}
           onRemoveZone={removeZone}
           canRemoveZone={(zone) => canRemoveZone(zone.name)}
+          onRenameZone={(index, name) => updateZone(index, { name })}
         />
       </div>
     </RoleGuard>

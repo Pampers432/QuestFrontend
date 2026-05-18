@@ -8,9 +8,11 @@ import { Question } from "@/Entities/Question";
 import { AnswerOption } from "@/Entities/AnswerOption";
 import RoleGuard from "@/components/RoleGuard";
 import Button from "@/components/Button";
+import CategorySearch from "@/components/CategorySearch";
 import { fetchCategories } from "@/services/categoriesService";
 import { fetchQuestById, updateQuest } from "@/services/questsService";
 import { Quest } from "@/Entities/Quest";
+import { PageSun, PageCloud, PageStars } from "@/components/PageDoodles";
 
 type LocalQuestionState = {
   text: string;
@@ -81,7 +83,7 @@ export default function EditQuest() {
           const initialQuestions: { [key: string]: LocalQuestionState } = {};
 
           room.roomTemplate.sceneData.forEach(zone => {
-            if (zone.name.trim().toLowerCase() === "door") return;
+            if (zone.name.trim().toLowerCase() === "door" || zone.name.trim().toLowerCase() === "дверь") return;
 
             const existingQuestion = room.questions?.find(q => q.targetObject === zone.name);
             if (existingQuestion) {
@@ -277,7 +279,7 @@ export default function EditQuest() {
   };
 
   const addNewRoom = () => {
-    router.push('/Templates');
+    router.push('/Templates?select=true');
   };
 
   const validateQuest = (): boolean => {
@@ -292,7 +294,7 @@ export default function EditQuest() {
     for (let roomIndex = 0; roomIndex < rooms.length; roomIndex++) {
       const room = rooms[roomIndex];
       for (const [zoneName, question] of Object.entries(room.questions)) {
-        if (zoneName.trim().toLowerCase() === "door") continue;
+        if (zoneName.trim().toLowerCase() === "door" || zoneName.trim().toLowerCase() === "дверь") continue;
         if (!question.text.trim()) {
           alert(`В зоне "${zoneName}" комнаты "${room.template.name}" не введён текст вопроса`);
           return false;
@@ -341,7 +343,7 @@ export default function EditQuest() {
         title: room.title,
         orderIndex: roomIndex,
         questions: Object.entries(room.questions)
-          .filter(([zoneName]) => zoneName.trim().toLowerCase() !== "door")
+          .filter(([zoneName]) => { const lower = zoneName.trim().toLowerCase(); return lower !== "door" && lower !== "дверь"; })
           .map(([zoneName, question], qIndex): CreateQuestionRequest => ({
             text: question.text,
             type: question.type,
@@ -402,8 +404,8 @@ export default function EditQuest() {
     }
   };
 
-  if (loading) return <div>Загрузка...</div>;
-  if (error) return <div>{error}</div>;
+  if (loading) return <div style={{ padding: 24, minHeight: "calc(100vh - 64px)", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, color: "var(--color-text-secondary)" }}><span style={{ fontSize: 24 }}>⏳</span> Загрузка...</div>;
+  if (error) return <div style={{ padding: 24 }}>{error}</div>;
   if (rooms.length === 0) {
     return (
       <RoleGuard
@@ -411,7 +413,7 @@ export default function EditQuest() {
         fallbackMessage="Редактирование квестов доступно только преподавателю и администратору."
       >
         <div className="page-container">
-          <h1 className="page-title">Редактирование квеста</h1>
+          <h1 className="page-title" style={{ background: "linear-gradient(135deg, var(--color-orange), var(--color-sky))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>✏️ Редактирование квеста</h1>
           <div style={{ textAlign: "center", padding: 40 }}>
             <p>Комнаты не найдены</p>
             <Button variant="primary" onClick={() => router.push('/Quests')}>
@@ -438,9 +440,13 @@ export default function EditQuest() {
       allowedRoles={["Teacher", "Admin"]}
       fallbackMessage="Редактирование квестов доступно только преподавателю и администратору."
     >
-    <div className="page-container">
+    <div style={{ position: "relative", minHeight: "calc(100vh - 64px)" }}>
+      <PageSun style={{ position: "fixed", top: "3%", right: "5%", width: 65, height: 65, opacity: 0.3, zIndex: 0 }} className="animate-float-slow" />
+      <PageCloud style={{ position: "fixed", top: "8%", left: "3%", width: 85, height: 42, opacity: 0.25, zIndex: 0 }} className="animate-drift" />
+      <PageStars style={{ position: "fixed", top: "12%", left: "60%", width: 120, height: 18, opacity: 0.15, zIndex: 0 }} />
+    <div className="page-container" style={{ position: "relative", zIndex: 1 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <h1 className="page-title">Редактирование квеста</h1>
+        <h1 className="page-title" style={{ background: "linear-gradient(135deg, var(--color-orange), var(--color-sky))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>✏️ Редактирование квеста</h1>
         <Button variant="ghost" onClick={() => router.push('/Quests')}>
           Отмена
         </Button>
@@ -599,20 +605,11 @@ export default function EditQuest() {
             style={{ width: "100%", marginBottom: 10, padding: 8 }}
           />
 
-          <select
-            name="categoryId"
-            value={questData.categoryId || ""}
-            onChange={(e) => setQuestData(prev => ({ ...prev, categoryId: e.target.value || undefined }))}
-            className="quest-select"
-            style={{ width: "100%", marginBottom: 10, padding: 8 }}
-          >
-            <option value="">Выберите категорию (необязательно)</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
+          <CategorySearch
+            categories={categories}
+            value={questData.categoryId}
+            onChange={(id) => setQuestData(prev => ({ ...prev, categoryId: id }))}
+          />
 
           <select
             name="difficulty"
@@ -659,7 +656,7 @@ export default function EditQuest() {
       </h3>
 
       {currentRoom.template.sceneData
-        .filter((zone) => zone.name.trim().toLowerCase() !== "door")
+        .filter((zone) => { const lower = zone.name.trim().toLowerCase(); return lower !== "door" && lower !== "дверь"; })
         .map((zone, zoneIndex) => (
         <div key={zone.name} className="question-card" style={{ 
           border: "1px solid #ddd", 
@@ -716,6 +713,8 @@ export default function EditQuest() {
               ))}
             </select>
 
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ fontWeight: 600, fontSize: 13, color: "var(--color-text-secondary)" }}>Количество баллов</div>
             <input
               type="number"
               placeholder="Баллы"
@@ -741,6 +740,7 @@ export default function EditQuest() {
               min="0"
               max="100"
             />
+            </div>
           </div>
 
           <textarea
@@ -882,6 +882,7 @@ export default function EditQuest() {
         </div>
       ))}
     </div>
+      </div>
     </RoleGuard>
   );
 }

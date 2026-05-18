@@ -8,6 +8,7 @@ import { Question } from "@/Entities/Question";
 import { AnswerOption } from "@/Entities/AnswerOption";
 import RoleGuard from "@/components/RoleGuard";
 import Button from "@/components/Button";
+import CategorySearch from "@/components/CategorySearch";
 import { fetchCategories } from "@/services/categoriesService";
 import { fetchTemplateRenames } from "@/services/templatesService";
 import { useTemplateRenames } from "@/hooks/useTemplateRenames";
@@ -243,9 +244,10 @@ export default function CreateQuest() {
       
       // Удаляем из localStorage
       localStorage.removeItem("selectedTemplates");
+      localStorage.removeItem("createQuestRooms");
       
       // Перенаправляем на страницу выбора шаблонов
-      router.push('/Templates');
+      router.push('/Templates?select=true');
     }
   };
 
@@ -273,56 +275,45 @@ export default function CreateQuest() {
   }, []);
 
   useEffect(() => {
-    const saved = localStorage.getItem("selectedTemplates");
+    const savedRooms = localStorage.getItem("createQuestRooms");
+    const newTemplates = localStorage.getItem("selectedTemplates");
+    localStorage.removeItem("selectedTemplates");
+    localStorage.removeItem("createQuestRooms");
 
-    if (saved) {
-      const parsed = JSON.parse(saved) as RoomTemplate[];
-      
-      const initialRooms: LocalRoomData[] = parsed.map(template => {
-        const initialQuestions: any = {};
-        
-        template.sceneData.forEach((z, index) => {
-          if (z.name.trim().toLowerCase() === "door") {
-            return;
-          }
-          
-          initialQuestions[z.name] = {
-            text: "",
-            type: "single_choice",
-            points: 10,
-            hint: "",
-            answerOptions: [
-              { 
-                id: crypto.randomUUID(), 
-                questionId: "",
-                text: "", 
-                isCorrect: false,
-                matchPair: null,
-                sequenceOrder: null,
-                orderIndex: 0 
-              },
-              { 
-                id: crypto.randomUUID(), 
-                questionId: "",
-                text: "", 
-                isCorrect: false,
-                matchPair: null,
-                sequenceOrder: null,
-                orderIndex: 1 
-              }
-            ]
-          };
-        });
-        
-        return {
-          template,
-          title: template.name,
-          questions: initialQuestions
+    let existing: LocalRoomData[] = [];
+    if (savedRooms) {
+      try { existing = JSON.parse(savedRooms); } catch {}
+    }
+
+    if (!newTemplates) {
+      if (savedRooms) setRooms(existing);
+      return;
+    }
+
+    const parsed = JSON.parse(newTemplates) as RoomTemplate[];
+    const existingIds = new Set(existing.map(r => r.template.id));
+
+    const makeRoom = (template: RoomTemplate): LocalRoomData => {
+      const initialQuestions: any = {};
+      template.sceneData.forEach((z) => {
+        if (z.name.trim().toLowerCase() === "door") return;
+        initialQuestions[z.name] = {
+          text: "", type: "single_choice", points: 10, hint: "",
+          answerOptions: [
+            { id: crypto.randomUUID(), questionId: "", text: "", isCorrect: false, matchPair: null, sequenceOrder: null, orderIndex: 0 },
+            { id: crypto.randomUUID(), questionId: "", text: "", isCorrect: false, matchPair: null, sequenceOrder: null, orderIndex: 1 }
+          ]
         };
       });
+      return { template, title: template.name, questions: initialQuestions };
+    };
 
-      setRooms(initialRooms);
-    }
+    const merged: LocalRoomData[] = [
+      ...existing,
+      ...parsed.filter(t => !existingIds.has(t.id)).map(makeRoom)
+    ];
+
+    setRooms(merged);
   }, []);
 
   const handleImageLoad = () => {
@@ -339,7 +330,8 @@ export default function CreateQuest() {
   };
 
   const addNewRoom = () => {
-    router.push('/Templates');
+    localStorage.setItem("createQuestRooms", JSON.stringify(rooms));
+    router.push('/Templates?select=true');
   };
 
   // Валидация перед созданием квеста
@@ -469,6 +461,7 @@ export default function CreateQuest() {
       
       // Очищаем временные данные
       localStorage.removeItem("selectedTemplates");
+      localStorage.removeItem("createQuestRooms");
       
       alert("Квест успешно создан!");
       router.push('/Quests');
@@ -500,7 +493,7 @@ export default function CreateQuest() {
           <h1 className="page-title">Создание квеста</h1>
           <div style={{ textAlign: "center", padding: 40 }}>
             <p>Шаблоны не найдены</p>
-            <Button variant="primary" onClick={() => router.push('/Templates')}>
+            <Button variant="primary" onClick={() => router.push('/Templates?select=true')}>
               Выбрать шаблоны
             </Button>
           </div>
@@ -722,20 +715,11 @@ export default function CreateQuest() {
             style={{ width: "100%", marginBottom: 10, padding: 8 }}
           />
 
-          <select
-            name="categoryId"
-            value={questData.categoryId || ""}
-            onChange={(e) => setQuestData(prev => ({ ...prev, categoryId: e.target.value || undefined }))}
-            className="quest-select"
-            style={{ width: "100%", marginBottom: 10, padding: 8 }}
-          >
-            <option value="">Выберите категорию (необязательно)</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
+          <CategorySearch
+            categories={categories}
+            value={questData.categoryId}
+            onChange={(id) => setQuestData(prev => ({ ...prev, categoryId: id }))}
+          />
 
           <select
             name="difficulty"
@@ -767,7 +751,7 @@ export default function CreateQuest() {
               checked={questData.visibility === "Private"}
               onChange={(e) => setQuestData(prev => ({ ...prev, visibility: e.target.checked ? "Private" : "Public" }))}
             />
-            Private (видно только вам)
+            Приватный (видно только вам)
           </label>
 
           <h3 style={{ marginBottom: 15 }}>Текущая комната</h3>
@@ -865,32 +849,35 @@ export default function CreateQuest() {
               ))}
             </select>
 
-            <input
-              type="number"
-              placeholder="Баллы"
-              value={currentRoom.questions[zone.name]?.points || 10}
-              onChange={(e) => {
-                setRooms(prev => {
-                  const newRooms = [...prev];
-                  newRooms[currentRoomIndex] = {
-                    ...newRooms[currentRoomIndex],
-                    questions: {
-                      ...newRooms[currentRoomIndex].questions,
-                      [zone.name]: {
-                        ...newRooms[currentRoomIndex].questions[zone.name],
-                        points: parseInt(e.target.value) || 0
+            <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ fontWeight: 600, fontSize: 13, color: "var(--color-text-secondary)" }}>Количество баллов</div>
+              <input
+                type="number"
+                placeholder="Баллы"
+                value={currentRoom.questions[zone.name]?.points || 10}
+                onChange={(e) => {
+                  setRooms(prev => {
+                    const newRooms = [...prev];
+                    newRooms[currentRoomIndex] = {
+                      ...newRooms[currentRoomIndex],
+                      questions: {
+                        ...newRooms[currentRoomIndex].questions,
+                        [zone.name]: {
+                          ...newRooms[currentRoomIndex].questions[zone.name],
+                          points: parseInt(e.target.value) || 0
+                        }
                       }
-                    }
-                  };
-                  return newRooms;
-                });
-              }}
-              className="quest-input"
-              style={{ padding: 8 }}
-              min="0"
-              max="100"
-            />
-          </div>
+                    };
+                    return newRooms;
+                  });
+                }}
+                className="quest-input"
+                style={{ padding: 8 }}
+                min="0"
+                max="100"
+              />
+            </div>
+           </div>
 
           <textarea
             placeholder="Введите текст вопроса *"

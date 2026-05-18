@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { getStoredRole } from "@/utils/auth";
 import Button from "@/components/Button";
 import Badge from "@/components/Badge";
+import { PageSun, PageCloud, PageStars } from "@/components/PageDoodles";
 
 export default function QuestPage({ params }: { params: { id: string } }) {
   const [quest, setQuest] = useState<Quest | null>(null);
@@ -78,146 +79,170 @@ export default function QuestPage({ params }: { params: { id: string } }) {
   const currentRoom = sortedRooms[currentRoomIndex];
 
   return (
-    <div className="page-container" style={{ maxWidth: 1400 }}>
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
-        <div>
-          <h1 className="page-title" style={{ margin: 0 }}>{quest.title}</h1>
-          <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center" }}>
-            <Badge variant={quest.visibility === "Private" ? "private" : "default"}>
-              {quest.visibility === "Private" ? "Private" : "Public"}
-            </Badge>
-            <span style={{ color: "var(--color-text-secondary)", fontSize: 14 }}>{quest.subject}</span>
-            <span style={{ color: "var(--color-text-secondary)", fontSize: 14 }}>{quest.difficulty}</span>
-          </div>
-        </div>
-        <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--color-text-primary)" }}>Настройки теста</h2>
-      </div>
+    <div style={{ position: "relative", minHeight: "calc(100vh - 64px)" }}>
+      <PageSun
+        style={{ position: "fixed", top: "3%", right: "5%", width: 65, height: 65, opacity: 0.3, zIndex: 0 }}
+        className="animate-float-slow"
+      />
+      <PageCloud
+        style={{ position: "fixed", top: "10%", left: "3%", width: 85, height: 42, opacity: 0.25, zIndex: 0 }}
+        className="animate-drift"
+      />
+      <PageStars
+        style={{ position: "fixed", top: "15%", left: "60%", width: 120, height: 18, opacity: 0.15, zIndex: 0 }}
+      />
 
-      <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
-        {/* Room sidebar */}
-        <div style={{
-          width: 140,
-          height: 500,
-          overflowY: "auto",
-          border: "1px solid var(--color-border)",
-          borderRadius: "var(--radius-lg)",
-          padding: 12,
-          background: "var(--color-surface)",
-        }}>
-          <h3 style={{ fontSize: 13, fontWeight: 600, marginBottom: 12, textAlign: "center", color: "var(--color-text-secondary)", textTransform: "uppercase" }}>
-            Комнаты
-          </h3>
-          {sortedRooms.map((room, index) => (
-            <div
-              key={room.id}
-              onClick={() => setCurrentRoomIndex(index)}
-              style={{
-                marginBottom: 8,
-                cursor: "pointer",
-                border: index === currentRoomIndex ? "2px solid var(--color-primary)" : "1px solid var(--color-border)",
-                borderRadius: "var(--radius-md)",
-                padding: 4,
-                background: index === currentRoomIndex ? "var(--color-hover)" : "var(--color-surface)",
-                transition: "all var(--transition-fast)",
-              }}
-            >
-              <img
-                src={`${API_BASE}${room.roomTemplate.previewImageUrl}`}
-                alt={room.title || room.roomTemplate.name}
-                style={{ width: "100%", height: 70, objectFit: "cover", borderRadius: "var(--radius-sm)" }}
+      <div className="page-container" style={{ maxWidth: 1400, position: "relative", zIndex: 1 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
+          <div>
+            <h1 className="page-title" style={{ margin: 0, background: "linear-gradient(135deg, var(--color-orange), var(--color-sky))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+              🎮 {quest.title}
+            </h1>
+            <div style={{ display: "flex", gap: 8, marginTop: 8, alignItems: "center" }}>
+              <Badge variant={quest.visibility === "Private" ? "private" : "default"}>
+                {quest.visibility === "Private" ? "🔒 Приватный" : "🌍 Публичный"}
+              </Badge>
+              <span style={{ color: "var(--color-text-secondary)", fontSize: 14 }}>📚 {quest.subject}</span>
+              <span style={{ color: "var(--color-text-secondary)", fontSize: 14 }}>
+                {quest.difficulty === "Easy" && "🟢"}
+                {quest.difficulty === "Medium" && "🟡"}
+                {quest.difficulty === "Hard" && "🔴"} {quest.difficulty}
+              </span>
+            </div>
+          </div>
+          <h2 style={{ fontSize: 20, fontWeight: 600, color: "var(--color-orange)" }}>⚙️ Настройки теста</h2>
+        </div>
+
+        <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+          <div style={{
+            width: 140,
+            height: 500,
+            overflowY: "auto",
+            border: "2px solid rgba(255,107,53,0.1)",
+            borderRadius: 20,
+            padding: 12,
+            background: "rgba(255,255,255,0.7)",
+            backdropFilter: "blur(8px)",
+          }}>
+            <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, textAlign: "center", color: "var(--color-orange)", textTransform: "uppercase" }}>
+              🏠 Комнаты
+            </h3>
+            {sortedRooms.map((room, index) => (
+              <div
+                key={room.id}
+                onClick={() => setCurrentRoomIndex(index)}
+                style={{
+                  marginBottom: 8,
+                  cursor: "pointer",
+                  border: index === currentRoomIndex ? "3px solid var(--color-orange)" : "2px solid transparent",
+                  borderRadius: 12,
+                  padding: 4,
+                  background: index === currentRoomIndex ? "rgba(255,107,53,0.08)" : "transparent",
+                  transition: "all var(--transition-fast)",
+                }}
+              >
+                <img
+                  src={`${API_BASE}${room.roomTemplate.previewImageUrl}`}
+                  alt={room.title || room.roomTemplate.name}
+                  style={{ width: "100%", height: 70, objectFit: "cover", borderRadius: 8 }}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div style={{ flex: 2, minWidth: 300 }}>
+            {sortedRooms.map((room) => (
+              <div key={room.id} style={{
+                border: "2px solid rgba(255,107,53,0.08)",
+                padding: 20,
+                borderRadius: 20,
+                marginBottom: 20,
+                background: "rgba(255,255,255,0.7)",
+                backdropFilter: "blur(8px)",
+              }}>
+                <h3 style={{ marginBottom: 12, color: "var(--color-text-primary)" }}>{room.title}</h3>
+                <img
+                  src={`${API_BASE}${room.roomTemplate.previewImageUrl}`}
+                  alt=""
+                  style={{ width: "100%", maxWidth: 600, borderRadius: 12 }}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div style={{
+            flex: 1,
+            minWidth: 280,
+            border: "2px solid rgba(255,107,53,0.1)",
+            padding: 24,
+            borderRadius: 20,
+            height: "fit-content",
+            background: "rgba(255,255,255,0.85)",
+            backdropFilter: "blur(12px)",
+            display: "flex",
+            flexDirection: "column",
+            gap: 16,
+            boxShadow: "0 8px 32px rgba(255,107,53,0.08)",
+          }}>
+            <div>
+              <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: 6 }}>⏱️ Лимит времени (мин)</label>
+              <input
+                type="number"
+                value={timeLimit ?? ""}
+                onChange={(e) => setTimeLimit(Number(e.target.value))}
+                style={{ width: "100%", padding: "10px 14px", border: "2px solid var(--color-border)", borderRadius: 12, fontSize: 14, background: "var(--color-surface)", color: "var(--color-text-primary)", outline: "none" }}
+                onFocus={(e) => e.target.style.borderColor = "var(--color-orange)"}
+                onBlur={(e) => e.target.style.borderColor = "var(--color-border)"}
               />
             </div>
-          ))}
-        </div>
 
-        {/* Room preview */}
-        <div style={{ flex: 2, minWidth: 300 }}>
-          {sortedRooms.map((room) => (
-            <div key={room.id} style={{
-              border: "1px solid var(--color-border)",
-              padding: 20,
-              borderRadius: "var(--radius-lg)",
-              marginBottom: 20,
-              background: "var(--color-surface)",
-            }}>
-              <h3 style={{ marginBottom: 12, color: "var(--color-text-primary)" }}>{room.title}</h3>
-              <img
-                src={`${API_BASE}${room.roomTemplate.previewImageUrl}`}
-                alt=""
-                style={{ width: "100%", maxWidth: 600, borderRadius: "var(--radius-md)" }}
+            <label style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 14, color: "var(--color-text-primary)", cursor: "pointer" }}>
+              <input type="checkbox" checked={allowPartial} onChange={(e) => setAllowPartial(e.target.checked)} style={{ accentColor: "var(--color-orange)", width: 18, height: 18 }} />
+              ✅ Разрешить частичное прохождение
+            </label>
+
+            <label style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 14, color: "var(--color-text-primary)", cursor: "pointer" }}>
+              <input type="checkbox" checked={allowSkip} onChange={(e) => setAllowSkip(e.target.checked)} style={{ accentColor: "var(--color-orange)", width: 18, height: 18 }} />
+              ⏭️ Разрешить пропуск вопросов
+            </label>
+
+            <div>
+              <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: 6 }}>🔑 Код доступа</label>
+              <input
+                type="text"
+                value={accessCode}
+                onChange={(e) => setAccessCode(e.target.value)}
+                placeholder="Оставьте пустым для генерации"
+                style={{ width: "100%", padding: "10px 14px", border: "2px solid var(--color-border)", borderRadius: 12, fontSize: 14, background: "var(--color-surface)", color: "var(--color-text-primary)", outline: "none" }}
+                onFocus={(e) => e.target.style.borderColor = "var(--color-orange)"}
+                onBlur={(e) => e.target.style.borderColor = "var(--color-border)"}
               />
             </div>
-          ))}
-        </div>
 
-        {/* Settings panel */}
-        <div style={{
-          flex: 1,
-          minWidth: 280,
-          border: "1px solid var(--color-border)",
-          padding: 20,
-          borderRadius: "var(--radius-lg)",
-          height: "fit-content",
-          background: "var(--color-surface)",
-          display: "flex",
-          flexDirection: "column",
-          gap: 16,
-        }}>
-          <div>
-            <label style={{ display: "block", fontSize: 14, fontWeight: 500, color: "var(--color-text-secondary)", marginBottom: 6 }}>Лимит времени (мин)</label>
-            <input
-              type="number"
-              value={timeLimit ?? ""}
-              onChange={(e) => setTimeLimit(Number(e.target.value))}
-              style={{ width: "100%", padding: "8px 12px", border: "2px solid var(--color-border)", borderRadius: "var(--radius-md)", fontSize: 14, background: "var(--color-surface)", color: "var(--color-text-primary)", outline: "none" }}
-            />
+            <div>
+              <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: 6 }}>📅 Начало</label>
+              <input
+                type="datetime-local"
+                value={startsAt}
+                onChange={(e) => setStartsAt(e.target.value)}
+                style={{ width: "100%", padding: "10px 14px", border: "2px solid var(--color-border)", borderRadius: 12, fontSize: 14, background: "var(--color-surface)", color: "var(--color-text-primary)", outline: "none" }}
+              />
+            </div>
+
+            <div>
+              <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: 6 }}>📅 Окончание</label>
+              <input
+                type="datetime-local"
+                value={endsAt}
+                onChange={(e) => setEndsAt(e.target.value)}
+                style={{ width: "100%", padding: "10px 14px", border: "2px solid var(--color-border)", borderRadius: 12, fontSize: 14, background: "var(--color-surface)", color: "var(--color-text-primary)", outline: "none" }}
+              />
+            </div>
+
+            <Button variant="primary" size="lg" onClick={startSession} style={{ marginTop: 8, borderRadius: 9999 }}>
+              🚀 Запустить тест
+            </Button>
           </div>
-
-          <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, color: "var(--color-text-primary)", cursor: "pointer" }}>
-            <input type="checkbox" checked={allowPartial} onChange={(e) => setAllowPartial(e.target.checked)} />
-            Разрешить частичное прохождение
-          </label>
-
-          <label style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 14, color: "var(--color-text-primary)", cursor: "pointer" }}>
-            <input type="checkbox" checked={allowSkip} onChange={(e) => setAllowSkip(e.target.checked)} />
-            Разрешить пропуск вопросов
-          </label>
-
-          <div>
-            <label style={{ display: "block", fontSize: 14, fontWeight: 500, color: "var(--color-text-secondary)", marginBottom: 6 }}>Код доступа</label>
-            <input
-              type="text"
-              value={accessCode}
-              onChange={(e) => setAccessCode(e.target.value)}
-              placeholder="Оставьте пустым для генерации"
-              style={{ width: "100%", padding: "8px 12px", border: "2px solid var(--color-border)", borderRadius: "var(--radius-md)", fontSize: 14, background: "var(--color-surface)", color: "var(--color-text-primary)", outline: "none" }}
-            />
-          </div>
-
-          <div>
-            <label style={{ display: "block", fontSize: 14, fontWeight: 500, color: "var(--color-text-secondary)", marginBottom: 6 }}>Начало</label>
-            <input
-              type="datetime-local"
-              value={startsAt}
-              onChange={(e) => setStartsAt(e.target.value)}
-              style={{ width: "100%", padding: "8px 12px", border: "2px solid var(--color-border)", borderRadius: "var(--radius-md)", fontSize: 14, background: "var(--color-surface)", color: "var(--color-text-primary)", outline: "none" }}
-            />
-          </div>
-
-          <div>
-            <label style={{ display: "block", fontSize: 14, fontWeight: 500, color: "var(--color-text-secondary)", marginBottom: 6 }}>Окончание</label>
-            <input
-              type="datetime-local"
-              value={endsAt}
-              onChange={(e) => setEndsAt(e.target.value)}
-              style={{ width: "100%", padding: "8px 12px", border: "2px solid var(--color-border)", borderRadius: "var(--radius-md)", fontSize: 14, background: "var(--color-surface)", color: "var(--color-text-primary)", outline: "none" }}
-            />
-          </div>
-
-          <Button variant="primary" size="lg" onClick={startSession} style={{ marginTop: 8 }}>
-            Запустить тест
-          </Button>
         </div>
       </div>
     </div>

@@ -6,7 +6,6 @@ interface EditorPanelProps {
   setTemplateName: (name: string) => void;
   addZone: () => void;
   saveTemplate: () => void;
-  printZones: () => void;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   saving?: boolean;
 }
@@ -16,7 +15,6 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
   setTemplateName,
   addZone,
   saveTemplate,
-  printZones,
   handleFileChange,
   saving = false
 }) => {
@@ -54,6 +52,7 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
           accept="image/*"
           onChange={handleFileChange}
           disabled={saving}
+          style={{ cursor: "pointer", border: "2px dashed var(--color-border)", borderRadius: 8, padding: 8 }}
         />
       </div>
 
@@ -63,10 +62,6 @@ export const EditorPanel: React.FC<EditorPanelProps> = ({
 
       <Button variant="secondary" size="sm" onClick={saveTemplate} loading={saving}>
         {saving ? "Сохранение..." : "Сохранить шаблон"}
-      </Button>
-
-      <Button variant="ghost" size="sm" onClick={printZones}>
-        Вывести зоны
       </Button>
     </div>
   );

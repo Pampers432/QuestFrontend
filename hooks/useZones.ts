@@ -7,7 +7,7 @@ export function useZones(initial: QuestionPosition[]) {
   const addZone = useCallback(() => {
     setZones((prev) => {
       const newIndex = prev.length;
-      return [...prev, { name: `obj${newIndex}`, x: 100, y: 100, w: 150, h: 150 }];
+      return [...prev, { name: `Объект${newIndex}`, x: 100, y: 100, w: 150, h: 150 }];
     });
   }, []);
 
