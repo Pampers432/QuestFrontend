@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Quest } from "@/Entities/Quest";
 import { useRouter } from "next/navigation";
 import { getStoredRole } from "@/utils/auth";
 import Button from "@/components/Button";
 import Badge from "@/components/Badge";
 import { PageSun, PageCloud, PageStars } from "@/components/PageDoodles";
+import DatePicker from "react-datepicker";
+import { ru } from "date-fns/locale";
+import "react-datepicker/dist/react-datepicker.css";
 
 export default function QuestPage({ params }: { params: { id: string } }) {
   const [quest, setQuest] = useState<Quest | null>(null);
@@ -16,6 +19,7 @@ export default function QuestPage({ params }: { params: { id: string } }) {
   const [allowSkip, setAllowSkip] = useState(false);
   const [startsAt, setStartsAt] = useState("");
   const [endsAt, setEndsAt] = useState("");
+  const [endsAtAuto, setEndsAtAuto] = useState(true);
   const [accessCode, setAccessCode] = useState("");
 
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7240";
@@ -72,6 +76,28 @@ export default function QuestPage({ params }: { params: { id: string } }) {
     const saved = localStorage.getItem("selectedQuest");
     if (saved) setQuest(JSON.parse(saved));
   }, []);
+
+  const fmtLocal = (d: Date) => {
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
+  const toDate = (iso: string) => iso ? new Date(iso) : null;
+  const toIso = (d: Date | null) => d ? fmtLocal(d) : "";
+
+  const autoCalcEnd = useCallback((start: string, limit: number | null) => {
+    if (!start || !limit || limit <= 0) return "";
+    const d = new Date(start);
+    if (isNaN(d.getTime())) return "";
+    d.setMinutes(d.getMinutes() + limit);
+    return fmtLocal(d);
+  }, []);
+
+  useEffect(() => {
+    if (!endsAtAuto) return;
+    const calc = autoCalcEnd(startsAt, timeLimit);
+    if (calc) setEndsAt(calc);
+  }, [startsAt, timeLimit, endsAtAuto, autoCalcEnd]);
 
   if (!quest) return <div className="page-container">Загрузка...</div>;
 
@@ -221,21 +247,60 @@ export default function QuestPage({ params }: { params: { id: string } }) {
 
             <div>
               <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: 6 }}>📅 Начало</label>
-              <input
-                type="datetime-local"
-                value={startsAt}
-                onChange={(e) => setStartsAt(e.target.value)}
-                style={{ width: "100%", padding: "10px 14px", border: "2px solid var(--color-border)", borderRadius: 12, fontSize: 14, background: "var(--color-surface)", color: "var(--color-text-primary)", outline: "none" }}
+              <DatePicker
+                selected={toDate(startsAt)}
+                onChange={(d: Date | null) => setStartsAt(toIso(d))}
+                showTimeSelect
+                timeFormat="HH:mm"
+                timeIntervals={5}
+                dateFormat="dd.MM.yyyy HH:mm"
+                locale={ru}
+                isClearable
+                placeholderText="Выберите дату и время"
+                className="date-picker-input"
+                todayButton="Сегодня"
+                openToDate={new Date()}
               />
+              <div style={{ marginTop: 4, display: "flex", gap: 6 }}>
+                <button
+                  type="button"
+                  onClick={() => { const now = new Date(); setStartsAt(fmtLocal(now)); }}
+                  style={{ fontSize: 12, color: "var(--color-orange)", background: "none", border: "none", cursor: "pointer", fontWeight: 600, padding: 0 }}
+                >
+                  ⏺ Сейчас
+                </button>
+              </div>
             </div>
 
             <div>
-              <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: 6 }}>📅 Окончание</label>
-              <input
-                type="datetime-local"
-                value={endsAt}
-                onChange={(e) => setEndsAt(e.target.value)}
-                style={{ width: "100%", padding: "10px 14px", border: "2px solid var(--color-border)", borderRadius: 12, fontSize: 14, background: "var(--color-surface)", color: "var(--color-text-primary)", outline: "none" }}
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: 6 }}>
+                📅 Окончание
+                {!endsAtAuto && (
+                  <span
+                    onClick={() => {
+                      setEndsAtAuto(true);
+                      const calc = autoCalcEnd(startsAt, timeLimit);
+                      if (calc) setEndsAt(calc);
+                    }}
+                    style={{ fontSize: 11, color: "var(--color-orange)", cursor: "pointer", fontWeight: 400 }}
+                  >
+                    ↻ Авто
+                  </span>
+                )}
+              </label>
+              <DatePicker
+                selected={toDate(endsAt)}
+                onChange={(d: Date | null) => { setEndsAt(toIso(d)); setEndsAtAuto(!d); }}
+                showTimeSelect
+                timeFormat="HH:mm"
+                timeIntervals={5}
+                dateFormat="dd.MM.yyyy HH:mm"
+                locale={ru}
+                isClearable
+                placeholderText="Выберите дату и время"
+                className="date-picker-input"
+                todayButton="Сегодня"
+                openToDate={new Date()}
               />
             </div>
 

@@ -5,7 +5,8 @@ import { AuthorAnalyticsDto } from "@/Application/DTO/AuthorAnalyticsDto";
 import { fetchMyAnalytics } from "@/services/analyticsService";
 import { SkeletonCard } from "@/components/Skeleton";
 import Badge from "@/components/Badge";
-import { PageSun, PageCloud, PageStars } from "@/components/PageDoodles";
+import { PageSun, PageCloud, PageStars, PageSparkle, PageSmiley, PageFlower } from "@/components/PageDoodles";
+import { PaintedDots } from "@/app/(landing)/components/Decorations";
 
 function SummaryCard({ value, label, color, icon }: { value: string | number; label: string; color: string; icon?: string }) {
   return (
@@ -66,16 +67,38 @@ export default function AnalyticsPage() {
 
   return (
     <div style={{ position: "relative", minHeight: "calc(100vh - 64px)" }}>
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        background: "linear-gradient(to bottom, var(--color-sky-light), var(--color-peach))",
+        zIndex: 0
+      }} />
+      <div style={{ position: "absolute", top: 0, left: 0, width: "100%", zIndex: 0 }}>
+        <PaintedDots style={{ position: "absolute", top: "10%", right: "3%", width: 200, height: 200, opacity: 0.15 }} />
+      </div>
+      
       <PageSun
-        style={{ position: "fixed", top: "3%", right: "6%", width: 65, height: 65, opacity: 0.3, zIndex: 0 }}
+        style={{ position: "fixed", top: "5%", right: "8%", width: 75, height: 75, opacity: 0.4, zIndex: 1 }}
         className="animate-float-slow"
       />
       <PageCloud
-        style={{ position: "fixed", top: "8%", left: "3%", width: 85, height: 42, opacity: 0.25, zIndex: 0 }}
+        style={{ position: "fixed", top: "12%", left: "5%", width: 110, height: 55, opacity: 0.35, zIndex: 1 }}
         className="animate-drift"
       />
+      <PageSparkle
+        style={{ position: "fixed", bottom: "20%", right: "10%", width: 35, height: 35, opacity: 0.25, zIndex: 1 }}
+        className="animate-sparkle"
+      />
+      <PageSmiley
+        style={{ position: "fixed", top: "45%", left: "45%", width: 55, height: 55, opacity: 0.15, zIndex: 1 }}
+        className="animate-bounceSoft"
+      />
+      <PageFlower
+        style={{ position: "fixed", bottom: "25%", left: "8%", width: 50, height: 50, opacity: 0.2, zIndex: 1 }}
+        className="animate-wiggle"
+      />
       <PageStars
-        style={{ position: "fixed", top: "12%", left: "50%", width: 130, height: 20, opacity: 0.15, zIndex: 0 }}
+        style={{ position: "fixed", top: "70%", left: "70%", width: 120, height: 18, opacity: 0.2, zIndex: 1 }}
       />
 
       <div className="page-container" style={{ position: "relative", zIndex: 1 }}>

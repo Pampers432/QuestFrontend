@@ -8,7 +8,8 @@ import { getStoredRole } from "@/utils/auth";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
 import { SkeletonCard } from "@/components/Skeleton";
-import { PageSun, PageCloud, PageStars } from "@/components/PageDoodles";
+import { PageSun, PageCloud, PageSparkle, PageStars, PageTree, PageHouse, PageSmiley, PageFlower } from "@/components/PageDoodles";
+import { ZigzagDivider, PaintedDots } from "@/app/(landing)/components/Decorations";
 
 export default function CategoriesPage() {
   const router = useRouter();
@@ -82,16 +83,45 @@ export default function CategoriesPage() {
   return (
     <RoleGuard allowedRoles={["Admin"]}>
       <div style={{ position: "relative", minHeight: "calc(100vh - 64px)" }}>
+        <div style={{
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(to bottom, var(--color-sky-light), var(--color-peach))",
+          zIndex: 0
+        }} />
+        <div style={{ position: "absolute", top: 0, left: 0, width: "100%", zIndex: 0 }}>
+          <PaintedDots style={{ position: "absolute", top: "5%", right: "2%", width: 180, height: 180, opacity: 0.2 }} />
+        </div>
+        
         <PageSun
-          style={{ position: "fixed", top: "3%", right: "6%", width: 65, height: 65, opacity: 0.3, zIndex: 0 }}
+          style={{ position: "fixed", top: "3%", right: "6%", width: 70, height: 70, opacity: 0.4, zIndex: 1 }}
           className="animate-float-slow"
         />
         <PageCloud
-          style={{ position: "fixed", top: "8%", left: "3%", width: 85, height: 42, opacity: 0.25, zIndex: 0 }}
+          style={{ position: "fixed", top: "10%", left: "5%", width: 100, height: 50, opacity: 0.3, zIndex: 1 }}
           className="animate-drift"
         />
+        <PageSparkle
+          style={{ position: "fixed", top: "20%", right: "15%", width: 35, height: 35, opacity: 0.3, zIndex: 1 }}
+          className="animate-sparkle"
+        />
+        <PageTree
+          style={{ position: "fixed", bottom: "15%", left: "3%", width: 70, height: 100, opacity: 0.25, zIndex: 1 }}
+          className="animate-wobble"
+        />
+        <PageHouse
+          style={{ position: "fixed", bottom: "20%", right: "8%", width: 70, height: 70, opacity: 0.2, zIndex: 1 }}
+        />
+        <PageSmiley
+          style={{ position: "fixed", top: "40%", left: "45%", width: 50, height: 50, opacity: 0.15, zIndex: 1 }}
+          className="animate-bounceSoft"
+        />
+        <PageFlower
+          style={{ position: "fixed", bottom: "35%", right: "25%", width: 50, height: 50, opacity: 0.2, zIndex: 1 }}
+          className="animate-wiggle"
+        />
         <PageStars
-          style={{ position: "fixed", top: "12%", left: "50%", width: 130, height: 20, opacity: 0.15, zIndex: 0 }}
+          style={{ position: "fixed", top: "60%", left: "70%", width: 100, height: 15, opacity: 0.2, zIndex: 1 }}
         />
 
         <div className="page-container" style={{ maxWidth: 800, position: "relative", zIndex: 1 }}>

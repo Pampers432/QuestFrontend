@@ -8,7 +8,8 @@ import RoleGuard from "@/components/RoleGuard";
 import Button from "@/components/Button";
 import * as XLSX from 'xlsx';
 import { signalRService } from "@/services/signalRService";
-import { PageSun, PageCloud, PageStars } from "@/components/PageDoodles";
+import { PageSun, PageCloud, PageStars, PageSparkle, PageSmiley, PageTree } from "@/components/PageDoodles";
+import { PaintedDots } from "@/app/(landing)/components/Decorations";
 
 export default function SessionDashboardPage() {
   const params = useParams();
@@ -186,16 +187,38 @@ export default function SessionDashboardPage() {
   return (
     <RoleGuard allowedRoles={["Teacher", "Admin"]}>
       <div style={{ position: "relative", minHeight: "calc(100vh - 64px)" }}>
+        <div style={{
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(to bottom, var(--color-sky-light), var(--color-peach))",
+          zIndex: 0
+        }} />
+        <div style={{ position: "absolute", top: 0, left: 0, width: "100%", zIndex: 0 }}>
+          <PaintedDots style={{ position: "absolute", top: "8%", right: "5%", width: 170, height: 170, opacity: 0.15 }} />
+        </div>
+        
         <PageSun
-          style={{ position: "fixed", top: "3%", right: "6%", width: 65, height: 65, opacity: 0.3, zIndex: 0 }}
+          style={{ position: "fixed", top: "5%", right: "8%", width: 75, height: 75, opacity: 0.4, zIndex: 1 }}
           className="animate-float-slow"
         />
         <PageCloud
-          style={{ position: "fixed", top: "8%", left: "3%", width: 85, height: 42, opacity: 0.25, zIndex: 0 }}
+          style={{ position: "fixed", top: "12%", left: "5%", width: 110, height: 55, opacity: 0.35, zIndex: 1 }}
           className="animate-drift"
         />
+        <PageSparkle
+          style={{ position: "fixed", top: "75%", right: "8%", width: 35, height: 35, opacity: 0.25, zIndex: 1 }}
+          className="animate-sparkle"
+        />
+        <PageTree
+          style={{ position: "fixed", bottom: "10%", left: "3%", width: 80, height: 110, opacity: 0.25, zIndex: 1 }}
+          className="animate-wobble"
+        />
+        <PageSmiley
+          style={{ position: "fixed", top: "45%", left: "45%", width: 55, height: 55, opacity: 0.15, zIndex: 1 }}
+          className="animate-bounceSoft"
+        />
         <PageStars
-          style={{ position: "fixed", top: "12%", left: "50%", width: 130, height: 20, opacity: 0.15, zIndex: 0 }}
+          style={{ position: "fixed", top: "25%", left: "65%", width: 120, height: 18, opacity: 0.15, zIndex: 1 }}
         />
 
         <div style={{ padding: "30px", maxWidth: "1200px", margin: "0 auto", position: "relative", zIndex: 1 }}>
