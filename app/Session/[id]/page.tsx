@@ -29,8 +29,8 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
   const [activeSession, setActiveSession] = useState<any>(null);
 
   const [doorMessage, setDoorMessage] = useState<string | null>(null);
-  const [finishMessage, setFinishMessage] = useState<string | null>(null);
-
+  const [showDoorConfirm, setShowDoorConfirm] = useState(false);
+  const [pendingRoomIndex, setPendingRoomIndex] = useState<number | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [textAnswer, setTextAnswer] = useState("");
   const [numberAnswer, setNumberAnswer] = useState("");
@@ -39,7 +39,8 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
   const renameMap = useTemplateRenames(currentTemplateId);
   
   const goToResults = () => {
-    setFinishMessage(null);
+    setShowDoorConfirm(false);
+    setPendingRoomIndex(null);
     router.push(`/Session/${activeSession.id}/Results`);
   };
 
@@ -145,21 +146,24 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
       </div>
     );
 
-  const handleAnswer = async (option?: any, question?: any, answerValue?: string) => {
+const handleAnswer = async (option?: any, question?: any, answerValue?: string) => {
     let isCorrect = false;
     let points = 0;
 
-     if (question.type === "text_input" || question.type === "number_input") {
-       const correctOption = question.answerOptions?.[0];
-       if (correctOption) {
-         if (question.type === "text_input") {
-           isCorrect = answerValue?.trim().toLowerCase() === correctOption.text?.trim().toLowerCase();
-         } else {
-           isCorrect = parseFloat(answerValue ?? "") === parseFloat(correctOption.text ?? "");
-         }
-       }
-       points = isCorrect ? question.points ?? 1 : 0;
-     } else if (selectedOptions.length > 0) {
+    if (question.type === "text_input" || question.type === "number_input") {
+      const correctOption = question.answerOptions?.[0];
+      if (correctOption) {
+        if (question.type === "text_input") {
+          isCorrect = answerValue?.trim().toLowerCase() === correctOption.text?.trim().toLowerCase();
+        } else {
+          isCorrect = parseFloat(answerValue ?? "") === parseFloat(correctOption.text ?? "");
+        }
+      }
+      points = isCorrect ? question.points ?? 1 : 0;
+    } else if (option) {
+      isCorrect = option.isCorrect;
+      points = isCorrect ? question.points ?? 1 : 0;
+    } else if (selectedOptions.length > 0) {
       const correctOptions = question.answerOptions?.filter((o: any) => o.isCorrect) || [];
       
       if (question.type === "single_choice") {
@@ -172,9 +176,6 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
         isCorrect = selectedCorrect === correctOptions.length && selectedCorrect === selectedOptions.length;
         points = isCorrect ? question.points ?? 1 : 0;
       }
-    } else if (option) {
-      isCorrect = option.isCorrect;
-      points = isCorrect ? question.points ?? 1 : 0;
     } else {
       return;
     }
@@ -182,7 +183,7 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
     const updatedSession = { ...activeSession };
 
     const answerData: any = {
-      selected_options: selectedOptions
+      selected_options: option?.id ? [option.id] : selectedOptions
     };
     if (question.type === "text_input" || question.type === "number_input") {
       answerData.text_answer = answerValue;
@@ -217,6 +218,27 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
     setSelectedOptions([]);
     setTextAnswer("");
     setNumberAnswer("");
+  };
+
+  const confirmDoorTransition = () => {
+    if (pendingRoomIndex !== null && quest) {
+      loadRoom(quest, pendingRoomIndex);
+    }
+    setShowDoorConfirm(false);
+    setPendingRoomIndex(null);
+  };
+
+  const cancelDoorTransition = () => {
+    setShowDoorConfirm(false);
+    setPendingRoomIndex(null);
+  };
+
+  const finishQuestConfirmation = () => {
+    fetch(
+      `${API_BASE}/api/QuestSessions/FinishAttempt/${activeSession.attemptId}`,
+      { method: "POST" }
+    );
+    goToResults();
   };
 
   const handleDoorClick = async () => {
@@ -267,8 +289,8 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
     }
 
     if (roomIndex + 1 < quest.questRooms.length) {
-      loadRoom(quest, roomIndex + 1);
-      setDoorMessage("Переход в следующую комнату...");
+      setPendingRoomIndex(roomIndex + 1);
+      setShowDoorConfirm(true);
       return;
     }
 
@@ -276,7 +298,6 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
       `${API_BASE}/api/QuestSessions/FinishAttempt/${activeSession.attemptId}`,
       { method: "POST" }
     );
-
     goToResults();
   };
 
@@ -389,19 +410,16 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
           alignItems: "center",
           justifyContent: "center"
         }}>
-          <img
-            ref={imageRef}
-            src={previewUrl}
-            onLoad={handleImageLoad}
-            style={{
-              maxWidth: "100%",
-              maxHeight: "100%",
-              width: "auto",
-              height: "auto",
-              objectFit: "contain"
-            }}
-            draggable={false}
-          />
+<img
+             ref={imageRef}
+             src={previewUrl}
+             onLoad={handleImageLoad}
+             style={{
+               width: "100vw",
+               height: "auto"
+             }}
+             draggable={false}
+           />
 
           {zones.map((z, i) => {
             const zoneStyle = getZoneStyle(z);
@@ -618,11 +636,24 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
         </Modal>
       )}
 
-      {finishMessage && (
+      {showDoorConfirm && (
         <Modal>
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
-            <h2>{finishMessage}</h2>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🚪</div>
+            <h2>Перейти в следующую комнату?</h2>
+            <p style={{ marginBottom: 24, color: "var(--color-text-secondary)" }}>
+              {pendingRoomIndex !== null && quest
+                ? `Комната ${pendingRoomIndex + 1} из ${quest.questRooms.length}`
+                : ""}
+            </p>
+            <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+              <Button variant="secondary" onClick={cancelDoorTransition}>
+                Отмена
+              </Button>
+              <Button variant="primary" onClick={confirmDoorTransition}>
+                Перейти
+              </Button>
+            </div>
           </div>
         </Modal>
       )}

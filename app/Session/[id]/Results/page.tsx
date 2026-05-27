@@ -52,12 +52,29 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
         answerData = JSON.parse(answerData);
       }
       
-      const selectedOptionId = answerData?.selected_options?.[0];
-      if (!selectedOptionId) return "Не выбран вариант";
+      if (question.type === "text_input" || question.type === "number_input") {
+        return answerData?.text_answer || "Нет ответа";
+      }
       
-      const option = question.answerOptions?.find((o: any) => o.id === selectedOptionId);
-      return option?.text || "Неизвестный вариант";
+      if (question.type === "single_choice") {
+        const selectedOptionId = answerData?.selected_options?.[0];
+        if (!selectedOptionId) return "Не выбран вариант";
+        const option = question.answerOptions?.find((o: any) => o.id === selectedOptionId);
+        return option?.text || "Неизвестный вариант";
+      }
       
+      if (question.type === "multiple_choice") {
+        const selectedIds = answerData?.selected_options || [];
+        if (selectedIds.length === 0) return "Не выбраны варианты";
+        const texts = selectedIds.map((id: string) => {
+          const opt = question.answerOptions?.find((o: any) => o.id === id);
+          return opt?.text || "Неизвестный вариант";
+        });
+        return texts.join(", ");
+      }
+      
+      return "Неизвестный тип вопроса";
+
     } catch (e) {
       console.error("Ошибка парсинга ответа:", e);
       return "Ошибка формата ответа";

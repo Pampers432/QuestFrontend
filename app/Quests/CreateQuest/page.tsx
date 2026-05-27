@@ -228,7 +228,7 @@ export default function CreateQuest() {
 
   // Функция полной очистки квеста
   const clearQuest = () => {
-    if (confirm("Вы уверены, что хотите очистить весь квест? Все введенные данные будут потеряны.")) {
+    if (confirm("Вы уверены, что хотите очистить квест? Все комнаты и выбранные шаблоны будут удалены.")) {
       // Очищаем все состояния
       setRooms([]);
       setQuestData({
@@ -241,13 +241,13 @@ export default function CreateQuest() {
         visibility: "Public"
       });
       setCurrentRoomIndex(0);
-      
+
       // Удаляем из localStorage
       localStorage.removeItem("selectedTemplates");
       localStorage.removeItem("createQuestRooms");
-      
-      // Перенаправляем на страницу выбора шаблонов
-      router.push('/Templates?select=true');
+
+      // Перенаправляем на страницу квестов
+      router.push('/Quests');
     }
   };
 
@@ -287,6 +287,7 @@ export default function CreateQuest() {
 
     if (!newTemplates) {
       if (savedRooms) setRooms(existing);
+      if (!savedRooms && existing.length === 0) router.push('/Templates?select=true');
       return;
     }
 
@@ -294,9 +295,10 @@ export default function CreateQuest() {
     const existingIds = new Set(existing.map(r => r.template.id));
 
     const makeRoom = (template: RoomTemplate): LocalRoomData => {
+      if (typeof template.sceneData === "string") template.sceneData = JSON.parse(template.sceneData as string);
       const initialQuestions: any = {};
-      template.sceneData.forEach((z) => {
-        if (z.name.trim().toLowerCase() === "door") return;
+      template.sceneData.forEach((z: any) => {
+        if (z.name.trim().toLowerCase() === "door" || z.name.trim().toLowerCase() === "дверь") return;
         initialQuestions[z.name] = {
           text: "", type: "single_choice", points: 10, hint: "",
           answerOptions: [
@@ -352,7 +354,7 @@ export default function CreateQuest() {
       const zoneEntries = Object.entries(room.questions);
 
       for (const [zoneName, question] of zoneEntries) {
-        if (zoneName.trim().toLowerCase() === "door") {
+        if (zoneName.trim().toLowerCase() === "door" || zoneName.trim().toLowerCase() === "дверь") {
           continue;
         }
 
@@ -416,7 +418,7 @@ export default function CreateQuest() {
         title: room.title,
         orderIndex: roomIndex,
         questions: Object.entries(room.questions)
-          .filter(([zoneName]) => zoneName.trim().toLowerCase() !== "door")
+          .filter(([zoneName]) => zoneName.trim().toLowerCase() !== "door" && zoneName.trim().toLowerCase() !== "дверь")
           .map(([zoneName, question], qIndex): CreateQuestionRequest => ({
             text: question.text,
             type: question.type,
@@ -483,40 +485,34 @@ export default function CreateQuest() {
     });
   };
 
+  const displayWidth = 600;
+
   if (rooms.length === 0) {
     return (
       <RoleGuard
         allowedRoles={["Teacher", "Admin"]}
         fallbackMessage="Создание квестов доступно только преподавателю и администратору."
       >
-        <div className="page-container">
-          <h1 className="page-title">Создание квеста</h1>
-          <div style={{ textAlign: "center", padding: 40 }}>
-            <p>Шаблоны не найдены</p>
-            <Button variant="primary" onClick={() => router.push('/Templates?select=true')}>
-              Выбрать шаблоны
-            </Button>
-          </div>
+        <div style={{ padding: 20 }}>
+          <h2>Загрузка...</h2>
         </div>
       </RoleGuard>
     );
   }
-
-  const displayWidth = 600;
 
   return (
     <RoleGuard
       allowedRoles={["Teacher", "Admin"]}
       fallbackMessage="Создание квестов доступно только преподавателю и администратору."
     >
-    <div className="page-container">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-        <h1 className="page-title">Создание квеста</h1>
-        
-        <Button variant="danger" onClick={clearQuest}>
-          Очистить квест
-        </Button>
-      </div>
+      <div className="page-container">
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <h1 className="page-title">Создание квеста</h1>
+          
+          <Button variant="danger" onClick={clearQuest}>
+            Очистить квест
+          </Button>
+        </div>
 
       <div style={{ display: "flex", gap: 20 }}>
         {/* Вертикальная панель с комнатами */}
@@ -775,7 +771,7 @@ export default function CreateQuest() {
       </h3>
 
       {currentRoom.template.sceneData
-        .filter((zone) => zone.name.trim().toLowerCase() !== "door")
+        .filter((zone) => zone.name.trim().toLowerCase() !== "door" && zone.name.trim().toLowerCase() !== "дверь")
         .map((zone, zoneIndex) => (
         <div key={zone.name} className="question-card" style={{ 
           border: "1px solid #ddd", 
@@ -1021,12 +1017,12 @@ export default function CreateQuest() {
                     style={{ flex: 1, padding: 5 }}
                   />
 
-                  <Button variant="danger" size="sm" onClick={() => removeOption(zone.name, option.id)}>
+<Button variant="danger" size="sm" onClick={() => removeOption(zone.name, option.id)}>
                     ✕
                   </Button>
                 </div>
               ))}
-
+              
               <Button variant="primary" size="sm" onClick={() => addOption(zone.name)} style={{ marginTop: 5 }}>
                 + Добавить вариант
               </Button>
@@ -1035,6 +1031,6 @@ export default function CreateQuest() {
         </div>
       ))}
     </div>
-    </RoleGuard>
-  );
-}
+      </RoleGuard>
+    );
+  }

@@ -261,15 +261,11 @@ export default function QuestPage({ params }: { params: { id: string } }) {
                 todayButton="Сегодня"
                 openToDate={new Date()}
               />
-              <div style={{ marginTop: 4, display: "flex", gap: 6 }}>
-                <button
-                  type="button"
-                  onClick={() => { const now = new Date(); setStartsAt(fmtLocal(now)); }}
-                  style={{ fontSize: 12, color: "var(--color-orange)", background: "none", border: "none", cursor: "pointer", fontWeight: 600, padding: 0 }}
-                >
-                  ⏺ Сейчас
-                </button>
-              </div>
+<div style={{ marginTop: 4, display: "flex", gap: 6 }}>
+    <Button variant="ghost" size="sm" onClick={() => { const now = new Date(); setStartsAt(fmtLocal(now)); }}>
+      ⏺ Сейчас
+    </Button>
+  </div>
             </div>
 
             <div>

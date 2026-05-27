@@ -197,6 +197,7 @@ export default function Home({ searchParams }: { searchParams: Promise<{ select?
                 selected={selectedIds.has(template.id!)}
                 onSelectForQuest={selectMode ? () => handleSelectForQuest(template) : undefined}
                 onDelete={handleDelete}
+                onCardClick={selectMode ? () => handleSelectForQuest(template) : undefined}
               />
             ))}
           </div>

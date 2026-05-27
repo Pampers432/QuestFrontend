@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import RoleGuard from "@/components/RoleGuard";
 import { useZones } from "@/hooks/useZones";
@@ -18,12 +18,41 @@ export default function Home() {
     { name: "Объект1", x: 350, y: 140, w: 120, h: 380 }
   ]);
 
-  const drag = useDragResize(zones, updateZone);
+  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
+  const [imageNaturalSize, setImageNaturalSize] = useState({ width: 0, height: 0 });
+
+  const drag = useDragResize(zones, updateZone, imageSize, imageNaturalSize);
 
   const [templateName, setTemplateName] = useState("");
   const [previewUrl, setPreviewUrl] = useState("/room.png");
   const [previewFile, setPreviewFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      const img = containerRef.current?.querySelector('img');
+      if (img) {
+        setImageSize({
+          width: img.clientWidth,
+          height: img.clientHeight
+        });
+      }
+    });
+
+    resizeObserver.observe(containerRef.current);
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  const handleImageLoad = (naturalWidth: number, naturalHeight: number) => {
+    setImageNaturalSize({
+      width: naturalWidth,
+      height: naturalHeight
+    });
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
@@ -93,7 +122,7 @@ export default function Home() {
       allowedRoles={["Admin"]}
       fallbackMessage="Только администратор может добавлять шаблоны."
     >
-      <div style={{ position: "relative", minHeight: "calc(100vh - 64px)" }}>
+      <div ref={containerRef} style={{ position: "relative", minHeight: "calc(100vh - 64px)" }}>
         <PageSun style={{ position: "fixed", top: "3%", right: "5%", width: 65, height: 65, opacity: 0.3, zIndex: 0 }} className="animate-float-slow" />
         <PageCloud style={{ position: "fixed", top: "8%", left: "3%", width: 85, height: 42, opacity: 0.25, zIndex: 0 }} className="animate-drift" />
         <PageStars style={{ position: "fixed", top: "12%", left: "60%", width: 120, height: 18, opacity: 0.15, zIndex: 0 }} />
@@ -113,6 +142,9 @@ export default function Home() {
           onRemoveZone={removeZone}
           canRemoveZone={(zone) => canRemoveZone(zone.name)}
           onRenameZone={(index, name) => updateZone(index, { name })}
+          imageSize={imageSize}
+          imageNaturalSize={imageNaturalSize}
+          onImageLoad={handleImageLoad}
         />
       </div>
     </RoleGuard>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import RoleGuard from "@/components/RoleGuard";
@@ -26,6 +26,9 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
   const [previewUrl, setPreviewUrl] = useState("/room.png");
   const [previewFile, setPreviewFile] = useState<File | null>(null);
 
+  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
+  const [imageNaturalSize, setImageNaturalSize] = useState({ width: 0, height: 0 });
+
   const {
     zones,
     addZone,
@@ -34,7 +37,26 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
     resetZones,
   } = useZones([]);
 
-  const drag = useDragResize(zones, updateZone);
+  const drag = useDragResize(zones, updateZone, imageSize, imageNaturalSize);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      const img = containerRef.current?.querySelector('img');
+      if (img) {
+        setImageSize({
+          width: img.clientWidth,
+          height: img.clientHeight
+        });
+      }
+    });
+
+    resizeObserver.observe(containerRef.current);
+    return () => resizeObserver.disconnect();
+  }, [previewUrl]);
 
   useEffect(() => {
     if (template?.sceneData) {
@@ -117,7 +139,6 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
         throw new Error(`HTTP ${response.status}: ${responseText}`);
       }
 
-      // Пробуем распарсить ответ
       let responseData;
       try {
         responseData = JSON.parse(responseText);
@@ -126,9 +147,7 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
         throw new Error("Сервер вернул некорректный формат данных");
       }
 
-      // Обновляем шаблон в зависимости от типа ответа
       if (responseData.path) {
-        // Это ответ от PostTemplate - обновляем только изображение
         setTemplate(prev => {
           if (!prev) return null;
           return {
@@ -139,14 +158,12 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
           };
         });
         
-         // Обновляем URL превью
-         setPreviewUrl(
-           responseData.path.startsWith("http")
-             ? responseData.path
-             : `${STATIC_BASE}${responseData.path}`
-         );
+        setPreviewUrl(
+          responseData.path.startsWith("http")
+            ? responseData.path
+            : `${STATIC_BASE}${responseData.path}`
+        );
       } else {
-        // Это ответ от UpdateTemplate - используем полученные данные
         const updatedTemplate: RoomTemplate = {
           ...responseData,
           sceneData:
@@ -156,13 +173,13 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
         };
         setTemplate(updatedTemplate);
         
-         if (updatedTemplate.previewImage) {
-           setPreviewUrl(
-             updatedTemplate.previewImage.startsWith("http")
-               ? updatedTemplate.previewImage
-               : `${STATIC_BASE}${updatedTemplate.previewImage}`
-           );
-         }
+        if (updatedTemplate.previewImage) {
+          setPreviewUrl(
+            updatedTemplate.previewImage.startsWith("http")
+              ? updatedTemplate.previewImage
+              : `${STATIC_BASE}${updatedTemplate.previewImage}`
+          );
+        }
       }
       
       setPreviewFile(null);
@@ -184,7 +201,7 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
       allowedRoles={["Admin"]}
       fallbackMessage="Только администратор может редактировать шаблоны."
     >
-      <div style={{ position: "relative", minHeight: "calc(100vh - 64px)" }}>
+      <div ref={containerRef} style={{ position: "relative", minHeight: "calc(100vh - 64px)" }}>
         <PageSun style={{ position: "fixed", top: "3%", right: "5%", width: 65, height: 65, opacity: 0.3, zIndex: 0 }} className="animate-float-slow" />
         <PageCloud style={{ position: "fixed", top: "8%", left: "3%", width: 85, height: 42, opacity: 0.25, zIndex: 0 }} className="animate-drift" />
         <PageStars style={{ position: "fixed", top: "12%", left: "60%", width: 120, height: 18, opacity: 0.15, zIndex: 0 }} />
@@ -204,6 +221,11 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
           onRemoveZone={removeZone}
           canRemoveZone={canRemoveZone}
           onRenameZone={(index, name) => updateZone(index, { name })}
+          imageSize={imageSize}
+          imageNaturalSize={imageNaturalSize}
+          onImageLoad={(w, h) => {
+            setImageNaturalSize({ width: w, height: h });
+          }}
         />
 
         {saving && <p style={{ padding: "0 15px", color: "#666" }}>Сохранение...</p>}

@@ -22,6 +22,7 @@ export default function TemplateRenamesPage() {
     const load = async () => {
       try {
         const tpl = await fetchTemplateById(templateId);
+        if (typeof tpl.sceneData === "string") tpl.sceneData = JSON.parse(tpl.sceneData);
         setTemplate(tpl);
         const initialMap: Record<string, string> = {};
         tpl.sceneData.forEach((zone: any) => {

@@ -9,6 +9,7 @@ interface ZoneProps {
   onRemove?: (index: number) => void;
   canRemove?: boolean;
   onRename?: (index: number, name: string) => void;
+  zoneStyle?: { left: number; top: number; width: number; height: number };
 }
 
 export function Zone({
@@ -18,7 +19,8 @@ export function Zone({
   startResize,
   onRemove,
   canRemove = false,
-  onRename
+  onRename,
+  zoneStyle
 }: ZoneProps) {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(zone.name);
@@ -60,12 +62,7 @@ export function Zone({
     <div
       className="editor-zone"
       onMouseDown={(e) => startDrag(index, e)}
-      style={{
-        left: zone.x,
-        top: zone.y,
-        width: zone.w,
-        height: zone.h
-      }}
+      style={zoneStyle}
     >
       {editing ? (
         <input

@@ -234,7 +234,10 @@ export default function QuestsPage() {
           <div style={{ display: "flex", flexWrap: "wrap", gap: 24, justifyContent: "center" }}>
             {quests.map((quest) => (
               <div key={quest.id} style={{ flex: "0 0 300px" }}>
-                <QuestCard quest={quest} onDelete={() => loadQuests()} />
+                <QuestCard quest={quest} onDelete={() => loadQuests()} onCardClick={() => {
+                  localStorage.setItem("selectedQuest", JSON.stringify(quest));
+                  router.push(`/Quests/${quest.id}`);
+                }} />
               </div>
             ))}
           </div>

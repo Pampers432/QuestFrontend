@@ -11,9 +11,10 @@ interface TemplateCardProps {
   selected?: boolean;
   onSelectForQuest?: (template: RoomTemplate) => void;
   onDelete?: (id: string) => void;
+  onCardClick?: () => void;
 }
 
-export default function TemplateCard({ template, selected, onSelectForQuest, onDelete }: TemplateCardProps) {
+export default function TemplateCard({ template, selected, onSelectForQuest, onDelete, onCardClick }: TemplateCardProps) {
   const router = useRouter();
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7240";
   const role = getStoredRole();
@@ -24,7 +25,8 @@ export default function TemplateCard({ template, selected, onSelectForQuest, onD
       boxShadow: selected ? "0 0 0 3px var(--color-orange), var(--shadow-sm)" : undefined,
       borderRadius: 12,
       position: "relative",
-    }}>
+      cursor: onCardClick || (canEdit && !onSelectForQuest) ? "pointer" : undefined,
+    }} onClick={onCardClick || (canEdit && !onSelectForQuest ? () => router.push(`/Templates/EditTemplate/${template.id}`) : undefined)}>
       {selected && (
         <div style={{
           position: "absolute",
@@ -59,7 +61,7 @@ export default function TemplateCard({ template, selected, onSelectForQuest, onD
       </div>
       <div className={styles.actions}>
         {onSelectForQuest && (
-          <Button variant={selected ? "secondary" : "primary"} size="sm" onClick={() => onSelectForQuest(template)}>
+          <Button variant={selected ? "secondary" : "primary"} size="sm" onClick={(e) => { e.stopPropagation(); onSelectForQuest!(template); }}>
             {selected ? "Убрать" : "Использовать"}
           </Button>
         )}

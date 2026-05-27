@@ -14,7 +14,7 @@ const statusConfig: Record<string, { label: string; variant: "success" | "warnin
   Archive: { label: "Архив", variant: "default" },
 };
 
-export const QuestCard = ({ quest, onDelete }: { quest: Quest; onDelete?: () => void }) => {
+export const QuestCard = ({ quest, onDelete, onCardClick }: { quest: Quest; onDelete?: () => void; onCardClick?: () => void }) => {
   const router = useRouter();
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7240";
   const role = getStoredRole();
@@ -40,7 +40,7 @@ export const QuestCard = ({ quest, onDelete }: { quest: Quest; onDelete?: () => 
   const previewUrl = quest.questRooms[0]?.roomTemplate?.previewImageUrl;
 
   return (
-    <div className={styles.card}>
+    <div className={styles.card} onClick={onCardClick}>
       <div className={styles.badges}>
         {quest.visibility === "Private" && <Badge variant="private">Приватный</Badge>}
         <Badge variant={statusConfig[quest.status]?.variant || "default"}>
@@ -89,7 +89,7 @@ export const QuestCard = ({ quest, onDelete }: { quest: Quest; onDelete?: () => 
         </div>
       </div>
 
-      <div className={styles.footer}>
+      <div className={styles.footer} onClick={(e) => e.stopPropagation()}>
         <Button variant="primary" size="sm" onClick={() => {
             localStorage.setItem("selectedQuest", JSON.stringify(quest));
             router.push(`/Quests/${quest.id}`);

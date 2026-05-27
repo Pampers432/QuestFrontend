@@ -82,7 +82,10 @@ export default function EditQuest() {
         const loadedRooms: LocalRoomData[] = quest.questRooms.map(room => {
           const initialQuestions: { [key: string]: LocalQuestionState } = {};
 
-          room.roomTemplate.sceneData.forEach(zone => {
+          if (typeof room.roomTemplate.sceneData === "string") {
+            room.roomTemplate.sceneData = JSON.parse(room.roomTemplate.sceneData as string);
+          }
+          room.roomTemplate.sceneData.forEach((zone: any) => {
             if (zone.name.trim().toLowerCase() === "door" || zone.name.trim().toLowerCase() === "дверь") return;
 
             const existingQuestion = room.questions?.find(q => q.targetObject === zone.name);
