@@ -1,12 +1,31 @@
 "use client";
 
+import { useState } from "react";
 import SectionTitle from "./SectionTitle";
 import AlienMascot from "./AlienMascot";
-import { useInView } from "../hooks/useInView";
+import { useInViewAdvanced } from "../hooks/useInViewAdvanced";
 import { SparkleDoodle, CloudDoodle, PaintedDots } from "./Decorations";
 
+const options = [
+  { formula: "E = mc²", label: "Эйнштейн", correct: true },
+  { formula: "F = ma", label: "Ньютон" },
+  { formula: "a² + b² = c²", label: "Пифагор" },
+  { formula: "PV = nRT", label: "Менделеев" },
+];
+
 export default function TaskPreview() {
-  const [ref, inView] = useInView();
+  const { ref, inView } = useInViewAdvanced({ threshold: 0.3 });
+  const [selected, setSelected] = useState<string | null>(null);
+  const [showResult, setShowResult] = useState(false);
+
+  const handleSelect = (label: string) => {
+    if (showResult) return;
+    setSelected(label);
+    setShowResult(true);
+  };
+
+  const isCorrect = selected === "Эйнштейн";
+  const mascotVariant = showResult ? (isCorrect ? "celebrate" : "thinking") : "happy";
 
   return (
     <section className="section-default section-bg-white" style={{ position: "relative" }}>
@@ -30,33 +49,65 @@ export default function TaskPreview() {
         >
           <div className="mascot-row">
             <div className="mascot-hover" style={{ width: "60px", height: "60px" }}>
-              <AlienMascot className="animate-float" />
+              <AlienMascot variant={mascotVariant} size={60} />
             </div>
-            <div className="speech-bubble">
+            <div className="speech-bubble" style={{ animation: inView ? "scaleIn 0.4s ease 0.3s forwards" : "none", opacity: 0 }}>
               <p className="speech-text">
-                Какая формула правильная? 🧠
+                {showResult
+                  ? (isCorrect ? "Ура! Правильно! 🎉" : "Попробуй ещё раз! 💪")
+                  : "Какая формула правильная? 🧠"
+                }
               </p>
             </div>
           </div>
 
           <div className="task-options">
-            {[
-              { formula: "E = mc²", label: "Эйнштейн", correct: true },
-              { formula: "F = ma", label: "Ньютон" },
-              { formula: "a² + b² = c²", label: "Пифагор" },
-              { formula: "PV = nRT", label: "Менделеев" },
-            ].map((item) => (
-              <button
-                key={item.label}
-                className={`task-option-btn ${item.correct && inView ? "task-option-btn-correct" : ""}`}
-              >
-                <div className="task-option-formula">{item.formula}</div>
-                <div className="task-option-label">{item.label}</div>
-                {item.correct && inView && (
-                  <div className="task-option-check">✓</div>
-                )}
-              </button>
-            ))}
+            {options.map((item, i) => {
+              let btnClass = "task-option-btn";
+              let extraStyle: React.CSSProperties = {};
+
+              if (showResult) {
+                if (item.correct) {
+                  btnClass += " task-option-btn-correct";
+                  extraStyle = { animation: "scaleIn 0.4s ease forwards" };
+                } else if (item.label === selected && !item.correct) {
+                  extraStyle = {
+                    background: "#ffe0e0",
+                    borderColor: "#ff4444",
+                    animation: "shake 0.5s ease-in-out",
+                  };
+                }
+              }
+
+              return (
+                <button
+                  key={item.label}
+                  className={btnClass}
+                  style={{
+                    ...extraStyle,
+                    opacity: 0,
+                    animation: inView && !showResult
+                      ? `slideInLeft 0.5s ease ${i * 0.1 + 0.5}s forwards`
+                      : showResult ? extraStyle.animation : undefined,
+                  }}
+                  onClick={() => handleSelect(item.label)}
+                  disabled={showResult}
+                >
+                  <div className="task-option-formula">{item.formula}</div>
+                  <div className="task-option-label">{item.label}</div>
+                  {showResult && item.correct && (
+                    <div className="task-option-check" style={{
+                      animation: "drawCheck 0.5s ease 0.3s forwards",
+                      strokeDasharray: 100,
+                      strokeDashoffset: 100,
+                    }}>✓</div>
+                  )}
+                  {showResult && item.label === selected && !item.correct && (
+                    <div style={{ color: "#ff4444", fontSize: "1.125rem", marginTop: "0.25rem" }}>✗</div>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           <div className="flex justify-between" style={{ marginBottom: "var(--space-xs)", fontSize: "0.875rem" }}>
@@ -65,8 +116,11 @@ export default function TaskPreview() {
           </div>
           <div className="progress-track">
             <div
-              className="progress-fill animate-fillBar"
-              style={{ width: inView ? "80%" : "0%" }}
+              className="progress-fill"
+              style={{
+                width: inView ? "80%" : "0%",
+                animation: inView ? "fillBar 1.5s ease forwards" : "none",
+              }}
             />
           </div>
 

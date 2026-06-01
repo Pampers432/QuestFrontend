@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import SectionTitle from "./SectionTitle";
-import { useInView } from "../hooks/useInView";
+import { useInViewAdvanced } from "../hooks/useInViewAdvanced";
 import { SparkleDoodle, PaintedDots } from "./Decorations";
 
 const subjects = [
@@ -16,23 +16,54 @@ const subjects = [
 
 function SubjectCard({ subject, index }: { subject: typeof subjects[0]; index: number }) {
   const router = useRouter();
-  const [ref, inView] = useInView();
+  const { ref, inView } = useInViewAdvanced({ threshold: 0.2 });
   return (
     <div
       ref={ref}
       className="card"
       style={{
-        opacity: inView ? 1 : 0,
-        transform: inView ? "translateY(0)" : "translateY(30px)",
-        transition: `all 0.6s ease ${index * 0.1}s`,
+        opacity: 0,
+        transform: "translateY(30px) scale(0.95)",
+        animation: inView ? `scaleIn 0.5s ease forwards` : "none",
+        animationDelay: inView ? `${index * 0.1}s` : "0s",
+        position: "relative", overflow: "hidden",
       }}
       onClick={() => router.push("/Auth")}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.setProperty("--shimmer-opacity", "1");
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.setProperty("--shimmer-opacity", "0");
+      }}
     >
+      {/* Shimmer */}
+      <div style={{
+        position: "absolute", top: "-50%", left: "-50%", width: "200%", height: "200%",
+        background: "linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%)",
+        animation: "shimmer 3s ease-in-out infinite",
+        opacity: "var(--shimmer-opacity, 0)",
+        transition: "opacity 0.3s ease",
+        pointerEvents: "none",
+      }} />
+
+      {/* Glow border */}
+      <div style={{
+        position: "absolute", inset: "-2px", borderRadius: "calc(var(--card-border-radius) + 2px)",
+        border: `2px solid ${subject.color}`,
+        opacity: 0, transition: "opacity 0.3s ease",
+        pointerEvents: "none",
+      }} className="card-glow" />
+
       <div
         className="card-icon"
-        style={{ backgroundColor: `${subject.color}20` }}
+        style={{ backgroundColor: `${subject.color}20`, position: "relative" }}
       >
-        {subject.icon}
+        <span style={{
+          display: "inline-block",
+          transition: "transform 0.4s ease",
+        }} className="card-icon-anim">
+          {subject.icon}
+        </span>
       </div>
       <h3 className="card-title" style={{ color: subject.color }}>
         {subject.title}
@@ -45,6 +76,11 @@ function SubjectCard({ subject, index }: { subject: typeof subjects[0]; index: n
         Начать
         <span>→</span>
       </div>
+
+      <style jsx>{`
+        .card:hover .card-glow { opacity: 0.3; }
+        .card:hover .card-icon-anim { transform: rotate(15deg) scale(1.1); }
+      `}</style>
     </div>
   );
 }

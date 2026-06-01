@@ -1,7 +1,7 @@
 "use client";
 
 import SectionTitle from "./SectionTitle";
-import { useInView } from "../hooks/useInView";
+import { useInViewAdvanced } from "../hooks/useInViewAdvanced";
 import { SparkleDoodle, PaintedDots, SunDoodle } from "./Decorations";
 
 const rewards = [
@@ -11,18 +11,30 @@ const rewards = [
 ];
 
 function RewardCard({ reward, index }: { reward: typeof rewards[0]; index: number }) {
-  const [ref, inView] = useInView();
+  const { ref, inView } = useInViewAdvanced({ threshold: 0.3 });
   return (
     <div
       ref={ref}
       className="reward-card"
       style={{
-        opacity: inView ? 1 : 0,
-        transform: inView ? "translateY(0)" : "translateY(30px)",
-        transition: `all 0.6s ease ${index * 0.15}s`,
+        opacity: 0,
+        transform: "translateY(30px)",
+        animation: inView ? `scaleIn 0.5s ease forwards` : "none",
+        animationDelay: inView ? `${index * 0.15}s` : "0s",
       }}
     >
-      <div className="reward-icon animate-pulseGlow">{reward.icon}</div>
+      <div className="reward-icon" style={{
+        animation: `floatUp 3s ease-in-out infinite`,
+        animationDelay: `${index * 0.3}s`,
+      }}>
+        <span style={{
+          display: "inline-block",
+          animation: `slowSpin 15s linear infinite`,
+          animationDelay: `${index * 0.3}s`,
+        }}>
+          {reward.icon}
+        </span>
+      </div>
       <h3 className="reward-title">{reward.title}</h3>
       <p className="reward-desc">{reward.desc}</p>
     </div>

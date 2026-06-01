@@ -40,6 +40,7 @@ export default function CreateQuest() {
   const [imageNaturalSize, setImageNaturalSize] = useState({ width: 0, height: 0 });
   const imageRef = useRef<HTMLImageElement>(null);
   const [draggedRoomIndex, setDraggedRoomIndex] = useState<number | null>(null);
+  const [step, setStep] = useState(1);
 
   const [questData, setQuestData] = useState({
     title: "",
@@ -495,7 +496,7 @@ export default function CreateQuest() {
       >
         <div style={{ padding: 20 }}>
           <h2>Загрузка...</h2>
-        </div>
+    </div>
       </RoleGuard>
     );
   }
@@ -514,6 +515,49 @@ export default function CreateQuest() {
           </Button>
         </div>
 
+        {/* Step indicator */}
+        <div style={{
+          display: "flex", gap: 12, marginBottom: 24, alignItems: "center",
+          justifyContent: "center",
+        }}>
+          <div onClick={() => setStep(1)} style={{
+            display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
+            padding: "10px 20px", borderRadius: 12,
+            background: step === 1 ? "var(--color-orange)" : "rgba(0,0,0,0.05)",
+            color: step === 1 ? "#fff" : "var(--color-text-secondary)",
+            fontWeight: 700, fontSize: 14, border: "none",
+            transition: "all 0.3s ease",
+          }}>
+            <span style={{
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              width: 24, height: 24, borderRadius: "50%",
+              background: step === 1 ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)",
+              fontSize: 12, fontWeight: 800,
+            }}>1</span>
+            Вопросы и комнаты
+          </div>
+
+          <div style={{ fontSize: 18, color: "rgba(0,0,0,0.15)" }}>→</div>
+
+          <div onClick={() => setStep(2)} style={{
+            display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
+            padding: "10px 20px", borderRadius: 12,
+            background: step === 2 ? "var(--color-orange)" : "rgba(0,0,0,0.05)",
+            color: step === 2 ? "#fff" : "var(--color-text-secondary)",
+            fontWeight: 700, fontSize: 14, border: "none",
+            transition: "all 0.3s ease",
+          }}>
+            <span style={{
+              display: "inline-flex", alignItems: "center", justifyContent: "center",
+              width: 24, height: 24, borderRadius: "50%",
+              background: step === 2 ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)",
+              fontSize: 12, fontWeight: 800,
+            }}>2</span>
+            Настройки и публикация
+          </div>
+        </div>
+
+      {step === 1 && (<>
       <div style={{ display: "flex", gap: 20 }}>
         {/* Вертикальная панель с комнатами */}
         <div className="rooms-sidebar" style={{
@@ -532,7 +576,7 @@ export default function CreateQuest() {
               onDragOver={(e) => handleDragOver(e, index)}
               onDrop={(e) => handleDrop(e, index)}
               onDragEnd={handleDragEnd}
-              onClick={() => selectRoom(index)} // Восстанавливаем функционал выбора комнаты
+              onClick={() => selectRoom(index)}
               className="room-thumbnail"
               style={{
                 marginBottom: 10,
@@ -586,7 +630,6 @@ export default function CreateQuest() {
                 ✕
               </button>
               
-              {/* Индикатор порядка */}
               <div style={{
                 position: "absolute",
                 top: 2,
@@ -607,7 +650,6 @@ export default function CreateQuest() {
             </div>
           ))}
 
-          {/* Кнопка добавления новой комнаты */}
           <div
             onClick={addNewRoom}
             className="add-room-button"
@@ -642,42 +684,41 @@ export default function CreateQuest() {
             style={{ width: "100%", height: "auto" }}
           />
 
-           {/* Зоны */}
            {imageSize.width > 0 && currentRoom.template.sceneData.map((zone) => {
              const scaleX = imageSize.width / imageNaturalSize.width;
              const scaleY = imageSize.height / imageNaturalSize.height;
-             
-             const x = zone.x * scaleX;
-             const y = zone.y * scaleY;
-             const w = zone.w * scaleX;
-             const h = zone.h * scaleY;
 
-             const displayName = renameMap[zone.name] || zone.name;
+              const x = zone.x * scaleX;
+              const y = zone.y * scaleY;
+              const w = zone.w * scaleX;
+              const h = zone.h * scaleY;
 
-             return (
-               <div
-                 key={zone.name}
-                 className="zone-box"
-                 style={{
-                   position: "absolute",
-                   border: "2px solid #007bff",
-                   backgroundColor: "rgba(0, 123, 255, 0.1)",
-                   display: "flex",
-                   alignItems: "center",
-                   justifyContent: "center",
-                   color: "white",
-                   fontWeight: "bold",
-                   textShadow: "1px 1px 2px black",
-                   left: x,
-                   top: y,
-                   width: w,
-                   height: h
-                 }}
-               >
-                 {displayName}
-               </div>
-             );
-           })}
+              const displayName = renameMap[zone.name] || zone.name;
+
+              return (
+                <div
+                  key={zone.name}
+                  className="zone-box"
+                  style={{
+                    position: "absolute",
+                    border: "2px solid #007bff",
+                    backgroundColor: "rgba(0, 123, 255, 0.1)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "white",
+                    fontWeight: "bold",
+                    textShadow: "1px 1px 2px black",
+                    left: x,
+                    top: y,
+                    width: w,
+                    height: h
+                  }}
+                >
+                  {displayName}
+                </div>
+              );
+            })}
         </div>
 
         {/* Форма */}
@@ -702,53 +743,11 @@ export default function CreateQuest() {
             style={{ width: "100%", marginBottom: 10, padding: 8, minHeight: 60 }}
           />
 
-          <input
-            name="subject"
-            placeholder="Предмет *"
-            value={questData.subject}
-            onChange={handleChange}
-            className="quest-input"
-            style={{ width: "100%", marginBottom: 10, padding: 8 }}
-          />
-
           <CategorySearch
             categories={categories}
             value={questData.categoryId}
             onChange={(id) => setQuestData(prev => ({ ...prev, categoryId: id }))}
           />
-
-          <select
-            name="difficulty"
-            value={questData.difficulty}
-            onChange={handleChange}
-            className="quest-select"
-            style={{ width: "100%", marginBottom: 10, padding: 8 }}
-          >
-            <option value="Easy">Лёгкий</option>
-            <option value="Medium">Средний</option>
-            <option value="Hard">Сложный</option>
-          </select>
-
-          <select
-            name="status"
-            value={questData.status}
-            onChange={handleChange}
-            className="quest-select"
-            style={{ width: "100%", marginBottom: 20, padding: 8 }}
-          >
-            <option value="Draft">Черновик</option>
-            <option value="Published">Опубликован</option>
-            <option value="Archived">Архив</option>
-          </select>
-
-          <label style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 20 }}>
-            <input
-              type="checkbox"
-              checked={questData.visibility === "Private"}
-              onChange={(e) => setQuestData(prev => ({ ...prev, visibility: e.target.checked ? "Private" : "Public" }))}
-            />
-            Приватный (видно только вам)
-          </label>
 
           <h3 style={{ marginBottom: 15 }}>Текущая комната</h3>
           
@@ -760,8 +759,8 @@ export default function CreateQuest() {
             style={{ width: "100%", marginBottom: 20, padding: 8 }}
           />
 
-          <Button variant="primary" onClick={createQuest} style={{ width: "100%" }}>
-            Создать квест
+          <Button variant="primary" onClick={() => setStep(2)} style={{ width: "100%", marginTop: 10 }}>
+            Далее: настройки →
           </Button>
         </div>
       </div>
@@ -1030,7 +1029,133 @@ export default function CreateQuest() {
           )}
         </div>
       ))}
+      </>)}
+      {step === 2 && (
+        <div style={{
+          maxWidth: 500, margin: "0 auto",
+          display: "flex", flexDirection: "column", gap: 20,
+          padding: 32, borderRadius: 20,
+          border: "2px solid rgba(255,107,53,0.1)",
+          background: "rgba(255,255,255,0.85)",
+          backdropFilter: "blur(12px)",
+          boxShadow: "0 8px 32px rgba(255,107,53,0.08)",
+        }}>
+          <h2 style={{ margin: 0, textAlign: "center", color: "var(--color-orange)", fontSize: 24 }}>
+            ⚙️ Настройки квеста
+          </h2>
+          <p style={{ textAlign: "center", color: "var(--color-text-secondary)", fontSize: 14, margin: 0 }}>
+            Выбери сложность, видимость и статус перед публикацией
+          </p>
+
+          {/* Difficulty */}
+          <div>
+            <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: 6 }}>
+              🎯 Сложность
+            </label>
+            <div style={{ display: "flex", gap: 8 }}>
+              {[
+                { value: "Easy", label: "🟢 Лёгкий", desc: "Базовые вопросы" },
+                { value: "Medium", label: "🟡 Средний", desc: "Стандартный уровень" },
+                { value: "Hard", label: "🔴 Сложный", desc: "Повышенная сложность" },
+              ].map((opt) => (
+                <div key={opt.value} onClick={() => setQuestData(prev => ({ ...prev, difficulty: opt.value }))}
+                  style={{
+                    flex: 1, padding: "12px 8px", borderRadius: 12, cursor: "pointer",
+                    textAlign: "center", transition: "all 0.2s",
+                    border: questData.difficulty === opt.value ? "2px solid var(--color-orange)" : "2px solid var(--color-border)",
+                    background: questData.difficulty === opt.value ? "rgba(255,107,53,0.08)" : "transparent",
+                  }}
+                >
+                  <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{opt.label}</div>
+                  <div style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>{opt.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Status */}
+          <div>
+            <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: 6 }}>
+              📋 Статус
+            </label>
+            <div style={{ display: "flex", gap: 8 }}>
+              {[
+                { value: "Draft", label: "📝 Черновик", desc: "Сохранить без публикации" },
+                { value: "Published", label: "🌍 Опубликован", desc: "Сразу доступен всем" },
+              ].map((opt) => (
+                <div key={opt.value} onClick={() => setQuestData(prev => ({ ...prev, status: opt.value }))}
+                  style={{
+                    flex: 1, padding: "12px 8px", borderRadius: 12, cursor: "pointer",
+                    textAlign: "center", transition: "all 0.2s",
+                    border: questData.status === opt.value ? "2px solid var(--color-orange)" : "2px solid var(--color-border)",
+                    background: questData.status === opt.value ? "rgba(255,107,53,0.08)" : "transparent",
+                  }}
+                >
+                  <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{opt.label}</div>
+                  <div style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>{opt.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Visibility */}
+          <div>
+            <label style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--color-text-secondary)", marginBottom: 6 }}>
+              👁️ Видимость
+            </label>
+            <div style={{ display: "flex", gap: 8 }}>
+              {[
+                { value: "Public" as const, label: "🌍 Публичный", desc: "Видно всем пользователям" },
+                { value: "Private" as const, label: "🔒 Приватный", desc: "Только вам и по ссылке" },
+              ].map((opt) => (
+                <div key={opt.value} onClick={() => setQuestData(prev => ({ ...prev, visibility: opt.value }))}
+                  style={{
+                    flex: 1, padding: "12px 8px", borderRadius: 12, cursor: "pointer",
+                    textAlign: "center", transition: "all 0.2s",
+                    border: questData.visibility === opt.value ? "2px solid var(--color-orange)" : "2px solid var(--color-border)",
+                    background: questData.visibility === opt.value ? "rgba(255,107,53,0.08)" : "transparent",
+                  }}
+                >
+                  <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4 }}>{opt.label}</div>
+                  <div style={{ fontSize: 11, color: "var(--color-text-secondary)" }}>{opt.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Summary */}
+          <div style={{
+            padding: 16, borderRadius: 12,
+            background: "rgba(255,107,53,0.05)",
+            border: "1px solid rgba(255,107,53,0.1)",
+          }}>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8, color: "var(--color-text-primary)" }}>
+              📊 Сводка
+            </div>
+            <div style={{ fontSize: 13, color: "var(--color-text-secondary)", lineHeight: 1.8 }}>
+              <div>📚 Предмет: <strong>{questData.subject || "не указан"}</strong></div>
+              <div>🏠 Комнат: <strong>{rooms.length}</strong></div>
+              <div>❓ Всего вопросов: <strong>{rooms.reduce((sum, r) => sum + Object.keys(r.questions).length, 0)}</strong></div>
+              <div>🎯 Сложность: <strong>{questData.difficulty === "Easy" ? "Лёгкая" : questData.difficulty === "Medium" ? "Средняя" : "Сложная"}</strong></div>
+              <div>📋 Статус: <strong>{questData.status === "Draft" ? "Черновик" : "Опубликован"}</strong></div>
+              <div>👁️ Видимость: <strong>{questData.visibility === "Public" ? "Публичный" : "Приватный"}</strong></div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div style={{ display: "flex", gap: 10 }}>
+            <Button variant="secondary" onClick={() => setStep(1)} style={{ flex: 1 }}>
+              ← Назад
+            </Button>
+            <Button variant="primary" onClick={createQuest} style={{ flex: 2, fontSize: 16, padding: "14px 0" }}>
+              🚀 Создать квест
+            </Button>
+          </div>
+        </div>
+      )}
+
     </div>
       </RoleGuard>
     );
   }
+

@@ -261,8 +261,14 @@ export default function QuestPage({ params }: { params: { id: string } }) {
                 todayButton="Сегодня"
                 openToDate={new Date()}
               />
-<div style={{ marginTop: 4, display: "flex", gap: 6 }}>
-    <Button variant="ghost" size="sm" onClick={() => { const now = new Date(); setStartsAt(fmtLocal(now)); }}>
+<div style={{ marginTop: 8, display: "flex", gap: 8 }}>
+    <Button
+      variant="secondary"
+      size="md"
+      onClick={() => { const now = new Date(); setStartsAt(fmtLocal(now)); }}
+      title="Установить текущие дату и время"
+      style={{ fontSize: 14, fontWeight: 700, gap: 6, padding: "0 16px" }}
+    >
       ⏺ Сейчас
     </Button>
   </div>
