@@ -24,6 +24,7 @@ export interface CreateQuestionRequest {
   type: string;
   points: number;
   hint?: string;
+  attachment?: string;
   targetObject?: string;
   orderIndex: number;
   answerOptions: CreateAnswerOptionRequest[];
@@ -32,5 +33,6 @@ export interface CreateQuestionRequest {
 export interface CreateAnswerOptionRequest {
   text?: string;
   isCorrect?: boolean;
+  attachment?: string;
   orderIndex: number;
 }

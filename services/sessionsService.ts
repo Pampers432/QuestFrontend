@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:7240/api/QuestSessions";
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7240"}/api/QuestSessions`;
 
 export interface SessionDashboard {
   sessionId: string;
@@ -34,7 +34,7 @@ export const fetchSessionDashboard = async (sessionId: string): Promise<SessionD
   return await res.json();
 };
 
-export const exportSessionReport = async (sessionId: string, format: "json" | "csv" = "json"): Promise<Blob> => {
+export const exportSessionReport = async (sessionId: string, format: "json" | "csv" | "xlsx" = "json"): Promise<Blob> => {
   const token = localStorage.getItem("auth_token");
   const res = await fetch(`${API_BASE_URL}/Export/${sessionId}?format=${format}`, {
     headers: {

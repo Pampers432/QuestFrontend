@@ -477,6 +477,15 @@ const handleAnswer = async (option?: any, question?: any, answerValue?: string) 
       {activeQuestion && (
         <Modal onClose={() => { setActiveQuestion(null); setSelectedOptions([]); setTextAnswer(""); setNumberAnswer(""); }}>
           <h2 style={{ marginBottom: 20, fontSize: 24 }}>📝 {activeQuestion.text}</h2>
+          {activeQuestion.attachment && (
+            <div style={{ marginBottom: 20, textAlign: "center" }}>
+              <img
+                src={activeQuestion.attachment}
+                alt="question image"
+                style={{ maxWidth: "100%", maxHeight: 300, borderRadius: 12, objectFit: "contain" }}
+              />
+            </div>
+          )}
           
           {activeQuestion.type === "single_choice" && (
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
@@ -507,6 +516,9 @@ const handleAnswer = async (option?: any, question?: any, answerValue?: string) 
                     }}
                     style={{ width: 20, height: 20, cursor: "pointer", accentColor: "var(--color-orange)" }}
                   />
+                  {a.attachment && (
+                    <img src={a.attachment} alt="" style={{ width: 36, height: 36, borderRadius: 8, objectFit: "cover" }} />
+                  )}
                   <span style={{ fontSize: 16 }}>{a.text}</span>
                 </label>
               ))}
@@ -541,6 +553,9 @@ const handleAnswer = async (option?: any, question?: any, answerValue?: string) 
                     }}
                     style={{ width: 20, height: 20, cursor: "pointer", accentColor: "var(--color-orange)" }}
                   />
+                  {a.attachment && (
+                    <img src={a.attachment} alt="" style={{ width: 36, height: 36, borderRadius: 8, objectFit: "cover" }} />
+                  )}
                   <span style={{ fontSize: 16 }}>{a.text}</span>
                 </label>
               ))}

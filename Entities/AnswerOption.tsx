@@ -8,5 +8,7 @@ export interface AnswerOption {
   matchPair?: string | null;
   sequenceOrder?: number | null;
 
+  attachment?: string | null;
+
   orderIndex: number;
 }

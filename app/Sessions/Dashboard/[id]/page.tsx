@@ -160,23 +160,24 @@ export default function SessionDashboardPage() {
     }
   };
 
-  const handleExport = async (format: "json" | "xlsx") => {
-    if (format === "xlsx") {
+  const handleExport = async (format: "json" | "csv" | "xlsx" | "client-xlsx") => {
+    if (format === "client-xlsx") {
       exportToXLSX();
-    } else {
-      try {
-        const blob = await exportSessionReport(id, format);
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `session_${id}_${new Date().toISOString().split("T")[0]}.${format}`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      } catch (err) {
-        alert("Ошибка экспорта отчета");
-      }
+      return;
+    }
+    try {
+      const ext = format === "xlsx" ? "xlsx" : format;
+      const blob = await exportSessionReport(id, format);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `session_${id}_${new Date().toISOString().split("T")[0]}.${ext}`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      alert("Ошибка экспорта отчета");
     }
   };
 
@@ -275,10 +276,13 @@ export default function SessionDashboardPage() {
             <h2 style={{ color: "var(--color-text-primary)" }}>📋 Результаты прохождения</h2>
             <div style={{ display: "flex", gap: "10px" }}>
               <Button variant="primary" size="sm" onClick={() => handleExport("json")}>
-                📄 Экспорт JSON
+                📄 JSON
               </Button>
               <Button variant="secondary" size="sm" onClick={() => handleExport("xlsx")}>
-                📊 Экспорт Excel
+                📊 Excel (сервер)
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => handleExport("client-xlsx")}>
+                📊 Excel (клиент)
               </Button>
             </div>
           </div>

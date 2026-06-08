@@ -7,8 +7,8 @@ class SignalRService {
   private readonly hubUrl: string;
 
   constructor() {
-    // Хардкод URL хаба — http://localhost:7240/questHub
-    this.hubUrl = "http://localhost:7240/questHub";
+    const base = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7240";
+    this.hubUrl = `${base}/questHub`;
   }
 
   public async startConnection(): Promise<void> {

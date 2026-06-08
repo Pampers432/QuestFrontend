@@ -4,7 +4,7 @@ export interface Category {
   description?: string;
 }
 
-const API_BASE_URL = "http://localhost:7240/api/Category";
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7240"}/api/Category`;
 
 export const fetchCategories = async (): Promise<Category[]> => {
   const res = await fetch(API_BASE_URL);

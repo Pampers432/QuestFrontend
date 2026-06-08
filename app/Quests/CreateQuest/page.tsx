@@ -12,12 +12,14 @@ import CategorySearch from "@/components/CategorySearch";
 import { fetchCategories } from "@/services/categoriesService";
 import { fetchTemplateRenames } from "@/services/templatesService";
 import { useTemplateRenames } from "@/hooks/useTemplateRenames";
+import { uploadImage } from "@/services/imagesService";
 
 type LocalQuestionState = {
   text: string;
   type: string;
   points: number;
   hint: string;
+  attachment?: string;
   answerOptions?: (AnswerOption & { id: string })[];
 };
 
@@ -898,6 +900,81 @@ export default function CreateQuest() {
             style={{ width: "100%", marginBottom: 10, padding: 8, minHeight: 60 }}
           />
 
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}>
+            <label style={{
+              padding: "6px 12px",
+              background: "rgba(255,107,53,0.1)",
+              color: "var(--color-orange)",
+              borderRadius: 8,
+              cursor: "pointer",
+              fontSize: 13,
+              fontWeight: 600,
+            }}>
+              🖼️ Прикрепить изображение
+              <input
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  try {
+                    const url = await uploadImage(file);
+                    setRooms(prev => {
+                      const newRooms = [...prev];
+                      newRooms[currentRoomIndex] = {
+                        ...newRooms[currentRoomIndex],
+                        questions: {
+                          ...newRooms[currentRoomIndex].questions,
+                          [zone.name]: {
+                            ...newRooms[currentRoomIndex].questions[zone.name],
+                            attachment: url
+                          }
+                        }
+                      };
+                      return newRooms;
+                    });
+                  } catch (err: any) {
+                    alert(err.message);
+                  }
+                }}
+              />
+            </label>
+            {currentRoom.questions[zone.name]?.attachment && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <img
+                  src={currentRoom.questions[zone.name].attachment!}
+                  alt="attachment"
+                  style={{ width: 40, height: 40, borderRadius: 6, objectFit: "cover" }}
+                />
+                <button
+                  onClick={() => {
+                    setRooms(prev => {
+                      const newRooms = [...prev];
+                      newRooms[currentRoomIndex] = {
+                        ...newRooms[currentRoomIndex],
+                        questions: {
+                          ...newRooms[currentRoomIndex].questions,
+                          [zone.name]: {
+                            ...newRooms[currentRoomIndex].questions[zone.name],
+                            attachment: undefined
+                          }
+                        }
+                      };
+                      return newRooms;
+                    });
+                  }}
+                  style={{
+                    background: "none", border: "none", color: "#dc3545",
+                    cursor: "pointer", fontSize: 16, padding: 4,
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+          </div>
+
           <input
             placeholder="Подсказка (необязательно)"
             value={currentRoom.questions[zone.name]?.hint || ""}
@@ -1016,6 +1093,52 @@ export default function CreateQuest() {
                     className="answer-input"
                     style={{ flex: 1, padding: 5 }}
                   />
+
+                  <label style={{
+                    padding: "4px 8px",
+                    background: "rgba(69,183,209,0.1)",
+                    color: "var(--color-sky)",
+                    borderRadius: 6,
+                    cursor: "pointer",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    whiteSpace: "nowrap",
+                  }}>
+                    🖼️
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        try {
+                          const url = await uploadImage(file);
+                          setRooms(prev => {
+                            const newRooms = [...prev];
+                            newRooms[currentRoomIndex] = {
+                              ...newRooms[currentRoomIndex],
+                              questions: {
+                                ...newRooms[currentRoomIndex].questions,
+                                [zone.name]: {
+                                  ...newRooms[currentRoomIndex].questions[zone.name],
+                                  answerOptions: (newRooms[currentRoomIndex].questions[zone.name].answerOptions || []).map(o =>
+                                    o.id === option.id ? { ...o, attachment: url } : o
+                                  )
+                                }
+                              }
+                            };
+                            return newRooms;
+                          });
+                        } catch (err: any) {
+                          alert(err.message);
+                        }
+                      }}
+                    />
+                  </label>
+                  {option.attachment && (
+                    <img src={option.attachment} alt="opt" style={{ width: 24, height: 24, borderRadius: 4, objectFit: "cover" }} />
+                  )}
 
 <Button variant="danger" size="sm" onClick={() => removeOption(zone.name, option.id)}>
                     ✕

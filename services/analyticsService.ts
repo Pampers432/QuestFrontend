@@ -1,6 +1,6 @@
 import { AuthorAnalyticsDto } from "@/Application/DTO/AuthorAnalyticsDto";
 
-const API_BASE_URL = "http://localhost:7240/api/Quests";
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7240"}/api/Quests`;
 
 export const fetchMyAnalytics = async (): Promise<AuthorAnalyticsDto> => {
   const token = localStorage.getItem("auth_token");

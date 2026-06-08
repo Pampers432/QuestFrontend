@@ -4,7 +4,7 @@ export interface Question {
   id?: string | null;
   questRoomId: string;
 
-  targetObject?: string | null; // зона в комнате
+  targetObject?: string | null;
   type: string;
   text: string;
 

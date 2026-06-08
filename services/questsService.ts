@@ -1,7 +1,7 @@
 import { Quest } from "@/Entities/Quest";
 import { CreateQuestRequest } from "@/Entities/Dto";
 
-const API_BASE_URL = "http://localhost:7240/api/Quests";
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7240"}/api/Quests`;
 
 export const fetchQuests = async (): Promise<Quest[]> => {
   const res = await fetch(`${API_BASE_URL}/GetAllQuests`);

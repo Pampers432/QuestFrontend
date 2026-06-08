@@ -7,7 +7,7 @@ export interface TemplateRename {
   displayName: string;
 }
 
-const API_BASE_URL = "http://localhost:7240/api/quests";
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7240"}/api/quests`;
 
 export const fetchTemplates = async (): Promise<RoomTemplate[]> => {
   const res = await fetch(`${API_BASE_URL}/GetAllTemplates`);
