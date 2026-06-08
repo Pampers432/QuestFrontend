@@ -20,6 +20,7 @@ export default function QuestsPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+  const [categoryName, setCategoryName] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("");
   const [mode, setMode] = useState<"public" | "private">("public");
   const router = useRouter();
@@ -31,6 +32,7 @@ export default function QuestsPage() {
           let filtered = data;
           if (searchTerm) filtered = filtered.filter((q) => q.title.toLowerCase().includes(searchTerm.toLowerCase()));
           if (selectedCategoryId) filtered = filtered.filter((q) => q.categoryId === selectedCategoryId);
+          if (categoryName) filtered = filtered.filter((q) => q.category?.name?.toLowerCase().includes(categoryName.toLowerCase()));
           setQuests(filtered);
         })
         .catch(() => setError("Не удалось загрузить ваши квесты"));
@@ -43,11 +45,12 @@ export default function QuestsPage() {
           let filtered = data;
           if (searchTerm) filtered = filtered.filter((q) => q.title.toLowerCase().includes(searchTerm.toLowerCase()));
           if (selectedCategoryId) filtered = filtered.filter((q) => q.categoryId === selectedCategoryId);
+          if (categoryName) filtered = filtered.filter((q) => q.category?.name?.toLowerCase().includes(categoryName.toLowerCase()));
           setQuests(filtered);
         })
         .catch(() => setError("Не удалось загрузить квесты по статусу"));
-    } else if (searchTerm || selectedCategoryId) {
-      searchQuests(searchTerm || undefined, selectedCategoryId || undefined)
+    } else if (searchTerm || selectedCategoryId || categoryName) {
+      searchQuests(searchTerm || undefined, selectedCategoryId || undefined, categoryName || undefined)
         .then(setQuests)
         .catch(() => setError("Ошибка поиска"));
     } else {
@@ -77,11 +80,11 @@ export default function QuestsPage() {
       window.removeEventListener("signalr:QuestUpdated", handleQuestChanged);
       window.removeEventListener("signalr:QuestDeleted", handleQuestChanged);
     };
-  }, [searchTerm, selectedCategoryId, selectedStatus]);
+  }, [searchTerm, selectedCategoryId, categoryName, selectedStatus]);
 
   useEffect(() => {
     if (!loading) loadQuests();
-  }, [mode, searchTerm, selectedCategoryId, selectedStatus]);
+  }, [mode, searchTerm, selectedCategoryId, categoryName, selectedStatus]);
 
   const role = getStoredRole();
   const canCreate = role === "Teacher" || role === "Admin";
@@ -187,6 +190,27 @@ export default function QuestsPage() {
               <option key={cat.id} value={cat.id}>{cat.name}</option>
             ))}
           </select>
+          <div style={{ position: "relative", flex: 1, minWidth: 150 }}>
+            <input
+              type="text"
+              placeholder="Поиск по категории..."
+              value={categoryName}
+              onChange={(e) => setCategoryName(e.target.value)}
+              style={{
+                padding: "8px 12px",
+                border: "2px solid var(--color-border)",
+                borderRadius: "9999px",
+                fontSize: 14,
+                width: "100%",
+                background: "rgba(255,255,255,0.7)",
+                color: "var(--color-text-primary)",
+                outline: "none",
+                transition: "border-color 0.3s ease",
+              }}
+              onFocus={(e) => e.target.style.borderColor = "var(--color-orange)"}
+              onBlur={(e) => e.target.style.borderColor = "var(--color-border)"}
+            />
+          </div>
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}

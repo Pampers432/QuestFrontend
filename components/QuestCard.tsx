@@ -32,8 +32,9 @@ export const QuestCard = ({ quest, onDelete, onCardClick }: { quest: Quest; onDe
     try {
       await deleteQuest(quest.id);
       onDelete?.();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Ошибка удаления квеста:", error);
+      alert(error.message || "Ошибка при удалении квеста");
     }
   };
 

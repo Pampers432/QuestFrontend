@@ -102,7 +102,7 @@ export function EditorCanvas({
         src={previewUrl}
         alt="Предпросмотр шаблона"
         draggable={false}
-        style={{ width: "100vw", height: "auto" }}
+        style={{ width: "100%", height: "100vh", objectFit: "cover", objectPosition: "center" }}
         onLoad={handleImageLoad}
       />
 

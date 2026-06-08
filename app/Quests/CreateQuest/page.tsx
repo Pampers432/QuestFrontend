@@ -590,13 +590,14 @@ export default function CreateQuest() {
                 transition: "all 0.2s"
               }}
             >
-              <img
-                  src={`${STATIC_BASE}${room.template.previewImageUrl}`}
-                alt={room.template.name}
+              <div
                 style={{
                   width: "100%",
                   height: 80,
-                  objectFit: "cover",
+                  backgroundImage: `url(${STATIC_BASE}${room.template.previewImageUrl})`,
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "center",
+                  backgroundSize: "cover",
                   borderRadius: 4,
                   pointerEvents: "none"
                 }}
@@ -674,14 +675,14 @@ export default function CreateQuest() {
         </div>
 
         {/* Превью текущей комнаты */}
-        <div className="room-preview-wrapper" style={{ position: "relative", width: displayWidth }}>
+        <div className="room-preview-wrapper" style={{ position: "relative", flex: 1, height: "calc(100vh - 150px)", overflow: "hidden" }}>
           <img
             ref={imageRef}
             src={`${STATIC_BASE}${currentRoom.template.previewImageUrl}`}
             alt="preview"
             className="room-preview"
             onLoad={handleImageLoad}
-            style={{ width: "100%", height: "auto" }}
+            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
           />
 
            {imageSize.width > 0 && currentRoom.template.sceneData.map((zone) => {

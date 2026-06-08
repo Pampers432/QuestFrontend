@@ -32,7 +32,7 @@ export default function AuthPage() {
     setSuccess("");
 
     if (!username.trim() || !password.trim()) {
-      setError("Введите username и password");
+      setError("Введите имя пользователя и пароль");
       return;
     }
 
@@ -162,14 +162,14 @@ export default function AuthPage() {
 
         <form onSubmit={onSubmit} className={styles.form}>
           <Input
-            label="Username"
+            label="Имя пользователя"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             error={error && !username.trim() ? "Обязательное поле" : undefined}
           />
 
           <Input
-            label="Password"
+            label="Пароль"
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}

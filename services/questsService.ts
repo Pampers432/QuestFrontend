@@ -15,10 +15,11 @@ export const fetchLatestQuests = async (count: number = 5): Promise<Quest[]> => 
   return await res.json();
 };
 
-export const searchQuests = async (searchTerm?: string, categoryId?: string): Promise<Quest[]> => {
+export const searchQuests = async (searchTerm?: string, categoryId?: string, categoryName?: string): Promise<Quest[]> => {
   const params = new URLSearchParams();
   if (searchTerm) params.append("searchTerm", searchTerm);
   if (categoryId) params.append("categoryId", categoryId);
+  if (categoryName) params.append("categoryName", categoryName);
   
   const res = await fetch(`${API_BASE_URL}/Search?${params.toString()}`);
   if (!res.ok) throw new Error("Ошибка поиска");
