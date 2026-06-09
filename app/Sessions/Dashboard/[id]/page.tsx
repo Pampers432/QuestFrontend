@@ -10,6 +10,7 @@ import * as XLSX from 'xlsx';
 import { signalRService } from "@/services/signalRService";
 import { PageSun, PageCloud, PageStars, PageSparkle, PageSmiley, PageTree } from "@/components/PageDoodles";
 import { PaintedDots } from "@/app/(landing)/components/Decorations";
+import { useToast } from "@/components/Toast";
 
 export default function SessionDashboardPage() {
   const params = useParams();
@@ -19,6 +20,7 @@ export default function SessionDashboardPage() {
   const [dashboard, setDashboard] = useState<SessionDashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const loadData = useCallback(async () => {
     try {
@@ -156,7 +158,7 @@ export default function SessionDashboardPage() {
       XLSX.writeFile(wb, fileName);
     } catch (err) {
       console.error("Ошибка экспорта:", err);
-      alert("Ошибка при создании Excel файла");
+      toast("Ошибка при создании Excel файла", "error");
     }
   };
 
@@ -177,7 +179,7 @@ export default function SessionDashboardPage() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (err) {
-      alert("Ошибка экспорта отчета");
+      toast("Ошибка экспорта отчета", "error");
     }
   };
 

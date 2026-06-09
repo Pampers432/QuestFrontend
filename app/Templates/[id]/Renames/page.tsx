@@ -6,11 +6,13 @@ import { RoomTemplate } from "@/Entities/RoomTemplate";
 import { fetchTemplateById, fetchTemplateRenames, updateTemplateRenames } from "@/services/templatesService";
 import Button from "@/components/Button";
 import { PageSun, PageCloud, PageStars } from "@/components/PageDoodles";
+import { useToast } from "@/components/Toast";
 
 export default function TemplateRenamesPage() {
   const params = useParams();
   const templateId = params.id as string;
   const router = useRouter();
+  const { toast } = useToast();
 
   const [template, setTemplate] = useState<RoomTemplate | null>(null);
   const [loading, setLoading] = useState(true);
@@ -60,7 +62,7 @@ export default function TemplateRenamesPage() {
       await updateTemplateRenames(templateId, renamesArray);
       router.back();
     } catch (e: any) {
-      alert(e.message);
+      toast(e.message || "Ошибка при сохранении названий зон", "error");
     } finally {
       setSaving(false);
     }

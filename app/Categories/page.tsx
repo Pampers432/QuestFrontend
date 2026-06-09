@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchCategories, createCategory, updateCategory, deleteCategory, Category } from "@/services/categoriesService";
+import { useToast } from "@/components/Toast";
 import RoleGuard from "@/components/RoleGuard";
 import { getStoredRole } from "@/utils/auth";
 import Button from "@/components/Button";
@@ -18,6 +19,7 @@ export default function CategoriesPage() {
   const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: "", description: "" });
+  const { toast } = useToast();
 
   useEffect(() => {
     const role = getStoredRole();
@@ -46,7 +48,7 @@ export default function CategoriesPage() {
       setFormData({ name: "", description: "" });
       await loadCategories();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Ошибка создания категории");
+      toast("Ошибка создания категории", "error");
     }
   };
 
@@ -58,7 +60,7 @@ export default function CategoriesPage() {
       setFormData({ name: "", description: "" });
       await loadCategories();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Ошибка обновления категории");
+      toast("Ошибка обновления категории", "error");
     }
   };
 
@@ -68,7 +70,7 @@ export default function CategoriesPage() {
       await deleteCategory(id);
       await loadCategories();
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Ошибка удаления категории");
+      toast("Ошибка удаления категории", "error");
     }
   };
 

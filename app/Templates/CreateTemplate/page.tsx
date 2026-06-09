@@ -8,11 +8,13 @@ import { useDragResize } from "@/hooks/useDragResize";
 import { EditorPanel } from "@/components/EditorPanel";
 import { EditorCanvas } from "@/components/EditorCanvas";
 import { PageSun, PageCloud, PageStars } from "@/components/PageDoodles";
+import { useToast } from "@/components/Toast";
 
 const API_BASE = "http://localhost:7240";
 
 export default function Home() {
   const router = useRouter();
+  const { toast } = useToast();
   const { zones, addZone, updateZone, removeZone } = useZones([
     { name: "Дверь", x: 100, y: 150, w: 200, h: 350 },
     { name: "Объект1", x: 350, y: 140, w: 120, h: 380 }
@@ -64,17 +66,17 @@ export default function Home() {
 
   const saveTemplate = async () => {
     if (!templateName.trim()) {
-      alert("Введите название шаблона");
+      toast("Введите название шаблона", "error");
       return;
     }
 
     if (!previewFile) {
-      alert("Выберите изображение для превью");
+      toast("Выберите изображение для превью", "error");
       return;
     }
 
     if (zones.length === 0) {
-      alert("Добавьте хотя бы одну зону");
+      toast("Добавьте хотя бы одну зону", "error");
       return;
     }
 
@@ -98,7 +100,7 @@ export default function Home() {
 
       const result = await response.json();
       
-      alert(result.message || "Шаблон успешно сохранен!");
+      toast(result.message || "Шаблон успешно сохранён!", "success");
       
       setTemplateName("");
       setPreviewUrl("/room.png");
@@ -106,7 +108,7 @@ export default function Home() {
       
     } catch (error) {
       console.error("Ошибка сохранения:", error);
-      alert(`Ошибка: ${error instanceof Error ? error.message : "Неизвестная ошибка"}`);
+      toast("Ошибка при сохранении шаблона", "error");
     } finally {
       setSaving(false);
     }

@@ -13,6 +13,7 @@ import { fetchCategories } from "@/services/categoriesService";
 import { fetchQuestById, updateQuest } from "@/services/questsService";
 import { Quest } from "@/Entities/Quest";
 import { PageSun, PageCloud, PageStars } from "@/components/PageDoodles";
+import { useToast } from "@/components/Toast";
 
 type LocalQuestionState = {
   text: string;
@@ -46,6 +47,8 @@ export default function EditQuest() {
   const [draggedRoomIndex, setDraggedRoomIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { toast } = useToast();
 
   const [questData, setQuestData] = useState({
     title: "",
@@ -228,7 +231,7 @@ export default function EditQuest() {
   const removeRoom = (indexToRemove: number, e: React.MouseEvent) => {
     e.stopPropagation();
     if (rooms.length <= 1) {
-      alert("Нельзя удалить последнюю комнату.");
+      toast("Нельзя удалить последнюю комнату.", "error");
       return;
     }
     setRooms(prev => {
@@ -287,11 +290,11 @@ export default function EditQuest() {
 
   const validateQuest = (): boolean => {
     if (!questData.title.trim()) {
-      alert("Введите название квеста");
+      toast("Введите название квеста", "error");
       return false;
     }
     if (!questData.subject.trim()) {
-      alert("Введите предмет");
+      toast("Введите предмет", "error");
       return false;
     }
     for (let roomIndex = 0; roomIndex < rooms.length; roomIndex++) {
@@ -299,29 +302,29 @@ export default function EditQuest() {
       for (const [zoneName, question] of Object.entries(room.questions)) {
         if (zoneName.trim().toLowerCase() === "door" || zoneName.trim().toLowerCase() === "дверь") continue;
         if (!question.text.trim()) {
-          alert(`В зоне "${zoneName}" комнаты "${room.template.name}" не введён текст вопроса`);
+          toast(`В зоне "${zoneName}" комнаты "${room.template.name}" не введён текст вопроса`, "error");
           return false;
         }
         if (["single_choice", "multiple_choice"].includes(question.type)) {
           const options = question.answerOptions || [];
           if (options.length < 2) {
-            alert(`В зоне "${zoneName}" комнаты "${room.template.name}" должно быть минимум 2 варианта ответа`);
+            toast(`В зоне "${zoneName}" комнаты "${room.template.name}" должно быть минимум 2 варианта ответа`, "error");
             return false;
           }
           const emptyOptions = options.filter(opt => !opt.text?.trim());
           if (emptyOptions.length > 0) {
-            alert(`В зоне "${zoneName}" комнаты "${room.template.name}" есть пустые варианты ответа`);
+            toast(`В зоне "${zoneName}" комнаты "${room.template.name}" есть пустые варианты ответа`, "error");
             return false;
           }
           const hasCorrect = options.some(opt => opt.isCorrect);
           if (!hasCorrect) {
-            alert(`В зоне "${zoneName}" комнаты "${room.template.name}" не выбран правильный ответ`);
+            toast(`В зоне "${zoneName}" комнаты "${room.template.name}" не выбран правильный ответ`, "error");
             return false;
           }
         }
         if (["text_input", "number_input"].includes(question.type)) {
           if (!question.answerOptions || question.answerOptions.length === 0 || !question.answerOptions[0]?.text?.trim()) {
-            alert(`В зоне "${zoneName}" комнаты "${room.template.name}" не введён правильный ответ`);
+            toast(`В зоне "${zoneName}" комнаты "${room.template.name}" не введён правильный ответ`, "error");
             return false;
           }
         }
@@ -365,11 +368,11 @@ export default function EditQuest() {
 
     try {
       await updateQuest(questId, questRequest);
-      alert("Квест успешно обновлён!");
+      toast("Квест успешно обновлён!", "success");
       router.push('/Quests');
     } catch (err) {
       console.error("Ошибка при обновлении квеста:", err);
-      alert("Произошла ошибка при обновлении квеста. Пожалуйста, попробуйте снова.");
+      toast("Произошла ошибка при обновлении квеста. Пожалуйста, попробуйте снова.", "error");
     }
   };
 

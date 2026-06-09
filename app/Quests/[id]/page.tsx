@@ -5,6 +5,7 @@ import { Quest } from "@/Entities/Quest";
 import { useRouter } from "next/navigation";
 import { getStoredRole } from "@/utils/auth";
 import Button from "@/components/Button";
+import { useToast } from "@/components/Toast";
 import Badge from "@/components/Badge";
 import { PageSun, PageCloud, PageStars } from "@/components/PageDoodles";
 import DatePicker from "react-datepicker";
@@ -24,6 +25,7 @@ export default function QuestPage({ params }: { params: { id: string } }) {
 
   const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7240";
   const router = useRouter();
+  const { toast } = useToast();
 
   const generateAccessCode = () => {
     const part = () => Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -33,12 +35,12 @@ export default function QuestPage({ params }: { params: { id: string } }) {
   const startSession = async () => {
     if (!quest) return;
     const token = localStorage.getItem("auth_token");
-    if (!token) { alert("Не найден токен авторизации"); return; }
+    if (!token) { toast("Не найден токен авторизации", "error"); return; }
 
     const meRes = await fetch(`${API_BASE}/api/Auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!meRes.ok) { alert("Не удалось получить данные пользователя"); return; }
+    if (!meRes.ok) { toast("Не удалось получить данные пользователя", "error"); return; }
 
     const me = await meRes.json() as { userId: string };
     const finalAccessCode = accessCode.trim() || generateAccessCode();
@@ -61,7 +63,7 @@ export default function QuestPage({ params }: { params: { id: string } }) {
       body: JSON.stringify(body),
     });
 
-    if (!res.ok) { alert("Ошибка создания сессии"); return; }
+    if (!res.ok) { toast("Ошибка создания сессии", "error"); return; }
     const session = await res.json();
     localStorage.setItem("activeSession", JSON.stringify(session));
 

@@ -5,6 +5,7 @@ import styles from "./QuestCard.module.css";
 import { useRouter } from "next/navigation";
 import { getStoredRole } from "@/utils/auth";
 import { deleteQuest } from "@/services/questsService";
+import { useToast } from "@/components/Toast";
 import Badge from "./Badge";
 import Button from "./Button";
 
@@ -16,6 +17,7 @@ const statusConfig: Record<string, { label: string; variant: "success" | "warnin
 
 export const QuestCard = ({ quest, onDelete, onCardClick }: { quest: Quest; onDelete?: () => void; onCardClick?: () => void }) => {
   const router = useRouter();
+  const { toast } = useToast();
   const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7240";
   const role = getStoredRole();
   const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
@@ -34,7 +36,7 @@ export const QuestCard = ({ quest, onDelete, onCardClick }: { quest: Quest; onDe
       onDelete?.();
     } catch (error: any) {
       console.error("Ошибка удаления квеста:", error);
-      alert(error.message || "Ошибка при удалении квеста");
+      toast(error.message || "Ошибка при удалении квеста", "error");
     }
   };
 

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { createCategory } from "@/services/categoriesService";
+import { useToast } from "@/components/Toast";
 
 interface Category {
   id: string;
@@ -15,6 +16,7 @@ interface CategorySearchProps {
 }
 
 export default function CategorySearch({ categories, value, onChange }: CategorySearchProps) {
+  const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
@@ -53,7 +55,7 @@ export default function CategorySearch({ categories, value, onChange }: Category
       setOpen(false);
       onChange(newCat.id, newCat.name);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Ошибка создания категории");
+      toast(err instanceof Error ? err.message : "Ошибка создания категории", "error");
     } finally {
       setCreating(false);
     }

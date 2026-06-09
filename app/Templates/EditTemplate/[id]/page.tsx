@@ -11,6 +11,7 @@ import { useDragResize } from "@/hooks/useDragResize";
 import { EditorPanel } from "@/components/EditorPanel";
 import { EditorCanvas } from "@/components/EditorCanvas";
 import { PageSun, PageCloud, PageStars } from "@/components/PageDoodles";
+import { useToast } from "@/components/Toast";
 
 const API_BASE = "http://localhost:7240";
 const STATIC_BASE = "http://localhost:7240";
@@ -18,6 +19,7 @@ const STATIC_BASE = "http://localhost:7240";
 export default function EditTemplatePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
   const router = useRouter();
+  const { toast } = useToast();
 
   const [template, setTemplate] = useState<RoomTemplate | null>(null);
   const [loading, setLoading] = useState(true);
@@ -183,11 +185,11 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
       }
       
       setPreviewFile(null);
-      alert("Сохранено!");
+      toast("Шаблон успешно сохранён!", "success");
       router.push("/Templates");
     } catch (error) {
       console.error("Ошибка сохранения:", error);
-      alert(`Ошибка при сохранении: ${error instanceof Error ? error.message : "Неизвестная ошибка"}`);
+      toast("Ошибка при сохранении шаблона", "error");
     } finally {
       setSaving(false);
     }

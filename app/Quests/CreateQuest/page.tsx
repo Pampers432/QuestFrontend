@@ -9,6 +9,7 @@ import { AnswerOption } from "@/Entities/AnswerOption";
 import RoleGuard from "@/components/RoleGuard";
 import Button from "@/components/Button";
 import CategorySearch from "@/components/CategorySearch";
+import { useToast } from "@/components/Toast";
 import { fetchCategories } from "@/services/categoriesService";
 import { fetchTemplateRenames } from "@/services/templatesService";
 import { useTemplateRenames } from "@/hooks/useTemplateRenames";
@@ -158,7 +159,7 @@ export default function CreateQuest() {
     e.stopPropagation(); // Предотвращаем всплытие события, чтобы не сработал переход на комнату
     
     if (rooms.length <= 1) {
-      alert("Нельзя удалить последнюю комнату. Добавьте новую комнату или очистите квест полностью.");
+      toast("Нельзя удалить последнюю комнату. Добавьте новую комнату или очистите квест полностью.", "error");
       return;
     }
 
@@ -254,6 +255,8 @@ export default function CreateQuest() {
     }
   };
 
+  const { toast } = useToast();
+
   const questionTypes = [
     { value: "single_choice", label: "Один вариант ответа" },
     { value: "multiple_choice", label: "Несколько вариантов ответа" },
@@ -342,57 +345,46 @@ export default function CreateQuest() {
   // Валидация перед созданием квеста
   const validateQuest = (): boolean => {
     if (!questData.title.trim()) {
-      alert("Введите название квеста");
+      toast("Введите название квеста", "error");
       return false;
     }
 
     if (!questData.subject.trim()) {
-      alert("Введите предмет");
+      toast("Введите предмет", "error");
       return false;
     }
 
-    // Проверка каждой комнаты
     for (let roomIndex = 0; roomIndex < rooms.length; roomIndex++) {
       const room = rooms[roomIndex];
       const zoneEntries = Object.entries(room.questions);
 
       for (const [zoneName, question] of zoneEntries) {
-        if (zoneName.trim().toLowerCase() === "door" || zoneName.trim().toLowerCase() === "дверь") {
-          continue;
-        }
+        if (zoneName.trim().toLowerCase() === "door" || zoneName.trim().toLowerCase() === "дверь") continue;
 
         if (!question.text.trim()) {
-          alert(`В зоне "${zoneName}" комнаты "${room.template.name}" не введен текст вопроса`);
+          toast(`В зоне «${zoneName}» комнаты «${room.template.name}» не введён текст вопроса`, "error");
           return false;
         }
 
-        // Проверка вариантов ответа для типов с вариантами
         if (["single_choice", "multiple_choice"].includes(question.type)) {
           const options = question.answerOptions || [];
           if (options.length < 2) {
-            alert(`В зоне "${zoneName}" комнаты "${room.template.name}" должно быть минимум 2 варианта ответа`);
+            toast(`В зоне «${zoneName}» комнаты «${room.template.name}» должно быть минимум 2 варианта ответа`, "error");
             return false;
           }
-
-          // Проверка что все варианты заполнены
-          const emptyOptions = options.filter(opt => !opt.text?.trim());
-          if (emptyOptions.length > 0) {
-            alert(`В зоне "${zoneName}" комнаты "${room.template.name}" есть пустые варианты ответа`);
+          if (options.some(opt => !opt.text?.trim())) {
+            toast(`В зоне «${zoneName}» комнаты «${room.template.name}» есть пустые варианты ответа`, "error");
             return false;
           }
-
-          // Проверка что есть хотя бы один правильный ответ
-          const hasCorrect = options.some(opt => opt.isCorrect);
-          if (!hasCorrect) {
-            alert(`В зоне "${zoneName}" комнаты "${room.template.name}" не выбран правильный ответ`);
+          if (!options.some(opt => opt.isCorrect)) {
+            toast(`В зоне «${zoneName}» комнаты «${room.template.name}» не выбран правильный ответ`, "error");
             return false;
           }
         }
 
-        // Проверка правильного ответа для text_input и number_input
         if (["text_input", "number_input"].includes(question.type)) {
-          if (!question.answerOptions || question.answerOptions.length === 0 || !question.answerOptions[0]?.text?.trim()) {
-            alert(`В зоне "${zoneName}" комнаты "${room.template.name}" не введён правильный ответ`);
+          if (!question.answerOptions?.length || !question.answerOptions[0]?.text?.trim()) {
+            toast(`В зоне «${zoneName}» комнаты «${room.template.name}» не введён правильный ответ`, "error");
             return false;
           }
         }
@@ -442,10 +434,10 @@ export default function CreateQuest() {
        // Получаем токен авторизации
        const token = localStorage.getItem("auth_token");
        if (!token) {
-         alert("Необходимо авторизоваться");
-         router.push("/login");
-         return;
-       }
+          toast("Необходимо авторизоваться", "error");
+          router.push("/Auth");
+          return;
+        }
 
        // Отправляем запрос на сервер
        const response = await fetch(`${API_BASE}/api/Quests/CreateQuest`, {
@@ -464,16 +456,15 @@ export default function CreateQuest() {
 
       const createdQuest = await response.json();
       
-      // Очищаем временные данные
       localStorage.removeItem("selectedTemplates");
       localStorage.removeItem("createQuestRooms");
       
-      alert("Квест успешно создан!");
+      toast("Квест успешно создан!", "success");
       router.push('/Quests');
       
     } catch (error) {
       console.error("Ошибка при создании квеста:", error);
-      alert("Произошла ошибка при создании квеста. Пожалуйста, попробуйте снова.");
+      toast("Произошла ошибка при создании квеста. Проверьте соединение и попробуйте снова.", "error");
     }
   };
 
@@ -677,19 +668,20 @@ export default function CreateQuest() {
         </div>
 
         {/* Превью текущей комнаты */}
-        <div className="room-preview-wrapper" style={{ position: "relative", flex: 1, height: "calc(100vh - 150px)", overflow: "hidden" }}>
-          <img
-            ref={imageRef}
-            src={`${STATIC_BASE}${currentRoom.template.previewImageUrl}`}
-            alt="preview"
-            className="room-preview"
-            onLoad={handleImageLoad}
-            style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
-          />
+        <div className="room-preview-wrapper" style={{ position: "relative", flex: 1, display: "flex", alignItems: "flex-start", justifyContent: "center", overflow: "auto" }}>
+          <div style={{ position: "relative", display: "inline-block", maxWidth: "100%" }}>
+            <img
+              ref={imageRef}
+              src={`${STATIC_BASE}${currentRoom.template.previewImageUrl}`}
+              alt="preview"
+              className="room-preview"
+              onLoad={handleImageLoad}
+              style={{ width: "100%", height: "auto", display: "block" }}
+            />
 
-           {imageSize.width > 0 && currentRoom.template.sceneData.map((zone) => {
-             const scaleX = imageSize.width / imageNaturalSize.width;
-             const scaleY = imageSize.height / imageNaturalSize.height;
+            {imageSize.width > 0 && currentRoom.template.sceneData.map((zone) => {
+              const scaleX = imageSize.width / imageNaturalSize.width;
+              const scaleY = imageSize.height / imageNaturalSize.height;
 
               const x = zone.x * scaleX;
               const y = zone.y * scaleY;
@@ -722,6 +714,7 @@ export default function CreateQuest() {
                 </div>
               );
             })}
+          </div>
         </div>
 
         {/* Форма */}
@@ -934,9 +927,9 @@ export default function CreateQuest() {
                       };
                       return newRooms;
                     });
-                  } catch (err: any) {
-                    alert(err.message);
-                  }
+                    } catch (err: any) {
+                      toast(err.message || "Ошибка загрузки изображения", "error");
+                    }
                 }}
               />
             </label>
@@ -1131,7 +1124,7 @@ export default function CreateQuest() {
                             return newRooms;
                           });
                         } catch (err: any) {
-                          alert(err.message);
+                          toast(err.message || "Ошибка загрузки изображения", "error");
                         }
                       }}
                     />
