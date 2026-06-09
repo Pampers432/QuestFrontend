@@ -44,3 +44,22 @@ export const exportSessionReport = async (sessionId: string, format: "json" | "c
   if (!res.ok) throw new Error("Ошибка экспорт отчета");
   return await res.blob();
 };
+
+export interface QuestSessionListItem {
+  id: string;
+  questTitle: string;
+  accessCode: string;
+  startsAt: string;
+  endsAt: string | null;
+  isActive: boolean;
+  participantCount: number;
+}
+
+export const fetchRecentSessions = async (count: number = 10): Promise<QuestSessionListItem[]> => {
+  const token = localStorage.getItem("auth_token");
+  const res = await fetch(`${API_BASE_URL}/RecentByAuthor?count=${count}`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error("Ошибка загрузки сессий");
+  return await res.json();
+};

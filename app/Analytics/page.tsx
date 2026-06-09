@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { AuthorAnalyticsDto } from "@/Application/DTO/AuthorAnalyticsDto";
 import { fetchMyAnalytics } from "@/services/analyticsService";
+import { fetchRecentSessions, QuestSessionListItem } from "@/services/sessionsService";
 import { SkeletonCard } from "@/components/Skeleton";
 import Badge from "@/components/Badge";
 import { PageSun, PageCloud, PageStars, PageSparkle, PageSmiley, PageFlower } from "@/components/PageDoodles";
@@ -29,14 +31,19 @@ function SummaryCard({ value, label, color, icon }: { value: string | number; la
 
 export default function AnalyticsPage() {
   const [analytics, setAnalytics] = useState<AuthorAnalyticsDto | null>(null);
+  const [recentSessions, setRecentSessions] = useState<QuestSessionListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadAnalytics = async () => {
       try {
-        const data = await fetchMyAnalytics();
+        const [data, sessions] = await Promise.all([
+          fetchMyAnalytics(),
+          fetchRecentSessions()
+        ]);
         setAnalytics(data);
+        setRecentSessions(sessions);
       } catch (e: any) {
         setError(e.message || "Ошибка загрузки аналитики");
       } finally {
@@ -112,6 +119,58 @@ export default function AnalyticsPage() {
           <SummaryCard value={analytics.totalAttempts} label="Попыток" color="#FF6F3C" icon="🎯" />
           <SummaryCard value={analytics.completedAttempts} label="Завершено" color="#00B894" icon="✅" />
           <SummaryCard value={`${analytics.averageScorePercent?.toFixed(1) ?? "0.0"}%`} label="Средний балл" color="#6C5CE7" icon="⭐" />
+        </div>
+
+        <div style={{
+          background: "rgba(255,255,255,0.85)",
+          backdropFilter: "blur(12px)",
+          borderRadius: 20,
+          padding: 28,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.06)",
+          border: "2px solid rgba(255,107,53,0.08)",
+          marginBottom: 24,
+        }}>
+          <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, color: "var(--color-orange)" }}>
+            📂 Последние сессии
+          </h2>
+          {recentSessions.length === 0 ? (
+            <p style={{ color: "var(--color-text-secondary)", fontStyle: "italic" }}>Сессий пока нет</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {recentSessions.map(s => (
+                <Link
+                  key={s.id}
+                  href={`/Analytics/Session/${s.id}`}
+                  style={{ textDecoration: "none" }}
+                >
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 16,
+                    padding: "14px 18px",
+                    borderRadius: 12,
+                    background: "white",
+                    border: "1px solid rgba(255,107,53,0.1)",
+                    transition: "all 0.2s ease",
+                    cursor: "pointer",
+                  }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--color-orange)"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(255,107,53,0.12)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,107,53,0.1)"; e.currentTarget.style.boxShadow = "none"; }}
+                  >
+                    <div style={{ fontSize: 28 }}>🎮</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, color: "var(--color-text-primary)", fontSize: 15 }}>{s.questTitle}</div>
+                      <div style={{ fontSize: 13, color: "var(--color-text-secondary)", marginTop: 2 }}>
+                        🔑 {s.accessCode} &middot; 👤 {s.participantCount} уч. &middot; {new Date(s.startsAt).toLocaleDateString("ru-RU")}
+                      </div>
+                    </div>
+                    <Badge variant={s.isActive ? "success" : "default"}>
+                      {s.isActive ? "Активна" : "Завершена"}
+                    </Badge>
+                    <span style={{ fontSize: 18, color: "var(--color-text-secondary)", marginLeft: 4 }}>→</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
 
         <div style={{
