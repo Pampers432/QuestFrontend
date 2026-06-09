@@ -349,11 +349,6 @@ export default function CreateQuest() {
       return false;
     }
 
-    if (!questData.subject.trim()) {
-      toast("Введите предмет", "error");
-      return false;
-    }
-
     for (let roomIndex = 0; roomIndex < rooms.length; roomIndex++) {
       const room = rooms[roomIndex];
       const zoneEntries = Object.entries(room.questions);
@@ -742,7 +737,7 @@ export default function CreateQuest() {
           <CategorySearch
             categories={categories}
             value={questData.categoryId}
-            onChange={(id) => setQuestData(prev => ({ ...prev, categoryId: id }))}
+            onChange={(id, name) => setQuestData(prev => ({ ...prev, categoryId: id, subject: name || prev.subject }))}
           />
 
           <h3 style={{ marginBottom: 15 }}>Текущая комната</h3>

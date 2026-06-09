@@ -38,43 +38,23 @@ export default function Footer() {
           <div>
             <h4 className="footer-heading">Платформа</h4>
             <ul className="footer-list">
-              <li><button onClick={() => router.push("/Quests")} className="footer-link">Квесты</button></li>
-              <li><button onClick={() => router.push("/Templates")} className="footer-link">Шаблоны</button></li>
+              <li><button onClick={() => {
+                const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+                router.push(token ? "/Quests" : "/Auth");
+              }} className="footer-link">Квесты</button></li>
+              <li><button onClick={() => {
+                const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
+                router.push(token ? "/Templates" : "/Auth");
+              }} className="footer-link">Шаблоны</button></li>
               <li><button onClick={() => router.push("/Auth")} className="footer-link">Войти</button></li>
             </ul>
           </div>
 
-          <div>
-            <h4 className="footer-heading">Помощь</h4>
-            <ul className="footer-list">
-              <li><button onClick={() => router.push("/Auth")} className="footer-link">FAQ</button></li>
-              <li><button onClick={() => router.push("/Auth")} className="footer-link">Соглашение</button></li>
-              <li><button onClick={() => router.push("/Auth")} className="footer-link">Поддержка</button></li>
-            </ul>
-          </div>
 
-          <div>
-            <h4 className="footer-heading">Мы в соцсетях</h4>
-            <div className="footer-social">
-              {[
-                { name: "VK", emoji: "📘" },
-                { name: "TG", emoji: "✈️" },
-                { name: "Discord", emoji: "🎮" },
-              ].map((s) => (
-                <span key={s.name} className="footer-social-btn" title={s.name}>
-                  {s.emoji}
-                </span>
-              ))}
-            </div>
-          </div>
         </div>
 
         <div className="footer-bottom">
           <p>© 2026 Quest Platform. Все права защищены.</p>
-          <div className="footer-stores">
-            <span className="footer-store-badge link-doodle-ghost">App Store</span>
-            <span className="footer-store-badge link-doodle-ghost">Google Play</span>
-          </div>
         </div>
       </div>
     </footer>

@@ -131,6 +131,12 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
     return () => resizeObserver.disconnect();
   }, [previewUrl]);
 
+  useEffect(() => {
+    if (!doorMessage) return;
+    const timer = setTimeout(() => setDoorMessage(null), 3000);
+    return () => clearTimeout(timer);
+  }, [doorMessage]);
+
   if (!room || !activeSession || !quest)
     return (
       <div style={{
@@ -146,7 +152,7 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
       </div>
     );
 
-const handleAnswer = async (option?: any, question?: any, answerValue?: string) => {
+  const handleAnswer = async (option?: any, question?: any, answerValue?: string) => {
     let isCorrect = false;
     let points = 0;
 
@@ -187,6 +193,14 @@ const handleAnswer = async (option?: any, question?: any, answerValue?: string) 
     };
     if (question.type === "text_input" || question.type === "number_input") {
       answerData.text_answer = answerValue;
+    }
+
+    const existingIdx = updatedSession.attempts.findIndex(
+      (a: any) => a.questionId === question.id
+    );
+    if (existingIdx !== -1) {
+      updatedSession.score -= updatedSession.attempts[existingIdx].pointsAwarded;
+      updatedSession.attempts.splice(existingIdx, 1);
     }
 
     updatedSession.attempts.push({
@@ -319,9 +333,19 @@ const handleAnswer = async (option?: any, question?: any, answerValue?: string) 
 
     if (question) {
       setActiveQuestion(question);
-      setSelectedOptions([]);
-      setTextAnswer("");
-      setNumberAnswer("");
+      const prev = activeSession.attempts.find(
+        (a: any) => a.questionId === question.id
+      );
+      if (prev) {
+        const data = JSON.parse(prev.answerData || "{}");
+        setSelectedOptions(data.selected_options || []);
+        setTextAnswer(data.text_answer || "");
+        setNumberAnswer(data.text_answer || "");
+      } else {
+        setSelectedOptions([]);
+        setTextAnswer("");
+        setNumberAnswer("");
+      }
     } else {
       setActiveQuestion({
         text: "Для этой зоны нет вопроса",
@@ -332,383 +356,339 @@ const handleAnswer = async (option?: any, question?: any, answerValue?: string) 
 
   const getZoneStyle = (zone: QuestionPosition) => {
     if (imageSize.width === 0 || imageNaturalSize.width === 0) {
-      return {
-        left: zone.x,
-        top: zone.y,
-        width: zone.w,
-        height: zone.h
-      };
+      return { left: zone.x, top: zone.y, width: zone.w, height: zone.h };
     }
-
-    const scaleX = imageSize.width / imageNaturalSize.width;
-    const scaleY = imageSize.height / imageNaturalSize.height;
-
     return {
-      left: zone.x * scaleX,
-      top: zone.y * scaleY,
-      width: zone.w * scaleX,
-      height: zone.h * scaleY
+      left: zone.x * (imageSize.width / imageNaturalSize.width),
+      top: zone.y * (imageSize.height / imageNaturalSize.height),
+      width: zone.w * (imageSize.width / imageNaturalSize.width),
+      height: zone.h * (imageSize.height / imageNaturalSize.height),
     };
   };
 
   return (
-    <div style={{ minHeight: "calc(100vh - 64px)", position: "relative" }}>
-      <PageSun
-        style={{ position: "fixed", top: "3%", right: "5%", width: 70, height: 70, opacity: 0.3, zIndex: 0 }}
-        className="animate-float-slow"
-      />
-      <PageStars
-        style={{ position: "fixed", top: "10%", left: "5%", width: 120, height: 20, opacity: 0.2, zIndex: 0 }}
-      />
+    <div ref={containerRef} style={{ position: "relative", minHeight: "calc(100vh - 64px)" }}>
+      <div style={{ position: "relative", height: "100vh", overflow: "hidden" }}>
+        <img
+          ref={imageRef}
+          src={previewUrl}
+          onLoad={handleImageLoad}
+          style={{
+            width: "100%",
+            height: "100vh",
+            objectFit: "cover",
+            objectPosition: "center",
+            display: "block",
+          }}
+          draggable={false}
+        />
 
-      <div style={{
-        padding: "12px 24px",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        background: "rgba(255,255,255,0.8)",
-        backdropFilter: "blur(8px)",
-        borderBottom: "1px solid rgba(255,107,53,0.1)",
-        position: "relative",
-        zIndex: 1,
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 24 }}>🗺️</span>
-          <span style={{ fontWeight: 600, color: "var(--color-text-primary)" }}>
-            Комната {roomIndex + 1} / {quest.questRooms.length}
-          </span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <span style={{ fontSize: 14, color: "var(--color-text-secondary)" }}>
-            ⭐ Баллы: <strong style={{ color: "var(--color-orange)" }}>{activeSession.score}</strong>
-          </span>
-          <span style={{ fontSize: 14, color: "var(--color-text-secondary)" }}>
-            ✓ {activeSession.attempts?.length || 0}
-          </span>
-        </div>
-      </div>
+        {zones.map((z, i) => {
+          const zoneStyle = getZoneStyle(z);
 
-      <div 
-        ref={containerRef}
-        style={{ 
-          width: "100vw", 
-          height: "auto", 
-          overflow: "hidden",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: "rgba(0,0,0,0.85)",
-          position: "relative",
-          zIndex: 1,
-        }}
-      >
-        <div style={{ 
-          position: "relative",
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center"
-        }}>
-<img
-             ref={imageRef}
-             src={previewUrl}
-             onLoad={handleImageLoad}
-             style={{
-               width: "100vw",
-               height: "auto"
-             }}
-             draggable={false}
-           />
-
-          {zones.map((z, i) => {
-            const zoneStyle = getZoneStyle(z);
-            const displayName = renameMap[z.name] || z.name;
-            const isDoor = z.name.toLowerCase() === "door" || z.name.toLowerCase() === "дверь";
-            
-            return (
-              <div
-                key={i}
-                onClick={() => handleZoneClick(i)}
-                style={{
-                  position: "absolute",
-                  cursor: "pointer",
-                  border: "2px solid",
-                  borderColor: isDoor ? "rgba(255,107,53,0.8)" : "rgba(78,205,196,0.8)",
-                  backgroundColor: isDoor 
-                    ? "rgba(255,107,53,0.15)" 
-                    : "rgba(78,205,196,0.15)",
-                  borderRadius: 8,
-                  transition: "all 0.3s ease",
-                  ...zoneStyle
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = isDoor ? "var(--color-orange)" : "var(--color-teal)";
-                  e.currentTarget.style.backgroundColor = isDoor 
-                    ? "rgba(255,107,53,0.3)" 
-                    : "rgba(78,205,196,0.3)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = isDoor ? "rgba(255,107,53,0.8)" : "rgba(78,205,196,0.8)";
-                  e.currentTarget.style.backgroundColor = isDoor 
-                    ? "rgba(255,107,53,0.15)" 
-                    : "rgba(78,205,196,0.15)";
-                }}
-              >
-                <span style={{
-                  position: "absolute",
-                  top: "50%",
-                  left: "50%",
-                  transform: "translate(-50%, -50%)",
-                  color: "white",
-                  fontWeight: "bold",
-                  textShadow: "1px 1px 2px black",
-                  fontSize: isDoor ? "16px" : "13px",
-                  pointerEvents: "none",
-                }}>
-                  {isDoor ? "🚪 " : ""}{displayName}
-                </span>
-              </div>
-            );
-          })}
-        </div>
+          return (
+            <div
+              key={i}
+              onClick={() => handleZoneClick(i)}
+              style={{
+                position: "absolute",
+                cursor: "pointer",
+                ...zoneStyle
+              }}
+            />
+          );
+        })}
       </div>
 
       {activeQuestion && (
-        <Modal onClose={() => { setActiveQuestion(null); setSelectedOptions([]); setTextAnswer(""); setNumberAnswer(""); }}>
-          <h2 style={{ marginBottom: 20, fontSize: 24 }}>📝 {activeQuestion.text}</h2>
-          {activeQuestion.attachment && (
-            <div style={{ marginBottom: 20, textAlign: "center" }}>
-              <img
-                src={activeQuestion.attachment}
-                alt="question image"
-                style={{ maxWidth: "100%", maxHeight: 300, borderRadius: 12, objectFit: "contain" }}
-              />
-            </div>
-          )}
-          
-          {activeQuestion.type === "single_choice" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
-              {activeQuestion.answerOptions?.map((a: any, idx: number) => (
-                <label
-                  key={idx}
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 200,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          onClick={() => setActiveQuestion(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "white",
+              borderRadius: 16,
+              padding: 32,
+              maxWidth: 520,
+              width: "90%",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+            }}
+          >
+            <h3 style={{ margin: 0, fontSize: 20, lineHeight: 1.4 }}>
+              {activeQuestion.text}
+            </h3>
+
+            {(activeQuestion.type === "single_choice" || activeQuestion.type === "multiple_choice") && (
+              <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 8 }}>
+                {activeQuestion.answerOptions?.map((opt: any) => {
+                  const isSelected = selectedOptions.includes(opt.id);
+                  return (
+                    <div
+                      key={opt.id}
+                      onClick={() => {
+                        if (activeQuestion.type === "single_choice") {
+                          handleAnswer(opt, activeQuestion);
+                        } else {
+                          setSelectedOptions(prev =>
+                            prev.includes(opt.id)
+                              ? prev.filter((id: string) => id !== opt.id)
+                              : [...prev, opt.id]
+                          );
+                        }
+                      }}
+                      style={{
+                        padding: "12px 16px",
+                        border: `2px solid ${isSelected ? "var(--color-teal)" : "#e0e0e0"}`,
+                        borderRadius: 10,
+                        cursor: "pointer",
+                        backgroundColor: isSelected ? "rgba(78,205,196,0.1)" : "white",
+                        fontWeight: isSelected ? 600 : 400,
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      {opt.text}
+                    </div>
+                  );
+                })}
+                {activeQuestion.type === "multiple_choice" && (
+                  <div style={{ marginTop: 12, display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                    <button
+                      onClick={() => setActiveQuestion(null)}
+                      style={{
+                        padding: "8px 20px",
+                        borderRadius: 8,
+                        border: "2px solid #e0e0e0",
+                        background: "white",
+                        cursor: "pointer",
+                        fontWeight: 600,
+                      }}
+                    >
+                      Отмена
+                    </button>
+                    <button
+                      onClick={() => handleAnswer(undefined, activeQuestion)}
+                      disabled={selectedOptions.length === 0}
+                      style={{
+                        padding: "8px 20px",
+                        borderRadius: 8,
+                        border: "none",
+                        background: selectedOptions.length === 0 ? "#ccc" : "var(--color-teal)",
+                        color: "white",
+                        cursor: selectedOptions.length === 0 ? "not-allowed" : "pointer",
+                        fontWeight: 600,
+                      }}
+                    >
+                      Ответить
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeQuestion.type === "text_input" && (
+              <div style={{ marginTop: 16 }}>
+                <input
+                  type="text"
+                  value={textAnswer}
+                  onChange={(e) => setTextAnswer(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAnswer(undefined, activeQuestion, textAnswer)}
+                  placeholder="Введите ответ..."
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
+                    width: "100%",
                     padding: "12px 16px",
+                    borderRadius: 10,
                     border: "2px solid #e0e0e0",
-                    borderRadius: 12,
-                    cursor: "pointer",
-                    transition: "all 0.2s",
+                    fontSize: 16,
+                    boxSizing: "border-box",
                   }}
-                >
-                  <input
-                    type="radio"
-                    name="answer"
-                    value={a.id}
-                    checked={selectedOptions.includes(a.id)}
-                    onChange={() => {
-                      setSelectedOptions([a.id]);
-                      setTimeout(() => {
-                        handleAnswer(a, activeQuestion);
-                      }, 100);
+                  autoFocus
+                />
+                <div style={{ marginTop: 12, display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                  <button
+                    onClick={() => setActiveQuestion(null)}
+                    style={{
+                      padding: "8px 20px",
+                      borderRadius: 8,
+                      border: "2px solid #e0e0e0",
+                      background: "white",
+                      cursor: "pointer",
+                      fontWeight: 600,
                     }}
-                    style={{ width: 20, height: 20, cursor: "pointer", accentColor: "var(--color-orange)" }}
-                  />
-                  {a.attachment && (
-                    <img src={a.attachment} alt="" style={{ width: 36, height: 36, borderRadius: 8, objectFit: "cover" }} />
-                  )}
-                  <span style={{ fontSize: 16 }}>{a.text}</span>
-                </label>
-              ))}
-            </div>
-          )}
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    onClick={() => handleAnswer(undefined, activeQuestion, textAnswer)}
+                    disabled={!textAnswer.trim()}
+                    style={{
+                      padding: "8px 20px",
+                      borderRadius: 8,
+                      border: "none",
+                      background: !textAnswer.trim() ? "#ccc" : "var(--color-teal)",
+                      color: "white",
+                      cursor: !textAnswer.trim() ? "not-allowed" : "pointer",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Ответить
+                  </button>
+                </div>
+              </div>
+            )}
 
-          {activeQuestion.type === "multiple_choice" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
-              {activeQuestion.answerOptions?.map((a: any, idx: number) => (
-                <label
-                  key={idx}
+            {activeQuestion.type === "number_input" && (
+              <div style={{ marginTop: 16 }}>
+                <input
+                  type="number"
+                  value={numberAnswer}
+                  onChange={(e) => setNumberAnswer(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAnswer(undefined, activeQuestion, numberAnswer)}
+                  placeholder="Введите число..."
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
+                    width: "100%",
                     padding: "12px 16px",
+                    borderRadius: 10,
                     border: "2px solid #e0e0e0",
-                    borderRadius: 12,
-                    cursor: "pointer",
-                    transition: "all 0.2s"
+                    fontSize: 16,
+                    boxSizing: "border-box",
                   }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedOptions.includes(a.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedOptions([...selectedOptions, a.id]);
-                      } else {
-                        setSelectedOptions(selectedOptions.filter(id => id !== a.id));
-                      }
+                  autoFocus
+                />
+                <div style={{ marginTop: 12, display: "flex", gap: 8, justifyContent: "flex-end" }}>
+                  <button
+                    onClick={() => setActiveQuestion(null)}
+                    style={{
+                      padding: "8px 20px",
+                      borderRadius: 8,
+                      border: "2px solid #e0e0e0",
+                      background: "white",
+                      cursor: "pointer",
+                      fontWeight: 600,
                     }}
-                    style={{ width: 20, height: 20, cursor: "pointer", accentColor: "var(--color-orange)" }}
-                  />
-                  {a.attachment && (
-                    <img src={a.attachment} alt="" style={{ width: 36, height: 36, borderRadius: 8, objectFit: "cover" }} />
-                  )}
-                  <span style={{ fontSize: 16 }}>{a.text}</span>
-                </label>
-              ))}
-              <Button variant="primary" onClick={() => handleAnswer(undefined, activeQuestion)} disabled={selectedOptions.length === 0}>
-                ✅ Ответить ({selectedOptions.length} выбрано)
-              </Button>
-            </div>
-          )}
-
-          {activeQuestion.type === "text_input" && (
-            <div style={{ marginBottom: 20, width: "100%" }}>
-              <textarea
-                value={textAnswer}
-                onChange={(e) => setTextAnswer(e.target.value)}
-                placeholder="✏️ Введите ваш ответ..."
-                style={{
-                  width: "100%",
-                  padding: 12,
-                  fontSize: 16,
-                  border: "2px solid #e0e0e0",
-                  borderRadius: 12,
-                  minHeight: 100,
-                  resize: "vertical",
-                  boxSizing: "border-box",
-                  fontFamily: "inherit",
-                  outline: "none",
-                  transition: "border-color 0.3s ease",
-                }}
-                onFocus={(e) => e.target.style.borderColor = "var(--color-orange)"}
-                onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
-              />
-              <Button variant="primary" onClick={() => handleAnswer(undefined, activeQuestion, textAnswer)} disabled={!textAnswer.trim()}>
-                ✅ Ответить
-              </Button>
-            </div>
-          )}
-
-          {activeQuestion.type === "number_input" && (
-            <div style={{ marginBottom: 20, width: "100%" }}>
-              <input
-                type="number"
-                value={numberAnswer}
-                onChange={(e) => setNumberAnswer(e.target.value)}
-                placeholder="🔢 Введите число..."
-                style={{
-                  width: "100%",
-                  padding: 12,
-                  fontSize: 16,
-                  border: "2px solid #e0e0e0",
-                  borderRadius: 12,
-                  marginBottom: 10,
-                  boxSizing: "border-box",
-                  outline: "none",
-                  fontFamily: "inherit",
-                  transition: "border-color 0.3s ease",
-                }}
-                onFocus={(e) => e.target.style.borderColor = "var(--color-orange)"}
-                onBlur={(e) => e.target.style.borderColor = "#e0e0e0"}
-              />
-              <Button variant="primary" onClick={() => handleAnswer(undefined, activeQuestion, numberAnswer)} disabled={!numberAnswer.trim()}>
-                ✅ Ответить
-              </Button>
-            </div>
-          )}
-
-          {!activeQuestion.type && activeQuestion.answerOptions?.length > 0 && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {activeQuestion.answerOptions?.map((a: any, idx: number) => (
-                <Button key={idx} variant="secondary" onClick={() => handleAnswer(a, activeQuestion)} style={{ width: "100%" }}>
-                  {a.text}
-                </Button>
-              ))}
-            </div>
-          )}
-
-          <Button variant="ghost" onClick={() => { setActiveQuestion(null); setSelectedOptions([]); setTextAnswer(""); setNumberAnswer(""); }}>
-            ✕ Закрыть
-          </Button>
-        </Modal>
+                  >
+                    Отмена
+                  </button>
+                  <button
+                    onClick={() => handleAnswer(undefined, activeQuestion, numberAnswer)}
+                    disabled={!numberAnswer.trim()}
+                    style={{
+                      padding: "8px 20px",
+                      borderRadius: 8,
+                      border: "none",
+                      background: !numberAnswer.trim() ? "#ccc" : "var(--color-teal)",
+                      color: "white",
+                      cursor: !numberAnswer.trim() ? "not-allowed" : "pointer",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Ответить
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       )}
 
       {doorMessage && (
-        <Modal onClose={() => setDoorMessage(null)}>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>
-              {doorMessage.includes("следующую") ? "🚪➡️" : "⚠️"}
-            </div>
-            <h2>{doorMessage}</h2>
-            <Button variant="primary" onClick={() => setDoorMessage(null)}>
-              OK
-            </Button>
-          </div>
-        </Modal>
+        <div
+          style={{
+            position: "fixed",
+            bottom: 40,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 300,
+            background: "#333",
+            color: "white",
+            padding: "14px 28px",
+            borderRadius: 12,
+            fontSize: 15,
+            fontWeight: 600,
+            boxShadow: "0 8px 30px rgba(0,0,0,0.3)",
+            cursor: "pointer",
+          }}
+          onClick={() => setDoorMessage(null)}
+        >
+          {doorMessage}
+        </div>
       )}
 
       {showDoorConfirm && (
-        <Modal>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🚪</div>
-            <h2>Перейти в следующую комнату?</h2>
-            <p style={{ marginBottom: 24, color: "var(--color-text-secondary)" }}>
-              {pendingRoomIndex !== null && quest
-                ? `Комната ${pendingRoomIndex + 1} из ${quest.questRooms.length}`
-                : ""}
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 200,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          onClick={cancelDoorTransition}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "white",
+              borderRadius: 16,
+              padding: 32,
+              maxWidth: 400,
+              width: "90%",
+              textAlign: "center",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+            }}
+          >
+            <div style={{ fontSize: 48, marginBottom: 12 }}>🚪</div>
+            <h3 style={{ margin: "0 0 8px", fontSize: 18 }}>
+              Перейти в следующую комнату?
+            </h3>
+            <p style={{ margin: 0, color: "#666", fontSize: 14 }}>
+              Все ответы в этой комнате сохранены.
             </p>
-            <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-              <Button variant="secondary" onClick={cancelDoorTransition}>
-                Отмена
-              </Button>
-              <Button variant="primary" onClick={confirmDoorTransition}>
-                Перейти
-              </Button>
+            <div style={{ marginTop: 20, display: "flex", gap: 10, justifyContent: "center" }}>
+              <button
+                onClick={cancelDoorTransition}
+                style={{
+                  padding: "10px 24px",
+                  borderRadius: 10,
+                  border: "2px solid #e0e0e0",
+                  background: "white",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  fontSize: 14,
+                }}
+              >
+                Остаться
+              </button>
+              <button
+                onClick={confirmDoorTransition}
+                style={{
+                  padding: "10px 24px",
+                  borderRadius: 10,
+                  border: "none",
+                  background: "var(--color-orange)",
+                  color: "white",
+                  cursor: "pointer",
+                  fontWeight: 700,
+                  fontSize: 14,
+                }}
+              >
+                Вперёд!
+              </button>
             </div>
           </div>
-        </Modal>
+        </div>
       )}
-    </div>
-  );
-}
-
-function Modal({ children, onClose }: any) {
-  return (
-    <div
-      style={{
-        position: "fixed",
-        left: 0,
-        top: 0,
-        width: "100vw",
-        height: "100vh",
-        background: "rgba(0,0,0,0.6)",
-        backdropFilter: "blur(4px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          background: "white",
-          padding: 36,
-          borderRadius: 24,
-          minWidth: 500,
-          maxWidth: "80vw",
-          maxHeight: "80vh",
-          overflowY: "auto",
-          boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {children}
-      </div>
     </div>
   );
 }

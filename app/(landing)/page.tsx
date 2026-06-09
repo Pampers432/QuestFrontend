@@ -5,20 +5,25 @@ import Hero from "./components/Hero";
 import SubjectGrid from "./components/SubjectGrid";
 import AgeProgression from "./components/AgeProgression";
 import TaskPreview from "./components/TaskPreview";
-import Rewards from "./components/Rewards";
-import Testimonials from "./components/Testimonials";
-import ParentTrust from "./components/ParentTrust";
 import Footer from "./components/Footer";
 import Preloader from "./components/Preloader";
 import ScrollProgressBar from "./components/ScrollProgressBar";
 import FloatingElements from "./components/FloatingElements";
-import { ZigzagDivider, ZigzagBg, GradientOrb } from "./components/Decorations";
+import { GradientOrb } from "./components/Decorations";
 
 export default function LandingPage() {
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
+    const shown = sessionStorage.getItem("preloader_shown");
+    if (shown) {
+      setLoading(false);
+      return;
+    }
+
+    sessionStorage.setItem("preloader_shown", "true");
+
     let start: number | null = null;
     const duration = 3500;
     const step = (timestamp: number) => {
@@ -44,21 +49,10 @@ export default function LandingPage() {
         <Hero />
         <FloatingElements />
       </div>
-      <ZigzagDivider color="var(--color-peach)" />
       <SubjectGrid />
-      <ZigzagDivider color="var(--color-sky-light)" />
       <AgeProgression />
       <GradientOrb style={{ top: "50%", left: "10%" }} />
-      <div style={{ height: "60px", width: "100%", display: "block" }}>
-        <ZigzagBg color="var(--color-orange)" />
-      </div>
       <TaskPreview />
-      <ZigzagDivider color="var(--color-peach)" />
-      <Rewards />
-      <ZigzagDivider color="var(--color-sky-light)" />
-      <Testimonials />
-      <ZigzagDivider color="var(--color-peach)" />
-      <ParentTrust />
       <Footer />
     </main>
   );

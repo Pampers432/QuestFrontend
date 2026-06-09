@@ -102,7 +102,7 @@ export default function AgeProgression() {
           Для любого уровня
         </SectionTitle>
 
-        <div className="age-scroll" ref={scrollRef}>
+        <div className="age-scroll age-scroll-snap" ref={scrollRef}>
           {ages.map((a, i) => (
             <AgeCard key={a.years} age={a} index={i} />
           ))}

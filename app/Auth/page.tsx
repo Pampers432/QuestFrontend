@@ -185,9 +185,8 @@ export default function AuthPage() {
                   onChange={(e) => setRole(e.target.value)}
                   className={styles.input}
                 >
-                  <option value="student">Student</option>
-                  <option value="teacher">Teacher</option>
-                  <option value="admin">Admin</option>
+                  <option value="student">Студент</option>
+                  <option value="teacher">Учитель</option>
                 </select>
               </label>
             </div>

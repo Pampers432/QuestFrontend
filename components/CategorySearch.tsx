@@ -44,7 +44,7 @@ export default function CategorySearch({ categories, value, onChange }: Category
   const handleSelect = (cat: Category) => {
     setQuery("");
     setOpen(false);
-    onChange(cat.id);
+    onChange(cat.id, cat.name);
   };
 
   const handleCreate = async () => {

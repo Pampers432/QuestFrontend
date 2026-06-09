@@ -124,24 +124,9 @@ export default function TaskPreview() {
             />
           </div>
 
-          <div className="features-row">
-            <div className="feature-item">
-              <span className="feature-icon">⚡</span>
-              <span className="feature-label">XP очки</span>
-            </div>
-            <div className="feature-item">
-              <span className="feature-icon">🏆</span>
-              <span className="feature-label">Рейтинг</span>
-            </div>
-            <div className="feature-item">
-              <span className="feature-icon">🔥</span>
-              <span className="feature-label">Серия</span>
-            </div>
-          </div>
-
           <div className="section-header" style={{ marginTop: "var(--space-lg)", marginBottom: 0 }}>
             <p style={{ fontWeight: 700, fontSize: "1.125rem", color: "var(--color-text-primary)" }}>
-              🚀 Каждый правильный ответ прокачивает твой уровень!
+              🚀 Каждый правильный ответ прокачивает твои знания!
             </p>
           </div>
         </div>

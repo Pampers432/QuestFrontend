@@ -86,7 +86,7 @@ export const clearAuthStorage = () => {
   localStorage.removeItem(ROLE_STORAGE_KEY);
 };
 
-export const canUseTemplates = (role: UserRole | null) => role === "Teacher" || role === "Admin";
+export const canUseTemplates = (role: UserRole | null) => role === "Admin";
 
 export const canManageTemplates = (role: UserRole | null) => role === "Admin";
 

@@ -233,11 +233,9 @@ export default function QuestsPage() {
         </div>
 
         {loading ? (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 24, justifyContent: "center" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 24 }}>
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} style={{ flex: "0 0 300px" }}>
-                <SkeletonCard />
-              </div>
+              <SkeletonCard key={i} />
             ))}
           </div>
         ) : error ? (
@@ -255,14 +253,12 @@ export default function QuestsPage() {
             )}
           </div>
         ) : (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 24, justifyContent: "center" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 24 }}>
             {quests.map((quest) => (
-              <div key={quest.id} style={{ flex: "0 0 300px" }}>
-                <QuestCard quest={quest} onDelete={() => loadQuests()} onCardClick={() => {
-                  localStorage.setItem("selectedQuest", JSON.stringify(quest));
-                  router.push(`/Quests/${quest.id}`);
-                }} />
-              </div>
+              <QuestCard key={quest.id} quest={quest} onDelete={() => loadQuests()} onCardClick={() => {
+                localStorage.setItem("selectedQuest", JSON.stringify(quest));
+                router.push(`/Quests/${quest.id}`);
+              }} />
             ))}
           </div>
         )}
