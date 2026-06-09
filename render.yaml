@@ -9,4 +9,4 @@ services:
       - key: PORT
         value: "3000"
       - key: NEXT_PUBLIC_API_BASE_URL
-        value: https://quest-backend.onrender.com
+        value: https://quest-backend-a9nv.onrender.com
