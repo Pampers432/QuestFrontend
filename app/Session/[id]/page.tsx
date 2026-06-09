@@ -7,8 +7,8 @@ import { useTemplateRenames } from "@/hooks/useTemplateRenames";
 import Button from "@/components/Button";
 import { PageSun, PageCloud, PageStars } from "@/components/PageDoodles";
 
-const API_BASE = "http://localhost:7240";
-const STATIC_BASE = "http://localhost:7240";
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7240";
+const STATIC_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7240";
 
 export default function SessionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
