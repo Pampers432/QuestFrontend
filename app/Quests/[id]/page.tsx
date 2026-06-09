@@ -10,6 +10,7 @@ import { PageSun, PageCloud, PageStars } from "@/components/PageDoodles";
 import DatePicker from "react-datepicker";
 import { ru } from "date-fns/locale";
 import "react-datepicker/dist/react-datepicker.css";
+import { getImageUrl } from "@/utils/imageUrl";
 
 export default function QuestPage({ params }: { params: { id: string } }) {
   const [quest, setQuest] = useState<Quest | null>(null);
@@ -168,7 +169,7 @@ export default function QuestPage({ params }: { params: { id: string } }) {
                 }}
               >
                 <img
-                  src={`${API_BASE}${room.roomTemplate.previewImageUrl}`}
+                  src={getImageUrl(room.roomTemplate.previewImageUrl)}
                   alt={room.title || room.roomTemplate.name}
                   style={{ width: "100%", height: 70, objectFit: "cover", borderRadius: 8 }}
                 />
@@ -188,7 +189,7 @@ export default function QuestPage({ params }: { params: { id: string } }) {
               }}>
                 <h3 style={{ marginBottom: 12, color: "var(--color-text-primary)" }}>{room.title}</h3>
                 <img
-                  src={`${API_BASE}${room.roomTemplate.previewImageUrl}`}
+                  src={getImageUrl(room.roomTemplate.previewImageUrl)}
                   alt=""
                   style={{ width: "100%", maxWidth: 600, borderRadius: 12 }}
                 />

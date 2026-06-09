@@ -19,5 +19,5 @@ export const uploadImage = async (file: File): Promise<string> => {
   }
 
   const data = await res.json();
-  return `${API_BASE}${data.url}`;
+  return data.url;
 };

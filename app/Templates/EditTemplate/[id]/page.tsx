@@ -11,6 +11,7 @@ import { useDragResize } from "@/hooks/useDragResize";
 import { EditorPanel } from "@/components/EditorPanel";
 import { EditorCanvas } from "@/components/EditorCanvas";
 import { PageSun, PageCloud, PageStars } from "@/components/PageDoodles";
+import { getImageUrl } from "@/utils/imageUrl";
 
 const API_BASE = "http://localhost:7240";
 const STATIC_BASE = "http://localhost:7240";
@@ -88,7 +89,7 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
         setPreviewUrl(
           imageUrl?.startsWith("http")
             ? imageUrl
-            : `${STATIC_BASE}${imageUrl}`
+            : getImageUrl(imageUrl)
         );
       })
       .catch((error) => {
@@ -161,7 +162,7 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
         setPreviewUrl(
           responseData.path.startsWith("http")
             ? responseData.path
-            : `${STATIC_BASE}${responseData.path}`
+            : getImageUrl(responseData.path)
         );
       } else {
         const updatedTemplate: RoomTemplate = {
@@ -174,11 +175,7 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
         setTemplate(updatedTemplate);
         
         if (updatedTemplate.previewImage) {
-          setPreviewUrl(
-            updatedTemplate.previewImage.startsWith("http")
-              ? updatedTemplate.previewImage
-              : `${STATIC_BASE}${updatedTemplate.previewImage}`
-          );
+          setPreviewUrl(getImageUrl(updatedTemplate.previewImage));
         }
       }
       

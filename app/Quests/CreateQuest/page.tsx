@@ -13,6 +13,7 @@ import { fetchCategories } from "@/services/categoriesService";
 import { fetchTemplateRenames } from "@/services/templatesService";
 import { useTemplateRenames } from "@/hooks/useTemplateRenames";
 import { uploadImage } from "@/services/imagesService";
+import { getImageUrl } from "@/utils/imageUrl";
 
 type LocalQuestionState = {
   text: string;
@@ -596,7 +597,7 @@ export default function CreateQuest() {
                 style={{
                   width: "100%",
                   height: 80,
-                  backgroundImage: `url(${STATIC_BASE}${room.template.previewImageUrl})`,
+                  backgroundImage: `url(${getImageUrl(room.template.previewImageUrl)})`,
                   backgroundRepeat: "no-repeat",
                   backgroundPosition: "center",
                   backgroundSize: "cover",
@@ -680,7 +681,7 @@ export default function CreateQuest() {
         <div className="room-preview-wrapper" style={{ position: "relative", flex: 1, height: "calc(100vh - 150px)", overflow: "hidden" }}>
           <img
             ref={imageRef}
-            src={`${STATIC_BASE}${currentRoom.template.previewImageUrl}`}
+            src={getImageUrl(currentRoom.template.previewImageUrl)}
             alt="preview"
             className="room-preview"
             onLoad={handleImageLoad}

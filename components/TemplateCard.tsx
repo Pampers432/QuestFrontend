@@ -5,6 +5,7 @@ import styles from "./TemplateCard.module.css";
 import Button from "./Button";
 import { useRouter } from "next/navigation";
 import { canManageTemplates, getStoredRole } from "@/utils/auth";
+import { getImageUrl } from "@/utils/imageUrl";
 
 interface TemplateCardProps {
   template: RoomTemplate;
@@ -50,7 +51,7 @@ export default function TemplateCard({ template, selected, onSelectForQuest, onD
       )}
       <div className={styles.imageWrapper}>
         <img
-          src={`${baseUrl}${template.previewImageUrl}`}
+          src={getImageUrl(template.previewImageUrl)}
           alt={template.name}
           className={styles.image}
         />

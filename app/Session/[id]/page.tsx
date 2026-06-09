@@ -6,6 +6,7 @@ import { QuestionPosition } from "@/Entities/QuestionPosition";
 import { useTemplateRenames } from "@/hooks/useTemplateRenames";
 import Button from "@/components/Button";
 import { PageSun, PageCloud, PageStars } from "@/components/PageDoodles";
+import { getImageUrl } from "@/utils/imageUrl";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7240";
 const STATIC_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:7240";
@@ -89,7 +90,7 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
     setRoom(r);
     setRoomIndex(index);
 
-    setPreviewUrl(`${STATIC_BASE}${r.roomTemplate.previewImageUrl}`);
+    setPreviewUrl(r.roomTemplate.previewImageUrl);
 
     const parsedZones: QuestionPosition[] = JSON.parse(
       r.roomTemplate.sceneData

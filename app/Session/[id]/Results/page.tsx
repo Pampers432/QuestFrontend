@@ -4,6 +4,7 @@ import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "@/components/Button";
 import { PageSun, PageCloud, PageSmiley, PageStars } from "@/components/PageDoodles";
+import { getImageUrl } from "@/utils/imageUrl";
 
 const STATIC_BASE = "http://localhost:7240";
 
@@ -295,7 +296,7 @@ export default function ResultsPage({ params }: { params: Promise<{ id: string }
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
               <img
-                src={`${STATIC_BASE}${currentRoom.roomTemplate.previewImageUrl}`}
+                src={getImageUrl(currentRoom.roomTemplate.previewImageUrl)}
                 alt={currentRoom.title}
                 style={{
                   width: "80px",

@@ -7,6 +7,7 @@ import { getStoredRole } from "@/utils/auth";
 import { deleteQuest } from "@/services/questsService";
 import Badge from "./Badge";
 import Button from "./Button";
+import { getImageUrl } from "@/utils/imageUrl";
 
 const statusConfig: Record<string, { label: string; variant: "success" | "warning" | "default" }> = {
   Draft: { label: "Черновик", variant: "warning" },
@@ -70,7 +71,7 @@ export const QuestCard = ({ quest, onDelete, onCardClick }: { quest: Quest; onDe
 
       <div className={styles.imageWrapper}>
         {previewUrl ? (
-          <img src={`${baseUrl}${previewUrl}`} alt={quest.title} className={styles.image} />
+          <img src={getImageUrl(previewUrl)} alt={quest.title} className={styles.image} />
         ) : (
           <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--color-text-secondary)", fontSize: 14 }}>
             Нет превью

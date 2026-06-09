@@ -13,6 +13,7 @@ import { fetchCategories } from "@/services/categoriesService";
 import { fetchQuestById, updateQuest } from "@/services/questsService";
 import { Quest } from "@/Entities/Quest";
 import { PageSun, PageCloud, PageStars } from "@/components/PageDoodles";
+import { getImageUrl } from "@/utils/imageUrl";
 
 type LocalQuestionState = {
   text: string;
@@ -487,7 +488,7 @@ export default function EditQuest() {
               }}
             >
               <img
-                src={`${STATIC_BASE}${room.template.previewImageUrl}`}
+                src={getImageUrl(room.template.previewImageUrl)}
                 alt={room.template.name}
                 style={{ width: "100%", height: 80, objectFit: "cover", borderRadius: 4, pointerEvents: "none" }}
               />
@@ -537,7 +538,7 @@ export default function EditQuest() {
         <div className="room-preview-wrapper" style={{ position: "relative", width: displayWidth }}>
           <img
             ref={imageRef}
-            src={`${STATIC_BASE}${currentRoom.template.previewImageUrl}`}
+            src={getImageUrl(currentRoom.template.previewImageUrl)}
             alt="preview"
             className="room-preview"
             onLoad={handleImageLoad}
