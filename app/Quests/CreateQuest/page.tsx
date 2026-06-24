@@ -342,10 +342,13 @@ export default function CreateQuest() {
     router.push('/Templates?select=true');
   };
 
-  // Валидация перед созданием квеста
-  const validateQuest = (): boolean => {
+  const validateRooms = (): boolean => {
     if (!questData.title.trim()) {
       toast("Введите название квеста", "error");
+      return false;
+    }
+    if (rooms.length === 0) {
+      toast("Добавьте хотя бы одну комнату", "error");
       return false;
     }
 
@@ -389,8 +392,12 @@ export default function CreateQuest() {
     return true;
   };
 
+  const handleGoToStep2 = () => {
+    if (validateRooms()) setStep(2);
+  };
+
   const createQuest = async () => {
-    if (!validateQuest()) {
+    if (!validateRooms()) {
       return;
     }
 
@@ -527,7 +534,7 @@ export default function CreateQuest() {
 
           <div style={{ fontSize: 18, color: "rgba(0,0,0,0.15)" }}>→</div>
 
-          <div onClick={() => setStep(2)} style={{
+          <div onClick={handleGoToStep2} style={{
             display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
             padding: "10px 20px", borderRadius: 12,
             background: step === 2 ? "var(--color-orange)" : "rgba(0,0,0,0.05)",
@@ -750,7 +757,7 @@ export default function CreateQuest() {
             style={{ width: "100%", marginBottom: 20, padding: 8 }}
           />
 
-          <Button variant="primary" onClick={() => setStep(2)} style={{ width: "100%", marginTop: 10 }}>
+          <Button variant="primary" onClick={handleGoToStep2} style={{ width: "100%", marginTop: 10 }}>
             Далее: настройки →
           </Button>
         </div>
