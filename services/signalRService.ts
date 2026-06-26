@@ -106,6 +106,10 @@ class SignalRService {
     await this.hubConnection?.invoke("SubscribeTemplates");
   }
 
+  public async subscribeToSessions(): Promise<void> {
+    await this.hubConnection?.invoke("SubscribeSessions");
+  }
+
   public async subscribeToSession(sessionId: string): Promise<void> {
     await this.hubConnection?.invoke("SubscribeToSession", sessionId);
   }

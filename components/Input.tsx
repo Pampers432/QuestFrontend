@@ -6,6 +6,7 @@ import styles from "./Input.module.css";
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
   error?: string;
+  rightElement?: React.ReactNode;
 }
 
 export default function Input({
@@ -13,6 +14,7 @@ export default function Input({
   error,
   id,
   className = "",
+  rightElement,
   ...props
 }: InputProps) {
   const [focused, setFocused] = useState(false);
@@ -22,7 +24,7 @@ export default function Input({
     <div className={`${styles.group} ${className}`}>
       <input
         id={inputId}
-        className={`${styles.field} ${error ? styles.hasError : ""}`}
+        className={`${styles.field} ${error ? styles.hasError : ""} ${rightElement ? styles.hasRight : ""}`}
         placeholder=" "
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
@@ -31,6 +33,7 @@ export default function Input({
       <label htmlFor={inputId} className={`${styles.label} ${focused || props.value ? styles.floating : ""}`}>
         {label}
       </label>
+      {rightElement && <div className={styles.right}>{rightElement}</div>}
       {error && <span className={styles.error}>{error}</span>}
     </div>
   );

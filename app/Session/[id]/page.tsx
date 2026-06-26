@@ -27,6 +27,9 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
 
   const [activeQuestion, setActiveQuestion] = useState<any>(null);
   const [activeSession, setActiveSession] = useState<any>(null);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const activeSessionRef = useRef<any>(null);
 
   const [doorMessage, setDoorMessage] = useState<string | null>(null);
   const [showDoorConfirm, setShowDoorConfirm] = useState(false);
@@ -43,6 +46,72 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
     setPendingRoomIndex(null);
     router.push(`/Session/${activeSession.id}/Results`);
   };
+
+  const finishQuestConfirmation = () => {
+    fetch(
+      `${API_BASE}/api/QuestSessions/FinishAttempt/${activeSession.attemptId}`,
+      { method: "POST" }
+    );
+    goToResults();
+  };
+
+  activeSessionRef.current = activeSession;
+
+  useEffect(() => {
+    if (!activeSession || !activeSession.endsAt) return;
+
+    const now = new Date();
+    const startsAt = new Date(activeSession.startsAt);
+    const endsAt = new Date(activeSession.endsAt);
+    const timeLimit = activeSession.timeLimit;
+
+    let effectiveSeconds: number;
+
+    if (now < startsAt) {
+      if (timeLimit && timeLimit > 0) {
+        effectiveSeconds = timeLimit * 60;
+      } else {
+        effectiveSeconds = Math.max(0, (endsAt.getTime() - now.getTime()) / 1000);
+      }
+    } else if (timeLimit && timeLimit > 0) {
+      const timeLimitSeconds = timeLimit * 60;
+      const elapsedSeconds = (now.getTime() - startsAt.getTime()) / 1000;
+      const remainingFromLimit = timeLimitSeconds - elapsedSeconds;
+      const remainingUntilEndsAt = Math.max(0, (endsAt.getTime() - now.getTime()) / 1000);
+
+      effectiveSeconds = Math.max(0, Math.min(remainingFromLimit, remainingUntilEndsAt));
+    } else {
+      effectiveSeconds = Math.max(0, (endsAt.getTime() - now.getTime()) / 1000);
+    }
+
+    if (effectiveSeconds <= 0) {
+      finishQuestConfirmation();
+      return;
+    }
+
+    setTimeLeft(Math.ceil(effectiveSeconds));
+
+    timerRef.current = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev === null || prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          timerRef.current = null;
+          const session = activeSessionRef.current;
+          if (session?.attemptId) {
+            fetch(`${API_BASE}/api/QuestSessions/FinishAttempt/${session.attemptId}`, { method: "POST" });
+          }
+          router.push(`/Session/${session?.id}/Results`);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = null;
+    };
+  }, [activeSession]);
 
   useEffect(() => {
     const savedQuest = localStorage.getItem("selectedQuest");
@@ -245,14 +314,6 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
   const cancelDoorTransition = () => {
     setShowDoorConfirm(false);
     setPendingRoomIndex(null);
-  };
-
-  const finishQuestConfirmation = () => {
-    fetch(
-      `${API_BASE}/api/QuestSessions/FinishAttempt/${activeSession.attemptId}`,
-      { method: "POST" }
-    );
-    goToResults();
   };
 
   const handleDoorClick = async () => {
@@ -620,6 +681,29 @@ export default function SessionPage({ params }: { params: Promise<{ id: string }
           onClick={() => setDoorMessage(null)}
         >
           {doorMessage}
+        </div>
+      )}
+
+      {timeLeft !== null && timeLeft > 0 && (
+        <div
+          style={{
+            position: "fixed",
+            top: 20,
+            right: 20,
+            zIndex: 150,
+            background: "rgba(0, 0, 0, 0.6)",
+            color: "white",
+            padding: "12px 20px",
+            borderRadius: 12,
+            fontSize: 22,
+            fontWeight: 700,
+            fontFamily: '"SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace',
+            backdropFilter: "blur(8px)",
+            border: `2px solid ${timeLeft <= 30 ? "rgba(255,80,80,0.8)" : timeLeft <= 60 ? "rgba(255,165,0,0.6)" : "rgba(255,255,255,0.2)"}`,
+            boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+          }}
+        >
+          ⏱️ {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, "0")}
         </div>
       )}
 

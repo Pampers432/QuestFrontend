@@ -52,6 +52,20 @@
   color: var(--color-error);
 }
 
+.hasRight {
+  padding-right: 44px;
+}
+
+.right {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  z-index: 1;
+}
+
 .error {
   display: block;
   margin-top: 4px;

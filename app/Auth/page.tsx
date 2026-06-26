@@ -16,6 +16,7 @@ export default function AuthPage() {
   const [mode, setMode] = useState<Mode>("login");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState("student");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -170,10 +171,31 @@ export default function AuthPage() {
 
           <Input
             label="Пароль"
-            type="password"
+            type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             error={error && !password.trim() ? "Обязательное поле" : undefined}
+            rightElement={
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: 20,
+                  padding: 4,
+                  opacity: 0.6,
+                  transition: "opacity 0.2s",
+                  lineHeight: 1,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+                onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.6")}
+                tabIndex={-1}
+              >
+                {showPassword ? "🙈" : "👁️"}
+              </button>
+            }
           />
 
           {mode === "register" && (

@@ -1,8 +1,9 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchSessionDashboard, SessionDashboard } from "@/services/sessionsService";
+import { signalRService } from "@/services/signalRService";
 import Badge from "@/components/Badge";
 import { SkeletonCard } from "@/components/Skeleton";
 
@@ -13,19 +14,52 @@ export default function SessionDashboardPage({ params }: { params: Promise<{ id:
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const loadData = useCallback(async () => {
+    try {
+      const data = await fetchSessionDashboard(id);
+      setDashboard(data);
+    } catch (e: any) {
+      setError(e.message || "Ошибка загрузки");
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
   useEffect(() => {
-    const load = async () => {
+    loadData();
+  }, [loadData]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const initSignalR = async () => {
       try {
-        const data = await fetchSessionDashboard(id);
-        setDashboard(data);
-      } catch (e: any) {
-        setError(e.message || "Ошибка загрузки");
-      } finally {
-        setLoading(false);
+        await signalRService.startConnection();
+        await signalRService.subscribeToSession(id);
+        window.addEventListener("signalr:SessionUpdated", handleSessionUpdated);
+      } catch (error) {
+        console.error("[Analytics Session] SignalR connection failed:", error);
       }
     };
-    load();
+
+    if (mounted) {
+      initSignalR();
+    }
+
+    return () => {
+      mounted = false;
+      signalRService.stopConnection();
+      window.removeEventListener("signalr:SessionUpdated", handleSessionUpdated);
+    };
   }, [id]);
+
+  const handleSessionUpdated = (e: Event) => {
+    const event = e as CustomEvent<string>;
+    const updatedSessionId = event.detail;
+    if (updatedSessionId === id) {
+      loadData();
+    }
+  };
 
   if (loading) return (
     <div className="page-container" style={{ paddingTop: 40 }}>

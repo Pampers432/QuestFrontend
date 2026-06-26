@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { AuthorAnalyticsDto } from "@/Application/DTO/AuthorAnalyticsDto";
 import { fetchMyAnalytics } from "@/services/analyticsService";
 import { fetchRecentSessions, QuestSessionListItem } from "@/services/sessionsService";
+import { signalRService } from "@/services/signalRService";
 import { SkeletonCard } from "@/components/Skeleton";
 import Badge from "@/components/Badge";
 import { PageSun, PageCloud, PageStars, PageSparkle, PageSmiley, PageFlower } from "@/components/PageDoodles";
@@ -35,23 +36,52 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const loadAnalytics = useCallback(async () => {
+    try {
+      const [data, sessions] = await Promise.all([
+        fetchMyAnalytics(),
+        fetchRecentSessions()
+      ]);
+      setAnalytics(data);
+      setRecentSessions(sessions);
+    } catch (e: any) {
+      setError(e.message || "Ошибка загрузки аналитики");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const loadAnalytics = async () => {
+    loadAnalytics();
+  }, [loadAnalytics]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const initSignalR = async () => {
       try {
-        const [data, sessions] = await Promise.all([
-          fetchMyAnalytics(),
-          fetchRecentSessions()
-        ]);
-        setAnalytics(data);
-        setRecentSessions(sessions);
-      } catch (e: any) {
-        setError(e.message || "Ошибка загрузки аналитики");
-      } finally {
-        setLoading(false);
+        await signalRService.startConnection();
+        await signalRService.subscribeToSessions();
+        window.addEventListener("signalr:SessionUpdated", handleSessionUpdated);
+      } catch (error) {
+        console.error("[Analytics] SignalR connection failed:", error);
       }
     };
-    loadAnalytics();
+
+    if (mounted) {
+      initSignalR();
+    }
+
+    return () => {
+      mounted = false;
+      signalRService.stopConnection();
+      window.removeEventListener("signalr:SessionUpdated", handleSessionUpdated);
+    };
   }, []);
+
+  const handleSessionUpdated = () => {
+    loadAnalytics();
+  };
 
   if (loading) return (
     <div className="page-container">
